@@ -1,19 +1,11 @@
 Gravity?
 Weapon Types?
-
-Time limit?
-
 Flag caputring:
 - Special weapon
-- Special buff
-
-
-Speed modifier for players?
-
+- Special buff (Speed modifier for players?)
 Item drops despawn after a certain amount of time?
-
 Was passiert nachdem flag gecaptured wurde?
 
-Was passiert wenn player die flag hat und gekillt wird?
 
+Friedhof:
 single most important player action
