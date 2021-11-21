@@ -2,19 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : MonoBehaviour
-{
+public class Player : MonoBehaviour {
 
     private float speed = 6.0f;
     private CharacterController cc;
 
-    void Start()
-    {
+    void Start() {
         cc = GetComponent<CharacterController>();
     }
 
-    void Update()
-    {
+    void Update() {
         float dx = Input.GetAxis("Horizontal") * speed;
         float dz = Input.GetAxis("Vertical") * speed;
 
