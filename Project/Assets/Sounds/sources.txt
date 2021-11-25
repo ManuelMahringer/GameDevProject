@@ -1,0 +1,6 @@
+Sources:
+laser:				https://freesound.org/people/wcoltd/sounds/417731/
+fire: 				https://freesound.org/people/tripjazz/sounds/394754/
+background-music: 	https://www.playonloop.com/2015-music-loops/spirit-forge/
+
+
