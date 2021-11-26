@@ -33,7 +33,19 @@ public class World : MonoBehaviour
         Debug.Log("localcoord" + localCoordinate);
         Debug.Log("x:" + Mathf.FloorToInt(chunkCoordinate.x));
         Debug.Log("z:" + Mathf.FloorToInt(chunkCoordinate.z));
-        chunks[Mathf.FloorToInt(chunkCoordinate.x), Mathf.FloorToInt(chunkCoordinate.z)].GetComponent<Chunk>().DestroyBlock(localCoordinate);
+        int chunkX = Mathf.FloorToInt(chunkCoordinate.x);
+        int chunkZ = Mathf.FloorToInt(chunkCoordinate.z);
+        chunks[chunkX, chunkZ].GetComponent<Chunk>().DestroyBlock(localCoordinate);
+
+        // Update Mesh Collider
+        MeshCollider mc = chunks[chunkX, chunkZ].GetComponent<MeshCollider>();
+        Destroy(mc);
+        addMeshCollider(chunkX, chunkZ);
+    }
+
+    private void addMeshCollider(int x, int z) {
+        MeshCollider mc = chunks[x, z].AddComponent<MeshCollider>();
+        mc.material = worldMaterial;
     }
 
 
@@ -47,8 +59,7 @@ public class World : MonoBehaviour
             {
                 Debug.Log("instantiate now");
                 chunks[x, y] = Instantiate(myPrefab, new Vector3(4 * x, 1, 4 * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
-                MeshCollider mc = chunks[x, y].AddComponent<MeshCollider>(); 
-                mc.material = worldMaterial;
+                addMeshCollider(x, y);
             }
         }
     }
