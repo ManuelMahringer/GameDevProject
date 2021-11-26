@@ -4,21 +4,28 @@ using UnityEngine;
 
 public class World : MonoBehaviour
 {
-    // Reference to the Prefab. Drag a Prefab into this field in the Inspector.
-    public GameObject myPrefab;
-    public PhysicMaterial worldMaterial = new PhysicMaterial {
-        staticFriction = 0f,
-        dynamicFriction = 0f,
-        bounciness = 0f,
-        frictionCombine = PhysicMaterialCombine.Minimum,
-        bounceCombine = PhysicMaterialCombine.Minimum
-    };
-    
-    // This script will simply instantiate the Prefab when the game starts.
-    void Start() {
+    // Reference to the Chunk Prefab. Drag a Prefab into this field in the Inspector.
+    [SerializeField] 
+    private GameObject myPrefab;
+    private PhysicMaterial worldMaterial;
 
-        // Instantiate at position (0, 0, 0) and zero rotation.
-        for(int x = 0; x < 3; x++)
+    void Awake()
+    {
+        worldMaterial = new PhysicMaterial
+        {
+            staticFriction = 0f,
+            dynamicFriction = 0f,
+            bounciness = 0f,
+            frictionCombine = PhysicMaterialCombine.Minimum,
+            bounceCombine = PhysicMaterialCombine.Minimum
+        };
+    }
+
+
+    void Start()
+    {  
+        // Instantiate chunks
+        for (int x = 0; x < 3; x++)
         {
             for (int y = 0; y < 3; y++)
             {
@@ -28,6 +35,6 @@ public class World : MonoBehaviour
             }
 
         }
-       
+
     }
-}
+} 
