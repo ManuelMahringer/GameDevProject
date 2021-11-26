@@ -14,13 +14,16 @@ public class Player : MonoBehaviour {
     [Header("Jump Settings")]
     public float jumpForce = 10_000f;
     public ForceMode appliedForceMode = ForceMode.Force;
-    
+
+    [Header("Ground Tag Specification")]
+    public String groundTag = "";
+
     [Header("Jumping State")]
     [SerializeField] private bool jump;
     [SerializeField] private bool isGrounded;
     
     [Header("Current Player Speed")]
-    [SerializeField] private float currentSpeed;
+    [SerializeField] private float currentSpeed;    
 
     private Rigidbody _rb;
     private RaycastHit _hit;
@@ -43,11 +46,16 @@ public class Player : MonoBehaviour {
         }
 
         if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), out _hit, Mathf.Infinity)) {
-            if (String.Compare(_hit.collider.tag, "ground", StringComparison.Ordinal) == 0) {
+            if (groundTag != null && groundTag != "") {
+                if (String.Compare(_hit.collider.tag, groundTag, StringComparison.Ordinal) == 0) {
+                    _groundLocation = _hit.point;
+                }
+            } else {
                 _groundLocation = _hit.point;
             }
 
             float distanceFromPlayerToGround = Vector3.Distance(transform.position, _groundLocation);
+            Debug.Log(distanceFromPlayerToGround);
             isGrounded = !(distanceFromPlayerToGround > 1f + 0.0001f);
         }
         else {
