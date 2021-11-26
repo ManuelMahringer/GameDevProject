@@ -40,20 +40,13 @@ public class Chunk : MonoBehaviour
         GenerateChunk();
     }
 
-    //public void GenerateChunk()
-    //{
-    //    Debug.Log("GENERATING");
-    //    float[,] chunkHeights = Noise.Generate(chunkSize.x + 1, chunkSize.y + 1, seed, intensity);
-    //    chunkBlocks = new Block[chunkSize.x + 1, chunkSize.y + 1, chunkSize.z + 1];
 
-    //    for (int y = 0; y <= chunkSize.y; y++)
-    //    {
-    //        chunkBlocks[x, y, z] = new Block(true);
-    //        if (y <= chunkHeights[x, z])
-    //        { chunkBlocks[x, y, z] = new Block(false); }
-    //    }
-    //    UpdateChunk(chunkBlocks[x, y, z].id);
-    //}
+    public void DestroyBlock(Vector3 hit) // Idea: only update blocks adjacent to the one beeing destroyed
+    {
+        Debug.Log(hit.x + " " + hit.y + " " + hit.z);
+        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
+        UpdateChunk();
+    }
 
     public void GenerateChunk()
     {
@@ -201,7 +194,6 @@ public class Chunk : MonoBehaviour
 
 
             case BlockFace.Bottom:    //Checks bottom face
-
                 if (y - 1 >= 0)
                     if(!chunkBlocks[x, y - 1, z].empty)
                 { return false; }
@@ -265,9 +257,6 @@ public class Chunk : MonoBehaviour
 
 
         Vector2 textureID = new Vector2(textureInterval.x * (blockID % atlasSize.x), textureInterval.y * Mathf.FloorToInt(blockID / atlasSize.y));
-
-
-        // try statically setting it first block
 
         chunkUV.Add(new Vector2(textureID.x, textureID.y - textureInterval.y));
         chunkUV.Add(new Vector2(textureID.x + textureInterval.x, textureID.y - textureInterval.y));

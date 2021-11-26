@@ -571,9 +571,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chunkSize:
-    x: 16
-    y: 16
-    z: 16
+    x: 8
+    y: 8
+    z: 8
   seed: 123
   intensity: 8
   textureBlockSize: {x: 32, y: 32}
@@ -1159,6 +1159,7 @@ GameObject:
   - component: {fileID: 856976173}
   - component: {fileID: 856976172}
   - component: {fileID: 856976175}
+  - component: {fileID: 856976176}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1334,7 +1335,7 @@ Transform:
   m_GameObject: {fileID: 856976165}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.14, y: 2.35, z: -4.62}
-  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
+  m_LocalScale: {x: 0.8, y: 1, z: 0.8}
   m_Children:
   - {fileID: 963194228}
   m_Father: {fileID: 0}
@@ -1424,6 +1425,18 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!114 &856976176
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 856976165}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a364337f31ab29a4e9ada3033cdf4ffd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -2009,7 +2022,7 @@ GameObject:
   - component: {fileID: 1745154811}
   - component: {fileID: 1745154812}
   m_Layer: 0
-  m_Name: World (Create multiple Chunks)
+  m_Name: world
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2042,6 +2055,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   myPrefab: {fileID: 9031596313245055636, guid: 0a1fbae335bb4854a98513097cc18eda, type: 3}
+  size: 1
 --- !u!1 &2056782646
 GameObject:
   m_ObjectHideFlags: 0

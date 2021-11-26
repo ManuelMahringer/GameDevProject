@@ -55,7 +55,7 @@ public class Player : MonoBehaviour {
             }
 
             float distanceFromPlayerToGround = Vector3.Distance(transform.position, _groundLocation);
-            Debug.Log(distanceFromPlayerToGround);
+            //Debug.Log(distanceFromPlayerToGround);
             isGrounded = !(distanceFromPlayerToGround > 1f + 0.0001f);
         }
         else {
