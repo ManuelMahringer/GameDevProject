@@ -67,9 +67,10 @@ public class Player : MonoBehaviour {
         // Move
         if (isGrounded) { // update direction if grounded
             _dxz = transform.TransformDirection(_xAxis, 0f, _zAxis);
+            _rb.velocity = Vector3.zero; // artificial friction when grounded
         }
         _rb.MovePosition(transform.position +
-                         Vector3.ClampMagnitude(currentSpeed * _dxz * Time.deltaTime, currentSpeed));
+                         Vector3.ClampMagnitude(currentSpeed * _dxz * Time.deltaTime, currentSpeed)); 
         
         // Jump
         if (jump && isGrounded) {
