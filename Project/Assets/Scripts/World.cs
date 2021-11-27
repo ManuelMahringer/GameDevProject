@@ -25,16 +25,16 @@ public class World : MonoBehaviour
         };
     }
 
-    public void DestroyBlock(Vector3 worldCoordinate)
+    /*public void DestroyBlock(Vector3 worldCoordinate)
     {
-        Vector3 chunkCoordinate = new Vector3(worldCoordinate.x / 8,1, worldCoordinate.z / 8);
+        Vector3 chunkCoordinate = new Vector3(worldCoordinate.x / 17,1, worldCoordinate.z / 17);
         Vector3 localCoordinate = worldCoordinate - chunkCoordinate;
         Debug.Log("chunkcoord" + chunkCoordinate);
         Debug.Log("localcoord" + localCoordinate);
         Debug.Log("x:" + Mathf.FloorToInt(chunkCoordinate.x));
         Debug.Log("z:" + Mathf.FloorToInt(chunkCoordinate.z));
         chunks[Mathf.FloorToInt(chunkCoordinate.x), Mathf.FloorToInt(chunkCoordinate.z)].GetComponent<Chunk>().DestroyBlock(localCoordinate);
-    }
+    }*/
 
 
     void Start()

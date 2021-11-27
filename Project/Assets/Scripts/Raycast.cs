@@ -28,9 +28,15 @@ public class Raycast : MonoBehaviour
 
             if (Physics.Raycast(ray, out hit))
             {
-                Debug.Log("Hit: " + hit.point);
-                StartCoroutine(HitIndicator(hit.point));
-                _world.GetComponent<World>().DestroyBlock(hit.point);
+                if(hit.transform.gameObject.GetComponent<Chunk>() != null) // Check if its a chunk
+                {
+                    Vector3 localCoordinate = hit.point - hit.transform.gameObject.transform.position;
+                    hit.transform.gameObject.GetComponent<Chunk>().DestroyBlock(localCoordinate);
+                    Debug.Log("Hit: " + hit.point);
+                    StartCoroutine(HitIndicator(hit.point));
+                    //_world.GetComponent<World>().DestroyBlock(hit.point);
+                }
+                
             }
 
         }
