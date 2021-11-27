@@ -28,17 +28,22 @@ public class Raycast : MonoBehaviour
 
             if (Physics.Raycast(ray, out hit))
             {
+
                 if(hit.transform.gameObject.GetComponent<Chunk>() != null) // Check if its a chunk
                 {
-                    Vector3 localCoordinate = hit.point - hit.transform.gameObject.transform.position;
-                    hit.transform.gameObject.GetComponent<Chunk>().DestroyBlock(localCoordinate);
                     Debug.Log("Hit: " + hit.point);
+                    GameObject chunk = hit.transform.gameObject;
+                    Vector3 localCoordinate = hit.point - chunk.transform.position;
+                    chunk.GetComponent<Chunk>().DestroyBlock(localCoordinate);
+                    Destroy(chunk.GetComponent<MeshCollider>());
+                    MeshCollider mc = chunk.AddComponent<MeshCollider>();
+                    mc.material = _world.GetComponent<World>().worldMaterial;
+                    
                     StartCoroutine(HitIndicator(hit.point));
                     //_world.GetComponent<World>().DestroyBlock(hit.point);
                 }
                 
             }
-
         }
         
     }

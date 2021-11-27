@@ -7,7 +7,7 @@ public class World : MonoBehaviour
     // Reference to the Chunk Prefab. Drag a Prefab into this field in the Inspector.
     [SerializeField] 
     private GameObject myPrefab;
-    private PhysicMaterial worldMaterial;
+    public PhysicMaterial worldMaterial;
     [SerializeField]
     private int size;
 
@@ -27,14 +27,32 @@ public class World : MonoBehaviour
 
     /*public void DestroyBlock(Vector3 worldCoordinate)
     {
-        Vector3 chunkCoordinate = new Vector3(worldCoordinate.x / 17,1, worldCoordinate.z / 17);
+        Vector3 chunkCoordinate = new Vector3(worldCoordinate.x / (size+1), 1, worldCoordinate.z / (size+1));
+
         Vector3 localCoordinate = worldCoordinate - chunkCoordinate;
         Debug.Log("chunkcoord" + chunkCoordinate);
         Debug.Log("localcoord" + localCoordinate);
         Debug.Log("x:" + Mathf.FloorToInt(chunkCoordinate.x));
         Debug.Log("z:" + Mathf.FloorToInt(chunkCoordinate.z));
+
         chunks[Mathf.FloorToInt(chunkCoordinate.x), Mathf.FloorToInt(chunkCoordinate.z)].GetComponent<Chunk>().DestroyBlock(localCoordinate);
-    }*/
+   
+
+        int chunkX = Mathf.FloorToInt(chunkCoordinate.x);
+        int chunkZ = Mathf.FloorToInt(chunkCoordinate.z);
+        chunks[chunkX, chunkZ].GetComponent<Chunk>().DestroyBlock(localCoordinate);
+
+        // Update Mesh Collider
+        MeshCollider mc = chunks[chunkX, chunkZ].GetComponent<MeshCollider>();
+        Destroy(mc);
+        addMeshCollider(chunkX, chunkZ);
+    } }*/
+
+    private void addMeshCollider(int x, int z) {
+        MeshCollider mc = chunks[x, z].AddComponent<MeshCollider>();
+        mc.material = worldMaterial;
+    }
+
 
 
     void Start()
@@ -46,9 +64,8 @@ public class World : MonoBehaviour
             for (int y = 0; y < size; y++)
             {
                 Debug.Log("instantiate now");
-                chunks[x, y] = Instantiate(myPrefab, new Vector3(17 * x, 1, 17 * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
-                MeshCollider mc = chunks[x, y].AddComponent<MeshCollider>(); 
-                mc.material = worldMaterial;
+                chunks[x, y] = Instantiate(myPrefab, new Vector3(4 * x, 1, 4 * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
+                addMeshCollider(x, y);
             }
         }
     }
