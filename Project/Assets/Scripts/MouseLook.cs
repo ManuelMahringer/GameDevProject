@@ -17,6 +17,7 @@ public class MouseLook : MonoBehaviour {
 
     void Start() {
         _playerCamera = GetComponentInChildren<Camera>();
+        Cursor.visible = false;
     }
 
     void Update() {
