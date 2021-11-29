@@ -8,7 +8,7 @@ public class World : MonoBehaviour {
     [SerializeField] private GameObject myPrefab;
     public PhysicMaterial worldMaterial;
     public int size;
-
+    
     [SerializeField] private float chunkSize;
 
     private GameObject[,] chunks;
