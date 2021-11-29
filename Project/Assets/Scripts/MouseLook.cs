@@ -11,7 +11,7 @@ public class MouseLook : MonoBehaviour {
     [Header("Vertical angle range")]
     public float minVert = -90.0f;
     public float maxVert = 90.0f;
-
+    
     private Camera _playerCamera;
     private float _rotX;
 

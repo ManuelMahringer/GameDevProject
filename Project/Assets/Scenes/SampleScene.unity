@@ -1373,7 +1373,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   walkSpeed: 3
   runSpeed: 5
-  jumpForce: 15000
+  jumpForce: 12000
   appliedForceMode: 0
   groundTag: 
   jump: 0

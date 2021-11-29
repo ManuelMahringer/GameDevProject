@@ -48,7 +48,7 @@ public class Player : MonoBehaviour {
         }
 
         if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.down), out _hit, Mathf.Infinity)) {
-            if (groundTag != null && groundTag != "") {
+            if (!string.IsNullOrEmpty(groundTag)) {
                 if (String.Compare(_hit.collider.tag, groundTag, StringComparison.Ordinal) == 0) {
                     _groundLocation = _hit.point;
                 }
@@ -61,6 +61,7 @@ public class Player : MonoBehaviour {
             isGrounded = !(distanceFromPlayerToGround > 1f + 0.0001f);
         }
         else {
+            isGrounded = false;
             Debug.Log("Error in Player.cs: raycast should always hit an element underneath!");
         }
     }
