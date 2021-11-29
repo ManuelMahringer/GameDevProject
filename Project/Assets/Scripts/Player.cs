@@ -31,6 +31,7 @@ public class Player : MonoBehaviour {
     private float _zAxis;
     private Vector3 _dxz;
     private Vector3 _groundLocation;
+    private bool _respawn;
 
     private void Start() {
         _rb = GetComponent<Rigidbody>();
@@ -40,6 +41,7 @@ public class Player : MonoBehaviour {
         _xAxis = Input.GetAxis("Horizontal");
         _zAxis = Input.GetAxis("Vertical");
         jump = Input.GetButton("Jump");
+        _respawn = Input.GetKey(KeyCode.R);
 
         if (isGrounded) { // Update speed if grounded
              currentSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
@@ -70,7 +72,11 @@ public class Player : MonoBehaviour {
             _rb.velocity = Vector3.zero; // artificial friction when grounded
         }
         _rb.MovePosition(transform.position +
-                         Vector3.ClampMagnitude(currentSpeed * _dxz * Time.deltaTime, currentSpeed)); 
+                         Vector3.ClampMagnitude(currentSpeed * _dxz * Time.deltaTime, currentSpeed));
+        if (_respawn) {
+            _rb.velocity = Vector3.zero;
+            _rb.position = new Vector3(0, 10, 0);
+        }
         
         // Jump
         if (jump && isGrounded) {
