@@ -1,26 +1,21 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-public class World : MonoBehaviour
-{
+public class World : MonoBehaviour {
     // Reference to the Chunk Prefab. Drag a Prefab into this field in the Inspector.
-    [SerializeField] 
-    private GameObject myPrefab;
+    [SerializeField] private GameObject myPrefab;
     public PhysicMaterial worldMaterial;
-    [SerializeField]
-    private int size;
-    [SerializeField]
-    private float chunk_size;
+    public int size;
 
-
+    [SerializeField] private float chunkSize;
 
     private GameObject[,] chunks;
+    private float worldSize;
 
-    void Awake()
-    {
-        worldMaterial = new PhysicMaterial
-        {
+    void Awake() {
+        worldMaterial = new PhysicMaterial {
             staticFriction = 0f,
             dynamicFriction = 0f,
             bounciness = 0f,
@@ -29,31 +24,28 @@ public class World : MonoBehaviour
         };
     }
 
-    public GameObject FindChunk(Vector3 worldCoordinate)
-    {
-        Debug.Log("found chunk " + Mathf.FloorToInt(worldCoordinate.x / chunk_size) + " " +  Mathf.FloorToInt(worldCoordinate.z / chunk_size));
-        return chunks[Mathf.Abs(Mathf.FloorToInt(worldCoordinate.x / chunk_size)), Mathf.Abs(Mathf.FloorToInt(worldCoordinate.z / chunk_size))];
-    } 
+    public GameObject FindChunk(Vector3 worldCoordinate) {
+        Debug.Log("found chunk " + Mathf.FloorToInt((worldSize / 2 + worldCoordinate.x) / chunkSize) + " " + Mathf.FloorToInt((worldSize / 2 + worldCoordinate.z) / chunkSize));
+        return chunks[Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.x) / chunkSize)), Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.z) / chunkSize))];
+    }
 
-    private void addMeshCollider(int x, int z) {
+    private void AddMeshCollider(int x, int z) {
         MeshCollider mc = chunks[x, z].AddComponent<MeshCollider>();
         mc.material = worldMaterial;
     }
 
 
-    void Start()
-    {
-        chunks = new GameObject[size,size]; 
+    void Start() {
+        worldSize = size * chunkSize;
+        chunks = new GameObject[size, size];
         // Instantiate chunks
-        for (int x = 0; x < size; x++)
-        {
-            for (int y = 0; y < size; y++)
-            {
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
                 Debug.Log("instantiate now");
 
-                chunks[x, y] = Instantiate(myPrefab, new Vector3(chunk_size * x,1, 17 * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
-                addMeshCollider(x, y);
+                chunks[x, y] = Instantiate(myPrefab, new Vector3(-worldSize / 2 + chunkSize * x, 1, -worldSize / 2 + chunkSize * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
+                AddMeshCollider(x, y);
             }
         }
     }
-} 
+}

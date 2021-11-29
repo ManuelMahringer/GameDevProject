@@ -11,7 +11,7 @@ public class Raycast : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        _world = GameObject.Find("world");
+        _world = GameObject.Find("World");
         _camera = GetComponentInChildren<Camera>();
         //_laserLine = GetComponent<LineRenderer>();,
             
@@ -71,7 +71,7 @@ public class Raycast : MonoBehaviour
                     // try to shift hit.point a little bit to counter the index out of bounds error
 
                     
-                    GameObject chunk = GameObject.Find("world").GetComponent<World>().FindChunk(hit.point - (ray.direction / 10000.0f));
+                    GameObject chunk = GameObject.Find("World").GetComponent<World>().FindChunk(hit.point - (ray.direction / 10000.0f));
                     Vector3 localCoordinate = hit.point - (ray.direction / 10000.0f) - chunk.transform.position;
                     Debug.Log("localCoordinate" + localCoordinate);
                     chunk.GetComponent<Chunk>().BuildBlock(localCoordinate);

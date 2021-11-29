@@ -34,6 +34,7 @@ public class Player : MonoBehaviour {
 
     private void Start() {
         _rb = GetComponent<Rigidbody>();
+        //transform.position = new Vector3(16 * 5 / 2, 10, 16 * 5 / 2) ;
     }
 
     private void Update() {
