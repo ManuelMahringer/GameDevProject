@@ -53,11 +53,20 @@ public class Chunk : MonoBehaviour
         UpdateChunk();
     }
 
+    public void BuildBlock(Vector3 hit) // Idea: only update blocks adjacent to the one beeing destroyed
+    {
+        Debug.Log(hit.x + " " + hit.y + " " + hit.z);
+        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
+        Debug.Log("BUILDING");
+        //RemoveVerticies(Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z));      
+        UpdateChunk();
+    }
+
+
     public void GenerateChunk()
     {
         float[,] chunkHeights = Noise.Generate(chunkSize.x + 1, chunkSize.y + 1, seed, intensity);
         chunkBlocks = new Block[chunkSize.x + 1, chunkSize.y + 1, chunkSize.z + 1];
-        //Debug.Log(chunkSize.ToString());
 
         for (int x = 0; x <= chunkSize.x; x++)
         {
@@ -79,10 +88,6 @@ public class Chunk : MonoBehaviour
         }
         UpdateChunk();
     }
-
-
-
-
     private void AddVerticies(int x, int y, int z)
     {
         if (CheckSides(new RVector3(x, y, z), BlockFace.Top))
@@ -317,6 +322,12 @@ public class Chunk : MonoBehaviour
     //     }
     // }
 
+    //public int[,,] getBlockCoordsFromPoint(Vector3 point)
+    //{
+
+    //}
+
+
 
     public void UpdateChunk()
     {
@@ -438,6 +449,7 @@ public class Chunk : MonoBehaviour
         chunkUV.Add(new Vector2(textureID.x + textureInterval.x, textureID.y));
         chunkUV.Add(new Vector2(textureID.x, textureID.y));
     }
+
     void FinalizeChunk()
     {
         chunkMesh.vertices = chunkVerticies.ToArray();
