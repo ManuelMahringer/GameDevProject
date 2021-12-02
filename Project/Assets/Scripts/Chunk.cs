@@ -45,7 +45,7 @@ public class Chunk : MonoBehaviour
     }
 
 
-    public void DestroyBlock(Vector3 hit) // Idea: only update blocks adjacent to the one beeing destroyed
+    public void DestroyBlock(Vector3 hit) 
     {
         Debug.Log(hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
@@ -53,14 +53,23 @@ public class Chunk : MonoBehaviour
         UpdateChunk();
     }
 
-    public void BuildBlock(Vector3 hit) // Idea: only update blocks adjacent to the one beeing destroyed
+    public void BuildBlock(Vector3 hit) 
     {
         Debug.Log(hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
         Debug.Log("BUILDING");
-        //RemoveVerticies(Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z));      
         UpdateChunk();
     }
+
+    public void DamageBlock(Vector3 hit, int damage)
+    {
+        Debug.Log(hit.x + " " + hit.y + " " + hit.z);
+        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].DamageBlock(damage);
+        Debug.Log("Damaging");
+        UpdateChunk();
+    }
+
+
 
 
     public void GenerateChunk()
