@@ -6,6 +6,9 @@ public class Raycast : MonoBehaviour
 {
     private Camera _camera;
     private GameObject _world;
+    
+    public  float hitRange = 5f;
+    
     // private LineRenderer _laserLine;
 
     // Start is called before the first frame update
@@ -30,7 +33,7 @@ public class Raycast : MonoBehaviour
             RaycastHit hit;
             Debug.Log("SHOOOOOOOOOOOOOOT");
 
-            if (Physics.Raycast(ray, out hit))
+            if (Physics.Raycast(ray, out hit, hitRange))
             {
                 if (hit.transform.gameObject.GetComponent<Chunk>() != null) // Check if its a chunk
                 {
@@ -60,7 +63,7 @@ public class Raycast : MonoBehaviour
             Ray ray = _camera.ScreenPointToRay(midPoint);
             RaycastHit hit;
             Debug.Log("SHOOOOOOOOOOOOOOT");
-            if (Physics.Raycast(ray, out hit))
+            if (Physics.Raycast(ray, out hit, hitRange))
             {
 
                 if (hit.transform.gameObject.GetComponent<Chunk>() != null) // Check if its a chunk

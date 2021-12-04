@@ -19,7 +19,7 @@ public class Block
     public byte id = 0;
     public int health;
 
-    public Block ReturnBlock { get { return this; } }
+    public Block ReturnBlock => this;
 
     public Block(bool isEmpty)
     {

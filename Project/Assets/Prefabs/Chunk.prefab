@@ -101,3 +101,4 @@ MonoBehaviour:
   seed: 100
   intensity: 3
   textureBlockSize: {x: 32, y: 32}
+  highlightBlockMaterial: {fileID: 2100000, guid: a1981fef895c9314f8b5aeda0e8a09c1, type: 2}

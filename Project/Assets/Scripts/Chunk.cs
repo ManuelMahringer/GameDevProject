@@ -33,6 +33,8 @@ public class Chunk : MonoBehaviour
     Texture textureAtlas;
     Vector2 atlasSize;
 
+    public Material highlightBlockMaterial;
+    
     void Awake()
     {
         textureAtlas = transform.GetComponent<MeshRenderer>().material.mainTexture;
@@ -68,9 +70,6 @@ public class Chunk : MonoBehaviour
         Debug.Log("Damaging");
         UpdateChunk();
     }
-
-
-
 
     public void GenerateChunk()
     {
@@ -171,173 +170,7 @@ public class Chunk : MonoBehaviour
             UpdateChunkUV(chunkBlocks[x, y, z].id);
         }
     }
-
-    /*private void RemoveVerticies(int x, int y, int z) // the bool is either for adding or removing vertices
-    {
-
-        if (CheckSides(new RVector3(x, y, z), BlockFace.Top))
-        {
-            VerticiesIndex = chunkVerticies.Count;
-
-
-            chunkVerticies.Remove(new Vector3(x, y + blockSize, z));
-            chunkVerticies.Remove(new Vector3(x, y + blockSize, z + blockSize));
-            chunkVerticies.Remove(new Vector3(x + blockSize, y + blockSize, z + blockSize));
-            chunkVerticies.Remove(new Vector3(x + blockSize, y + blockSize, z));
-
-            //UpdateChunkUV(chunkBlocks[x, y, z].id);
-        }
-
-        if (CheckSides(new RVector3(x, y, z), BlockFace.Bottom))
-        {
-            VerticiesIndex = chunkVerticies.Count;
-
-            chunkVerticies.Remove(new Vector3(x, y, z));
-            chunkVerticies.Remove(new Vector3(x + blockSize, y, z));
-            chunkVerticies.Remove(new Vector3(x + blockSize, y, z + blockSize));
-            chunkVerticies.Remove(new Vector3(x, y, z + blockSize));
-
-            //UpdateChunkUV(chunkBlocks[x, y, z].id);
-        }
-        if (CheckSides(new RVector3(x, y, z), BlockFace.Right))
-        {
-            VerticiesIndex = chunkVerticies.Count;
-
-            chunkVerticies.Remove(new Vector3(x + blockSize, y, z));
-            chunkVerticies.Remove(new Vector3(x + blockSize, y + blockSize, z));
-            chunkVerticies.Remove(new Vector3(x + blockSize, y + blockSize, z + blockSize));
-            chunkVerticies.Remove(new Vector3(x + blockSize, y, z + blockSize));
-
-            //UpdateChunkUV(chunkBlocks[x, y, z].id);
-        }
-
-        if (CheckSides(new RVector3(x, y, z), BlockFace.Left))
-        {
-            VerticiesIndex = chunkVerticies.Count;
-
-            chunkVerticies.Remove(new Vector3(x, y, z + blockSize));
-            chunkVerticies.Remove(new Vector3(x, y + blockSize, z + blockSize));
-            chunkVerticies.Remove(new Vector3(x, y + blockSize, z));
-            chunkVerticies.Remove(new Vector3(x, y, z));
-
-            //UpdateChunkUV(chunkBlocks[x, y, z].id);
-        }
-
-        if (CheckSides(new RVector3(x, y, z), BlockFace.Far))
-        {
-            VerticiesIndex = chunkVerticies.Count;
-
-            chunkVerticies.Remove(new Vector3(x, y, z + blockSize));
-            chunkVerticies.Remove(new Vector3(x + blockSize, y, z + blockSize));
-            chunkVerticies.Remove(new Vector3(x + blockSize, y + blockSize, z + blockSize));
-            chunkVerticies.Remove(new Vector3(x, y + blockSize, z + blockSize));
-
-            //UpdateChunkUV(chunkBlocks[x, y, z].id);
-        }
-
-        if (CheckSides(new RVector3(x, y, z), BlockFace.Near))
-        {
-            VerticiesIndex = chunkVerticies.Count;
-
-            chunkVerticies.Remove(new Vector3(x, y, z));
-            chunkVerticies.Remove(new Vector3(x, y + blockSize, z));
-            chunkVerticies.Remove(new Vector3(x + blockSize, y + blockSize, z));
-            chunkVerticies.Remove(new Vector3(x + blockSize, y, z));
-
-            //UpdateChunkUV(chunkBlocks[x, y, z].id);
-        }
-        FinalizeChunk();
-    }*/
-
-    // public void UpdateNeighbors(Vector3 block) {
-    //     for (var y = block.y - 1; y <= block.y + 1; y++) {
-    //         for (var x = block.x - 1; x <= block.x + 1; x++) {
-    //             for (var z = block.z - 1; z <= block.z; z++) {
-    //                 if (!chunkBlocks[x, y, z].empty) {
-    //                     if (CheckSides(new RVector3(x, y, z), BlockFace.Top))
-    //                     {
-    //                         VerticiesIndex = chunkVerticies.Count;
-
-
-    //                         chunkVerticies.Add(new Vector3(x, y + blockSize, z));
-    //                         chunkVerticies.Add(new Vector3(x, y + blockSize, z + blockSize));
-    //                         chunkVerticies.Add(new Vector3(x + blockSize, y + blockSize, z + blockSize));
-    //                         chunkVerticies.Add(new Vector3(x + blockSize, y + blockSize, z));
-
-    //                         UpdateChunkUV(chunkBlocks[x, y, z].id);
-    //                     }
-
-    //                     if (CheckSides(new RVector3(x, y, z), BlockFace.Bottom))
-    //                     {
-    //                         VerticiesIndex = chunkVerticies.Count;
-
-    //                         chunkVerticies.Add(new Vector3(x, y, z));
-    //                         chunkVerticies.Add(new Vector3(x + blockSize, y, z));
-    //                         chunkVerticies.Add(new Vector3(x + blockSize, y, z + blockSize));
-    //                         chunkVerticies.Add(new Vector3(x, y, z + blockSize));
-
-    //                         UpdateChunkUV(chunkBlocks[x, y, z].id);
-    //                     }
-    //                     if (CheckSides(new RVector3(x, y, z), BlockFace.Right))
-    //                     {
-    //                         VerticiesIndex = chunkVerticies.Count;
-
-    //                         chunkVerticies.Add(new Vector3(x + blockSize, y, z));
-    //                         chunkVerticies.Add(new Vector3(x + blockSize, y + blockSize, z));
-    //                         chunkVerticies.Add(new Vector3(x + blockSize, y + blockSize, z + blockSize));
-    //                         chunkVerticies.Add(new Vector3(x + blockSize, y, z + blockSize));
-
-    //                         UpdateChunkUV(chunkBlocks[x, y, z].id);
-    //                     }
-
-    //                     if (CheckSides(new RVector3(x, y, z), BlockFace.Left))
-    //                     {
-    //                         VerticiesIndex = chunkVerticies.Count;
-
-    //                         chunkVerticies.Add(new Vector3(x, y, z + blockSize));
-    //                         chunkVerticies.Add(new Vector3(x, y + blockSize, z + blockSize));
-    //                         chunkVerticies.Add(new Vector3(x, y + blockSize, z));
-    //                         chunkVerticies.Add(new Vector3(x, y, z));
-
-    //                         UpdateChunkUV(chunkBlocks[x, y, z].id);
-    //                     }
-
-    //                     if (CheckSides(new RVector3(x, y, z), BlockFace.Far))
-    //                     {
-    //                         VerticiesIndex = chunkVerticies.Count;
-
-    //                         chunkVerticies.Add(new Vector3(x, y, z + blockSize));
-    //                         chunkVerticies.Add(new Vector3(x + blockSize, y, z + blockSize));
-    //                         chunkVerticies.Add(new Vector3(x + blockSize, y + blockSize, z + blockSize));
-    //                         chunkVerticies.Add(new Vector3(x, y + blockSize, z + blockSize));
-
-    //                         UpdateChunkUV(chunkBlocks[x, y, z].id);
-    //                     }
-
-    //                     if (CheckSides(new RVector3(x, y, z), BlockFace.Near))
-    //                     {
-    //                         VerticiesIndex = chunkVerticies.Count;
-
-    //                         chunkVerticies.Add(new Vector3(x, y, z));
-    //                         chunkVerticies.Add(new Vector3(x, y + blockSize, z));
-    //                         chunkVerticies.Add(new Vector3(x + blockSize, y + blockSize, z));
-    //                         chunkVerticies.Add(new Vector3(x + blockSize, y, z));
-
-    //                         UpdateChunkUV(chunkBlocks[x, y, z].id);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
-    //public int[,,] getBlockCoordsFromPoint(Vector3 point)
-    //{
-
-    //}
-
-
-
+    
     public void UpdateChunk()
     {
         //Debug.Log("start updating " + Time.time * 1000);
