@@ -57,8 +57,8 @@ public class Player : MonoBehaviour {
         }
 
         SetGrounded();
-        SetBlock();
         DestroyBlock();
+        BuildBlock();
         Shoot();
         SetHighlightBlock();
     }
@@ -99,7 +99,7 @@ public class Player : MonoBehaviour {
         }
     }
 
-    private void SetBlock() {
+    private void DestroyBlock() {
         if (Input.GetMouseButtonDown(0)) {
             // Pos middle of screen
             Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
@@ -142,7 +142,7 @@ public class Player : MonoBehaviour {
         }
     }
 
-    private void DestroyBlock() {
+    private void BuildBlock() {
         if (Input.GetMouseButtonDown(1)) {
             // Pos middle of screen
             Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
@@ -189,7 +189,7 @@ public class Player : MonoBehaviour {
                     Debug.Log("Ray " + ray);
 
                     GameObject chunk = GameObject.Find("World").GetComponent<World>().FindChunk(hit.point - (ray.direction / 10000.0f));
-                    Vector3 localCoordinate = hit.point - (ray.direction / 10000.0f) - chunk.transform.position;
+                    Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
                     Debug.Log("localCoordinate" + localCoordinate);
                     chunk.GetComponent<Chunk>().DamageBlock(localCoordinate, 100);
                     Destroy(chunk.GetComponent<MeshCollider>());

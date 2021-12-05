@@ -13,6 +13,14 @@ public enum BlockFace
     Near //Z-    
 }
 
+public enum BlockType
+{
+    Grass = 100, // Type and corresponding health 
+    Stone = 200,
+    Metal = 300,
+    Earth = 100,
+}
+
 public class Block
 {
     public bool empty;
