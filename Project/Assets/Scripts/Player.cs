@@ -2,24 +2,28 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Serialization;
-using UnityEngine.UIElements;
+//using UnityEngine.UIElements;
 
 
 // Player Controller Basics: https://www.youtube.com/watch?v=NEUzB5vPYrE
 // Fall Damage: https://www.youtube.com/watch?v=D897sarRL3w
+// Health Bar:
+//  - https://www.youtube.com/watch?v=BLfNP4Sc_iA
+//  - https://www.youtube.com/watch?v=Gtw7VyuMdDc
 public class Player : MonoBehaviour {
-    [Header("Health")]
-    public float health = 100f;
-    public float fallDmgDistThreshold = 2f;
-    public float fallDmgMultiplier = 20f;
+    [Header("Health & Damage")]
+    public float maxHealth = 100f;
+    public float fallDmgDistThreshold = 2.5f;
+    public float fallDmgMultiplier = 15f;
 
     [Header("Walk / Run Settings")]
     public float walkSpeed = 3f;
     public float runSpeed = 5f;
 
     [Header("Jump Settings")]
-    public float jumpForce = 10_000f;
+    public float jumpForce = 12_000f;
     public ForceMode appliedForceMode = ForceMode.Force;
 
     [Header("Build/Destroy Settings")]
@@ -41,9 +45,11 @@ public class Player : MonoBehaviour {
     private float currentSpeed;
     private bool IsFalling => !isGrounded && _rb.velocity.y < 0;
 
+    private float _health;
     private GameObject _world;
     private Rigidbody _rb;
     private Camera _camera;
+    private Slider _healthBar;
     private RaycastHit _hit;
     private float _xAxis;
     private float _zAxis;
@@ -56,8 +62,9 @@ public class Player : MonoBehaviour {
 
     public void TakeDamage(float amount) {
         Debug.Log("Take Damage: " + amount);
-        health -= amount;
-        if (health < 0) {
+        _health -= amount;
+        _healthBar.value = _health;
+        if (_health < 0) {
             Die();
         }
     }
@@ -70,6 +77,10 @@ public class Player : MonoBehaviour {
         _world = GameObject.Find("World");
         _rb = GetComponent<Rigidbody>();
         _camera = GetComponentInChildren<Camera>();
+        _healthBar = GameObject.Find("HealthBar").GetComponent<Slider>();
+        _health = maxHealth;
+        _healthBar.maxValue = _health;
+        _healthBar.value = _health;
     }
 
     private void Update() {
@@ -133,7 +144,9 @@ public class Player : MonoBehaviour {
         // TODO: remove
         if (_respawn) {
             _rb.velocity = Vector3.zero;
-            _rb.position = new Vector3(0, 10, 0);
+            _rb.position = new Vector3(0, 7, 0);
+            _health = maxHealth;
+            _healthBar.value = _health;
         }
     }
 
@@ -232,7 +245,7 @@ public class Player : MonoBehaviour {
         }
 
         // TODO: remove - Debug: player damages himself when shooting
-        TakeDamage(25f);
+        TakeDamage(.1f);
     }
 
     private void SetHighlightBlock() {
