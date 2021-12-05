@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
-//using UnityEngine.UIElements;
 
 
 // Player Controller Basics: https://www.youtube.com/watch?v=NEUzB5vPYrE
@@ -19,7 +18,7 @@ public class Player : MonoBehaviour {
     public float fallDmgMultiplier = 15f;
 
     [Header("Walk / Run Settings")]
-    public float walkSpeed = 3f;
+    public float walkSpeed = 3.5f;
     public float runSpeed = 5f;
 
     [Header("Jump Settings")]
@@ -133,12 +132,10 @@ public class Player : MonoBehaviour {
         
         // Move
         if (isGrounded) {
-            _dxz = transform.TransformDirection(_xAxis, 0f, _zAxis);
+            _dxz = Vector3.ClampMagnitude(transform.TransformDirection(_xAxis, 0f, _zAxis), 1f);
             _rb.velocity = Vector3.zero; // artificial friction when grounded
         }
-
-        _rb.MovePosition(transform.position +
-                         Vector3.ClampMagnitude(currentSpeed * _dxz * Time.deltaTime, currentSpeed));
+        _rb.MovePosition(transform.position + currentSpeed * _dxz * Time.deltaTime);
 
         // Jump
         if (jump && isGrounded) {
