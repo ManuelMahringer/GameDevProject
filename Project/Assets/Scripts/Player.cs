@@ -50,6 +50,8 @@ public class Player : MonoBehaviour {
     private Rigidbody _rb;
     private Camera _camera;
     private Slider _healthBar;
+    private AudioSource _audioSource;
+    private AudioClip _fallSound;
     private RaycastHit _hit;
     private float _xAxis;
     private float _zAxis;
@@ -62,6 +64,7 @@ public class Player : MonoBehaviour {
 
     public void TakeDamage(float amount) {
         Debug.Log("Take Damage: " + amount);
+        _audioSource.PlayOneShot(_fallSound);
         _health -= amount;
         _healthBar.value = _health;
         if (_health < 0) {
@@ -77,6 +80,8 @@ public class Player : MonoBehaviour {
         _world = GameObject.Find("World");
         _rb = GetComponent<Rigidbody>();
         _camera = GetComponentInChildren<Camera>();
+        _audioSource = GetComponent<AudioSource>();
+        _fallSound = Resources.Load("Sounds/hurt_fall") as AudioClip;
         _healthBar = GameObject.Find("HealthBar").GetComponent<Slider>();
         _health = maxHealth;
         _healthBar.maxValue = _health;
