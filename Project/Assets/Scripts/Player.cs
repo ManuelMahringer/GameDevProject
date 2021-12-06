@@ -103,7 +103,7 @@ public class Player : MonoBehaviour {
         bool run = Input.GetKey(KeyCode.LeftShift);
         bool destroyBlock = Input.GetMouseButtonDown(0);
         bool buildBlock = Input.GetMouseButtonDown(1);
-        bool shoot = Input.GetKey(KeyCode.T);
+        bool shoot = Input.GetKeyDown(KeyCode.T);
 
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
@@ -192,7 +192,7 @@ public class Player : MonoBehaviour {
                 case RaycastAction.Shoot:
                     chunk = hit.transform.gameObject;
                     localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
-                    chunk.GetComponent<Chunk>().DamageBlock(localCoordinate, 100);
+                    chunk.GetComponent<Chunk>().DamageBlock(localCoordinate, 50);
                     _world.GetComponent<World>().UpdateMeshCollider(chunk);
                     break;
                 case RaycastAction.HighlightBlock:

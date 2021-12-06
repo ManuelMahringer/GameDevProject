@@ -39,10 +39,12 @@ public class Block
     {
         Debug.Log("Damage to block from " + health + " to " + (health - points));
         health -= points;
-        if(health <= 0)
-        {
+        if(health <= 0){
             empty = true;
             Debug.Log("setting to empty");
+        }else if (health <= 50) {
+            Debug.Log("damaged");
+            id += 4;
         }
     }
 }

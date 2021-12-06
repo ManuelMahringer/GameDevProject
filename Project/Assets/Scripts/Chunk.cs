@@ -283,9 +283,13 @@ public class Chunk : MonoBehaviour
 
         Vector2 textureInterval = new Vector2(1 / atlasSize.x, 1 / atlasSize.y);
 
-
-        Vector2 textureID = new Vector2(textureInterval.x * (blockID % atlasSize.x), textureInterval.y * Mathf.FloorToInt(blockID / atlasSize.y));
-
+        Vector2 textureID = new Vector2(textureInterval.x * (blockID % atlasSize.x), textureInterval.y * Mathf.FloorToInt(blockID / (2 * atlasSize.y)));
+        
+        
+        /*.Log("texID " + textureID);
+        Debug.Log("atlasid x " + atlasSize.x + " y " + atlasSize.y);
+        Debug.Log("HÄÄ" +textureInterval.x * (blockID % atlasSize.x));
+        Debug.Log("textureInterval" + textureInterval);*/
         chunkUV.Add(new Vector2(textureID.x, textureID.y - textureInterval.y));
         chunkUV.Add(new Vector2(textureID.x + textureInterval.x, textureID.y - textureInterval.y));
         chunkUV.Add(new Vector2(textureID.x + textureInterval.x, textureID.y));
