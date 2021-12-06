@@ -34,6 +34,12 @@ public class World : MonoBehaviour {
         mc.material = worldMaterial;
     }
 
+    public void UpdateMeshCollider(GameObject chunk) {
+        Destroy(chunk.GetComponent<MeshCollider>());
+        MeshCollider mc = chunk.AddComponent<MeshCollider>();
+        mc.material = worldMaterial;
+    }
+
 
     void Start() {
         worldSize = size * chunkSize;

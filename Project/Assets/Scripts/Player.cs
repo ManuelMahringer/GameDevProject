@@ -61,6 +61,13 @@ public class Player : MonoBehaviour {
     private bool _wasFalling;
     private float _startOfFall;
 
+    private enum RaycastAction {
+        DestroyBlock,
+        BuildBlock,
+        Shoot,
+        HighlightBlock
+    }
+    
     public void TakeDamage(float amount) {
         Debug.Log("Take Damage: " + amount);
         _audioSource.PlayOneShot(_fallSound);
@@ -101,13 +108,13 @@ public class Player : MonoBehaviour {
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
         if (destroyBlock)
-            DestroyBlock();
+            PerformRaycastAction(RaycastAction.DestroyBlock, hitRange);
         if (buildBlock)
-            BuildBlock();
+            PerformRaycastAction(RaycastAction.BuildBlock, hitRange);
         if (shoot)
-            Shoot();
+            PerformRaycastAction(RaycastAction.Shoot, float.PositiveInfinity);
 
-        SetHighlightBlock();
+        PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
     }
 
     private void FixedUpdate() {
@@ -164,102 +171,45 @@ public class Player : MonoBehaviour {
             Debug.Log("Error in Player.cs: raycast should always hit an element underneath!");
         }
     }
-
-    private void DestroyBlock() {
-        // Pos middle of screen
+    
+    private void PerformRaycastAction(RaycastAction raycastAction, float range) {
         Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
-        //ray passing mittlde of screen
         Ray ray = _camera.ScreenPointToRay(midPoint);
-        RaycastHit hit;
-        Debug.Log("SHOOOOOOOOOOOOOOT");
-
-        if (Physics.Raycast(ray, out hit, hitRange)) {
-            if (hit.transform.gameObject.GetComponent<Chunk>() != null) // Check if its a chunk
-            {
-                Debug.Log("Hit: " + hit.point);
-                Debug.Log("Ray " + ray);
-                GameObject chunk = hit.transform.gameObject;
-                // try to shift hit.point a little bit to counter the index out of bounds error
-
-                Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
-                chunk.GetComponent<Chunk>().DestroyBlock(localCoordinate);
-                Destroy(chunk.GetComponent<MeshCollider>());
-                MeshCollider mc = chunk.AddComponent<MeshCollider>();
-                mc.material = _world.GetComponent<World>().worldMaterial;
-
-                //StartCoroutine(HitIndicator(hit.point));
-                //_world.GetComponent<World>().DestroyBlock(hit.point);
+        if (Physics.Raycast(ray, out var hit, range)) {
+            switch (raycastAction) {
+                case RaycastAction.DestroyBlock:
+                    GameObject chunk = hit.transform.gameObject;
+                    Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
+                    chunk.GetComponent<Chunk>().DestroyBlock(localCoordinate);
+                    _world.GetComponent<World>().UpdateMeshCollider(chunk);
+                    break;
+                case RaycastAction.BuildBlock:
+                    chunk = GameObject.Find("World").GetComponent<World>().FindChunk(hit.point - (ray.direction / 10000.0f));
+                    localCoordinate = hit.point - (ray.direction / 10000.0f) - chunk.transform.position;
+                    chunk.GetComponent<Chunk>().BuildBlock(localCoordinate);
+                    _world.GetComponent<World>().UpdateMeshCollider(chunk);
+                    break;
+                case RaycastAction.Shoot:
+                    chunk = hit.transform.gameObject;
+                    localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
+                    chunk.GetComponent<Chunk>().DamageBlock(localCoordinate, 100);
+                    _world.GetComponent<World>().UpdateMeshCollider(chunk);
+                    break;
+                case RaycastAction.HighlightBlock:
+                    Vector3 coord = hit.point - (ray.direction / 10000.0f);
+                    highlightBlock.SetActive(true);
+                    highlightBlock.transform.position = new Vector3(Mathf.FloorToInt(coord.x + 0.5f), Mathf.FloorToInt(coord.y) + 0.5f, Mathf.FloorToInt(coord.z + 0.5f));
+                    break;
+                default:
+                    Debug.Log("Error in Player.cs: Illegal RaycastAction in method PerformRaycastAction");
+                    break;
             }
-        }
-    }
-
-    private void BuildBlock() {
-        // Pos middle of screen
-        Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
-        //ray passing mittlde of screen
-        Ray ray = _camera.ScreenPointToRay(midPoint);
-        RaycastHit hit;
-        Debug.Log("SHOOOOOOOOOOOOOOT");
-        if (Physics.Raycast(ray, out hit, hitRange)) {
-            if (hit.transform.gameObject.GetComponent<Chunk>() != null) // Check if its a chunk
-            {
-                Debug.Log("Hit: " + hit.point);
-                Debug.Log("Ray " + ray);
-                //GameObject chunk = hit.transform.gameObject;
-                // try to shift hit.point a little bit to counter the index out of bounds error
-
-
-                GameObject chunk = GameObject.Find("World").GetComponent<World>().FindChunk(hit.point - (ray.direction / 10000.0f));
-                Vector3 localCoordinate = hit.point - (ray.direction / 10000.0f) - chunk.transform.position;
-                Debug.Log("localCoordinate" + localCoordinate);
-                chunk.GetComponent<Chunk>().BuildBlock(localCoordinate);
-                Destroy(chunk.GetComponent<MeshCollider>());
-                MeshCollider mc = chunk.AddComponent<MeshCollider>();
-                mc.material = _world.GetComponent<World>().worldMaterial;
-
-                //StartCoroutine(HitIndicator(hit.point));
-                //_world.GetComponent<World>().DestroyBlock(hit.point);
-            }
-        }
-    }
-
-    private void Shoot() {
-        // Pos middle of screen
-        Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
-        //ray passing mittlde of screen
-        Ray ray = _camera.ScreenPointToRay(midPoint);
-        RaycastHit hit;
-        Debug.Log("SHOOOOOOOOOOOOOOT");
-        if (Physics.Raycast(ray, out hit)) {
-            if (hit.transform.gameObject.GetComponent<Chunk>() != null) // Check if its a chunk
-            {
-                Debug.Log("Hit: " + hit.point);
-                Debug.Log("Ray " + ray);
-
-                GameObject chunk = GameObject.Find("World").GetComponent<World>().FindChunk(hit.point - (ray.direction / 10000.0f));
-                Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
-                Debug.Log("localCoordinate" + localCoordinate);
-                chunk.GetComponent<Chunk>().DamageBlock(localCoordinate, 100);
-                Destroy(chunk.GetComponent<MeshCollider>());
-                MeshCollider mc = chunk.AddComponent<MeshCollider>();
-                mc.material = _world.GetComponent<World>().worldMaterial;
-            }
-        }
-
-        // TODO: remove - Debug: player damages himself when shooting
-        TakeDamage(.1f);
-    }
-
-    private void SetHighlightBlock() {
-        Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
-        Ray ray = _camera.ScreenPointToRay(midPoint);
-        if (Physics.Raycast(ray, out var hit, hitRange)) {
-            Vector3 coord = hit.point - (ray.direction / 10000.0f);
-            highlightBlock.SetActive(true);
-            highlightBlock.transform.position = new Vector3(Mathf.FloorToInt(coord.x + 0.5f), Mathf.FloorToInt(coord.y) + 0.5f, Mathf.FloorToInt(coord.z + 0.5f));
+            //if (hit.transform.gameObject.GetComponent<Chunk>() != null) {}
         }
         else {
-            highlightBlock.SetActive(false);
+            if (raycastAction == RaycastAction.HighlightBlock) {
+                highlightBlock.SetActive(false);
+            }
         }
     }
 }
