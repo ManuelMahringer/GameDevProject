@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
@@ -179,26 +180,41 @@ public class Player : MonoBehaviour {
             switch (raycastAction) {
                 case RaycastAction.DestroyBlock:
                     GameObject chunk = hit.transform.gameObject;
-                    Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
-                    chunk.GetComponent<Chunk>().DestroyBlock(localCoordinate);
+                    Vector3 localHitCoord = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
+                    chunk.GetComponent<Chunk>().DestroyBlock(localHitCoord);
                     _world.GetComponent<World>().UpdateMeshCollider(chunk);
                     break;
                 case RaycastAction.BuildBlock:
                     chunk = GameObject.Find("World").GetComponent<World>().FindChunk(hit.point - (ray.direction / 10000.0f));
-                    localCoordinate = hit.point - (ray.direction / 10000.0f) - chunk.transform.position;
-                    chunk.GetComponent<Chunk>().BuildBlock(localCoordinate);
+                    localHitCoord = hit.point - (ray.direction / 10000.0f) - chunk.transform.position;
+                    chunk.GetComponent<Chunk>().BuildBlock(localHitCoord);
                     _world.GetComponent<World>().UpdateMeshCollider(chunk);
                     break;
                 case RaycastAction.Shoot:
                     chunk = hit.transform.gameObject;
-                    localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
-                    chunk.GetComponent<Chunk>().DamageBlock(localCoordinate, 50);
+                    localHitCoord = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
+                    chunk.GetComponent<Chunk>().DamageBlock(localHitCoord, 50);
                     _world.GetComponent<World>().UpdateMeshCollider(chunk);
                     break;
                 case RaycastAction.HighlightBlock:
+                    float epsilon = 0.0001f;
+                    var blockDim = highlightBlock.transform.localScale;
+                    float blockThickness = blockDim.x;
+                    float blockSize = blockDim.y;
                     Vector3 coord = hit.point - (ray.direction / 10000.0f);
+                    Vector3 blockPos = new Vector3(Mathf.FloorToInt(coord.x) + blockSize/2, Mathf.FloorToInt(coord.y) + blockSize/2, Mathf.FloorToInt(coord.z) + blockSize/2);
+                    if (Math.Abs(hit.point.x - Math.Round(hit.point.x)) < epsilon) {  // looking at x face
+                        highlightBlock.transform.rotation = Quaternion.Euler(0, 0, 0);
+                        blockPos.x += ray.direction.x > 0 ? blockSize / 2 - blockThickness / 2 : -blockSize / 2 + blockThickness / 2;
+                    } else if (Math.Abs(hit.point.z - Math.Round(hit.point.z)) < epsilon) { // looking at z face
+                        highlightBlock.transform.rotation = Quaternion.Euler(0, 90, 0);
+                        blockPos.z += ray.direction.z > 0 ? blockSize / 2 - blockThickness / 2 : -blockSize / 2 + blockThickness / 2;
+                    } else {  // looking at y face
+                        highlightBlock.transform.rotation = Quaternion.Euler(0, 0, 90);
+                        blockPos.y += ray.direction.y > 0 ? blockSize / 2 - blockThickness / 2 : -blockSize / 2 + blockThickness / 2;
+                    }
+                    highlightBlock.transform.position = blockPos;
                     highlightBlock.SetActive(true);
-                    highlightBlock.transform.position = new Vector3(Mathf.FloorToInt(coord.x) + 0.5f, Mathf.FloorToInt(coord.y) + 0.5f, Mathf.FloorToInt(coord.z) + 0.5f);
                     break;
                 default:
                     Debug.Log("Error in Player.cs: Illegal RaycastAction in method PerformRaycastAction");
