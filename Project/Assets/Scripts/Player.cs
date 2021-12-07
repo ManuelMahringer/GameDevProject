@@ -198,7 +198,7 @@ public class Player : MonoBehaviour {
                 case RaycastAction.HighlightBlock:
                     Vector3 coord = hit.point - (ray.direction / 10000.0f);
                     highlightBlock.SetActive(true);
-                    highlightBlock.transform.position = new Vector3(Mathf.FloorToInt(coord.x + 0.5f), Mathf.FloorToInt(coord.y) + 0.5f, Mathf.FloorToInt(coord.z + 0.5f));
+                    highlightBlock.transform.position = new Vector3(Mathf.FloorToInt(coord.x) + 0.5f, Mathf.FloorToInt(coord.y) + 0.5f, Mathf.FloorToInt(coord.z) + 0.5f);
                     break;
                 default:
                     Debug.Log("Error in Player.cs: Illegal RaycastAction in method PerformRaycastAction");
