@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
@@ -203,10 +202,10 @@ public class Player : MonoBehaviour {
                     float blockSize = blockDim.y;
                     Vector3 coord = hit.point - (ray.direction / 10000.0f);
                     Vector3 blockPos = new Vector3(Mathf.FloorToInt(coord.x) + blockSize/2, Mathf.FloorToInt(coord.y) + blockSize/2, Mathf.FloorToInt(coord.z) + blockSize/2);
-                    if (Math.Abs(hit.point.x - Math.Round(hit.point.x)) < epsilon) {  // looking at x face
+                    if (Math.Abs(hit.point.x - Mathf.Round(hit.point.x)) < epsilon) {  // looking at x face
                         highlightBlock.transform.rotation = Quaternion.Euler(0, 0, 0);
                         blockPos.x += ray.direction.x > 0 ? blockSize / 2 - blockThickness / 2 : -blockSize / 2 + blockThickness / 2;
-                    } else if (Math.Abs(hit.point.z - Math.Round(hit.point.z)) < epsilon) { // looking at z face
+                    } else if (Math.Abs(hit.point.z - Mathf.Round(hit.point.z)) < epsilon) { // looking at z face
                         highlightBlock.transform.rotation = Quaternion.Euler(0, 90, 0);
                         blockPos.z += ray.direction.z > 0 ? blockSize / 2 - blockThickness / 2 : -blockSize / 2 + blockThickness / 2;
                     } else {  // looking at y face
