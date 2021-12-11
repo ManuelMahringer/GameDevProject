@@ -2151,6 +2151,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1745154811}
   - component: {fileID: 1745154812}
+  - component: {fileID: 1745154813}
   m_Layer: 0
   m_Name: World
   m_TagString: Untagged
@@ -2188,6 +2189,22 @@ MonoBehaviour:
   worldMaterial: {fileID: 0}
   size: 3
   chunkSize: 17
+--- !u!114 &1745154813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1745154810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 2100929624
+  AlwaysReplicateAsRoot: 0
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
 --- !u!1 &2037518263
 GameObject:
   m_ObjectHideFlags: 0

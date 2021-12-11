@@ -110,10 +110,10 @@ public class Player : NetworkBehaviour {
     
 
     private void Update() {
-        Debug.Log("lcoalplayer?" + IsLocalPlayer);
+        //Debug.Log("lcoalplayer?" + IsLocalPlayer);
         if (!IsLocalPlayer)
             return;
-        Debug.Log("Afterlocalplayer");
+        //Debug.Log("Afterlocalplayer");
         _xAxis = Input.GetAxis("Horizontal");
         _zAxis = Input.GetAxis("Vertical");
         jump = Input.GetButton("Jump");
@@ -135,8 +135,8 @@ public class Player : NetworkBehaviour {
             PerformRaycastAction(RaycastAction.Shoot, float.PositiveInfinity);
         if (rpc_call) {
             Debug.Log("RPCCalled");
-            GameObject chunk = GameObject.Find("World").GetComponent<World>().FindChunk(new Vector3(0,1,0));
-            chunk.GetComponent<Chunk>().PingServerRpc("TestRPC");
+            //GameObject chunk = GameObject.Find("World").GetComponent<World>().FindChunkServerRpc(new Vector3(0,1,0));
+            //chunk.GetComponent<Chunk>().PingServerRpc("TestRPC");
 
             
 
@@ -210,16 +210,18 @@ public class Player : NetworkBehaviour {
                 case RaycastAction.DestroyBlock:
                     GameObject chunk = hit.transform.gameObject;
                     Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
-                    chunk.GetComponent<Chunk>().DestroyBlock(localCoordinate);
+                    //chunk.GetComponent<Chunk>().DestroyBlock(localCoordinate);
+                    chunk.GetComponent<Chunk>().DestroyBlockServerRpc(localCoordinate);
                     //_world.GetComponent<World>().UpdateMeshCollider(chunk);
                     break;
                 case RaycastAction.BuildBlock:
-                    chunk = GameObject.Find("World").GetComponent<World>().FindChunk(hit.point - (ray.direction / 10000.0f));
-                    localCoordinate = hit.point - (ray.direction / 10000.0f) - chunk.transform.position;
-                    chunk.GetComponent<Chunk>().BuildBlock(localCoordinate);
+                    Debug.Log("Calling BuildBlock Server RPC ");
+                    GameObject.Find("World").GetComponent<World>().FindChunkServerRpc(hit.point - (ray.direction / 10000.0f));
+                    /*localCoordinate = hit.point - (ray.direction / 10000.0f) - chunk.transform.position;
+                    chunk.GetComponent<Chunk>().BuildBlockServerRpc(localCoordinate);
                     //_world.GetComponent<World>().UpdateMeshCollider(chunk);
                     Debug.Log("NOW SENDING RPC");
-                    chunk.GetComponent<Chunk>().PingServerRpc("TESTRPC");
+                    chunk.GetComponent<Chunk>().PingServerRpc("TESTRPC");*/
                     break;
                 case RaycastAction.Shoot:
                     chunk = hit.transform.gameObject;

@@ -38,7 +38,7 @@ public class Chunk : NetworkBehaviour
 
     public Material highlightBlockMaterial;
 
-    [ServerRpc]
+    [ServerRpc (RequireOwnership = false)]
     public void PingServerRpc(string sometext) {
         Debug.Log("ServerRPC Called " + sometext); 
         
@@ -49,7 +49,6 @@ public class Chunk : NetworkBehaviour
         textureAtlas = transform.GetComponent<MeshRenderer>().material.mainTexture;
 
         atlasSize = new Vector2(textureAtlas.width / textureBlockSize.x, textureAtlas.height / textureBlockSize.y);
-        Debug.Log(atlasSize);
         chunkMesh = this.GetComponent<MeshFilter>().mesh;
         chunkMesh.MarkDynamic();
         GenerateChunk();
@@ -63,10 +62,46 @@ public class Chunk : NetworkBehaviour
         //RemoveVerticies(Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z));      
         UpdateChunk();
     }
+    
+    [ServerRpc (RequireOwnership = false)]
+    public void DestroyBlockServerRpc(Vector3 hit) 
+    {
+        Debug.Log("DESTROY BLOCK PER RPC");
+        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
+        //RemoveVerticies(Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z));      
+        UpdateChunk();
+        DestroyBlockClientRpc(hit);
+    }
+    
+    [ClientRpc]
+    public void DestroyBlockClientRpc(Vector3 hit) 
+    {
+        Debug.Log("DESTROY BLOCK PER CLIENT RPC");
+        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
+        //RemoveVerticies(Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z));      
+        UpdateChunk();
+    }
 
     public void BuildBlock(Vector3 hit) 
     {
+        Debug.Log("NORMAL BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
+        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
+        UpdateChunk();
+        BuildBlockClientRpc(hit);
+    }
+    [ClientRpc]
+    public void BuildBlockClientRpc(Vector3 hit) 
+    {
+        Debug.Log("Client RPC BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
+        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
+        UpdateChunk();
+    }
+    
+    [ServerRpc (RequireOwnership = false)]
+    public void BuildBlockServerRpc(Vector3 hit) 
+    {
         Debug.Log(hit.x + " " + hit.y + " " + hit.z);
+        
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
         Debug.Log("BUILDING");
         UpdateChunk();

@@ -24,10 +24,12 @@ public class World : NetworkBehaviour {
             bounceCombine = PhysicMaterialCombine.Minimum
         };
     }
-
-    public GameObject FindChunk(Vector3 worldCoordinate) {
+    [ServerRpc (RequireOwnership = false)]
+    public void FindChunkServerRpc(Vector3 worldCoordinate) {
         Debug.Log("found chunk " + Mathf.FloorToInt((worldSize / 2 + worldCoordinate.x) / chunkSize) + " " + Mathf.FloorToInt((worldSize / 2 + worldCoordinate.z) / chunkSize));
-        return chunks[Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.x) / chunkSize)), Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.z) / chunkSize))];
+        GameObject chunk = chunks[Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.x) / chunkSize)), Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.z) / chunkSize))];
+        Vector3 localCoordinate = worldCoordinate - chunk.transform.position;
+        chunk.GetComponent<Chunk>().BuildBlock(localCoordinate);
     }
 
     private void AddMeshCollider(int x, int z) {
@@ -52,7 +54,7 @@ public class World : NetworkBehaviour {
 
                 chunks[x, y] = Instantiate(chunkPrefab, new Vector3(-worldSize / 2 + chunkSize * x, 1, -worldSize / 2 + chunkSize * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
                 chunks[x, y].GetComponent<NetworkObject>().Spawn();
-                Debug.Log("spawned");
+                //Debug.Log("spawned");
                 //AddMeshCollider(x, y);
             }
         }
