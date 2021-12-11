@@ -14,16 +14,7 @@ public class World : NetworkBehaviour {
 
     private GameObject[,] chunks;
     private float worldSize;
-
-    void Awake() {
-        worldMaterial = new PhysicMaterial {
-            staticFriction = 0f,
-            dynamicFriction = 0f,
-            bounciness = 0f,
-            frictionCombine = PhysicMaterialCombine.Minimum,
-            bounceCombine = PhysicMaterialCombine.Minimum
-        };
-    }
+    
     [ServerRpc (RequireOwnership = false)]
     public void FindChunkServerRpc(Vector3 worldCoordinate) {
         Debug.Log("found chunk " + Mathf.FloorToInt((worldSize / 2 + worldCoordinate.x) / chunkSize) + " " + Mathf.FloorToInt((worldSize / 2 + worldCoordinate.z) / chunkSize));
@@ -44,7 +35,7 @@ public class World : NetworkBehaviour {
     }
 
 
-    public void StartTest() {
+    public void BuildWorld() {
         worldSize = size * chunkSize;
         chunks = new GameObject[size, size];
         // Instantiate chunks
@@ -52,6 +43,24 @@ public class World : NetworkBehaviour {
             for (int y = 0; y < size; y++) {
                 Debug.Log("instantiate now");
 
+                chunks[x, y] = Instantiate(chunkPrefab, new Vector3(-worldSize / 2 + chunkSize * x, 1, -worldSize / 2 + chunkSize * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
+                chunks[x, y].GetComponent<NetworkObject>().Spawn();
+                //Debug.Log("spawned");
+                //AddMeshCollider(x, y);
+            }
+        }
+    }
+    
+    public void ReBuildWorld() {
+        if (!IsOwner) {
+            return;
+        }
+        worldSize = size * chunkSize;
+        // Instantiate chunks
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                Debug.Log("instantiate now");
+                chunks[x, y].GetComponent<NetworkObject>().Despawn();
                 chunks[x, y] = Instantiate(chunkPrefab, new Vector3(-worldSize / 2 + chunkSize * x, 1, -worldSize / 2 + chunkSize * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
                 chunks[x, y].GetComponent<NetworkObject>().Spawn();
                 //Debug.Log("spawned");

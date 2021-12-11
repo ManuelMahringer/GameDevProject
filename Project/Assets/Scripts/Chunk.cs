@@ -62,7 +62,6 @@ public class Chunk : NetworkBehaviour
     {
         Debug.Log(hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
-        //RemoveVerticies(Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z));      
         UpdateChunk();
     }
     
@@ -71,7 +70,6 @@ public class Chunk : NetworkBehaviour
     {
         Debug.Log("DESTROY BLOCK PER RPC");
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
-        //RemoveVerticies(Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z));      
         UpdateChunk();
         DestroyBlockClientRpc(hit);
     }
@@ -81,7 +79,6 @@ public class Chunk : NetworkBehaviour
     {
         Debug.Log("DESTROY BLOCK PER CLIENT RPC");
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
-        //RemoveVerticies(Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z));      
         UpdateChunk();
     }
 
@@ -89,12 +86,13 @@ public class Chunk : NetworkBehaviour
     {
         Debug.Log("NORMAL BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
-        UpdateChunk();
         BuildBlockClientRpc(hit);
+        UpdateChunk();
     }
     [ClientRpc]
-    public void BuildBlockClientRpc(Vector3 hit) 
-    {
+    public void BuildBlockClientRpc(Vector3 hit) {
+        if (IsOwner)
+            return;
         Debug.Log("Client RPC BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
         UpdateChunk();
@@ -245,12 +243,11 @@ public class Chunk : NetworkBehaviour
         //Debug.Log("before finzalize "+  +Time.time * 1000);
         FinalizeChunk();
         
-        Destroy(gameObject.GetComponent<MeshCollider>());
+        DestroyImmediate(gameObject.GetComponent<MeshCollider>());
         MeshCollider mc = gameObject.AddComponent<MeshCollider>();
         mc.material = worldMaterial;
         
-    
-        //Debug.Log("end updating " + Time.time * 1000);
+        Debug.Log("updated chunk");
     }
 
     public bool CheckSides(RVector3 blockPosition, BlockFace blockFace)

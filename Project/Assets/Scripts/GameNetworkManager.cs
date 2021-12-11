@@ -16,7 +16,7 @@ public class GameNetworkManager : MonoBehaviour {
         {
             StatusLabels();
 
-            SubmitNewPosition();
+            RebuildWorld();
         }
 
         GUILayout.EndArea();
@@ -26,12 +26,12 @@ public class GameNetworkManager : MonoBehaviour {
     {
         if (GUILayout.Button("Host")) {
             NetworkManager.Singleton.StartHost();
-            GameObject.Find("World").GetComponent<World>().StartTest();
+            GameObject.Find("World").GetComponent<World>().BuildWorld();
         }
         if (GUILayout.Button("Client")) NetworkManager.Singleton.StartClient();
         if (GUILayout.Button("Server")) {
             NetworkManager.Singleton.StartServer();
-            GameObject.Find("World").GetComponent<World>().StartTest();
+            GameObject.Find("World").GetComponent<World>().BuildWorld();
         }
     }
 
@@ -45,13 +45,11 @@ public class GameNetworkManager : MonoBehaviour {
         GUILayout.Label("Mode: " + mode);
     }
 
-    static void SubmitNewPosition()
+    static void RebuildWorld()
     {
-        if (GUILayout.Button(NetworkManager.Singleton.IsServer ? "Move" : "Request Position Change"))
+        if (GUILayout.Button("Rebuild World"))
         {
-            var playerObject = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
-            var player = playerObject.GetComponent<HelloWorldPlayer>();
-            player.Move();
+            GameObject.Find("World").GetComponent<World>().ReBuildWorld();
         }
     }
 }
