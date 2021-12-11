@@ -9,6 +9,7 @@ using Random = UnityEngine.Random;
 
 public class Chunk : NetworkBehaviour
 {
+    public PhysicMaterial worldMaterial;
     Mesh chunkMesh;
     float blockSize = 1;
 
@@ -51,7 +52,9 @@ public class Chunk : NetworkBehaviour
         atlasSize = new Vector2(textureAtlas.width / textureBlockSize.x, textureAtlas.height / textureBlockSize.y);
         chunkMesh = this.GetComponent<MeshFilter>().mesh;
         chunkMesh.MarkDynamic();
-        GenerateChunk();
+        if (IsOwnedByServer) {
+            GenerateChunk();
+        }
     }
 
 
@@ -243,7 +246,8 @@ public class Chunk : NetworkBehaviour
         FinalizeChunk();
         
         Destroy(gameObject.GetComponent<MeshCollider>());
-        gameObject.AddComponent<MeshCollider>();
+        MeshCollider mc = gameObject.AddComponent<MeshCollider>();
+        mc.material = worldMaterial;
         
     
         //Debug.Log("end updating " + Time.time * 1000);
@@ -352,9 +356,4 @@ public class Chunk : NetworkBehaviour
         chunkMesh.uv = chunkUV.ToArray();
         chunkMesh.RecalculateNormals();
     }
-
-    //private void Update() {
-        //UpdateChunk();
-        //Debug.Log("Update");
-   // }
 }
