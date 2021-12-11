@@ -1,10 +1,13 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Threading.Tasks;
+using Unity.Netcode;
+using Random = UnityEngine.Random;
 
 
-public class Chunk : MonoBehaviour
+public class Chunk : NetworkBehaviour
 {
     Mesh chunkMesh;
     float blockSize = 1;
@@ -34,6 +37,12 @@ public class Chunk : MonoBehaviour
     Vector2 atlasSize;
 
     public Material highlightBlockMaterial;
+
+    [ServerRpc]
+    public void PingServerRpc(string sometext) {
+        Debug.Log("ServerRPC Called " + sometext); 
+        
+    }
     
     void Awake()
     {
@@ -88,7 +97,7 @@ public class Chunk : MonoBehaviour
                     {
                         chunkBlocks[x, y, z] = new Block(false);
                         chunkBlocks[x, y, z].id = (byte)Random.Range(0, 4);
-                        Debug.Log("Creating Block with id" + chunkBlocks[x, y, z].id);
+                        //Debug.Log("Creating Block with id" + chunkBlocks[x, y, z].id);
                     }
                     
                 }
@@ -197,6 +206,11 @@ public class Chunk : MonoBehaviour
         }
         //Debug.Log("before finzalize "+  +Time.time * 1000);
         FinalizeChunk();
+        
+        Destroy(gameObject.GetComponent<MeshCollider>());
+        gameObject.AddComponent<MeshCollider>();
+        
+    
         //Debug.Log("end updating " + Time.time * 1000);
     }
 
@@ -303,4 +317,9 @@ public class Chunk : MonoBehaviour
         chunkMesh.uv = chunkUV.ToArray();
         chunkMesh.RecalculateNormals();
     }
+
+    //private void Update() {
+        //UpdateChunk();
+        //Debug.Log("Update");
+   // }
 }

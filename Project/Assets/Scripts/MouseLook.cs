@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-public class MouseLook : MonoBehaviour {
+public class MouseLook : NetworkBehaviour {
     
     [Header("Sensitivity Settings")]
     public float sensitivityHor = 5.0f;
@@ -16,12 +17,18 @@ public class MouseLook : MonoBehaviour {
     private float _rotX;
 
     void Start() {
+        if (!IsLocalPlayer) {
+            return;
+        }
         _playerCamera = GetComponentInChildren<Camera>();
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        //Cursor.lockState = CursorLockMode.Locked;
+        //Cursor.visible = false;
     }
 
     void Update() {
+        if (!IsOwner) {
+            return;
+        }
         // Rotate camera around x
         _rotX -= Input.GetAxis("Mouse Y") * sensitivityVer;
         _rotX = Mathf.Clamp(_rotX, minVert, maxVert);

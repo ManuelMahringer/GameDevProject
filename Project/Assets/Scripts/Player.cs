@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
+using UnityEngine.Networking;
+using Unity.Netcode;
 
 
 // Player Controller Basics: https://www.youtube.com/watch?v=NEUzB5vPYrE
@@ -11,13 +13,13 @@ using UnityEngine.Serialization;
 // Health Bar:
 //  - https://www.youtube.com/watch?v=BLfNP4Sc_iA
 //  - https://www.youtube.com/watch?v=Gtw7VyuMdDc
-public class Player : MonoBehaviour {
+public class Player : NetworkBehaviour {
     [Header("Health & Damage")]
     public float maxHealth = 100f;
     public float fallDmgDistThreshold = 2.5f;
     public float fallDmgMultiplier = 15f;
 
-    [Header("Walk / Run Settings")]
+   [Header("Walk / Run Settings")]
     public float walkSpeed = 3.5f;
     public float runSpeed = 5f;
 
@@ -83,18 +85,35 @@ public class Player : MonoBehaviour {
     }
 
     private void Start() {
+        if (!IsLocalPlayer)
+            return;
         _world = GameObject.Find("World");
         _rb = GetComponent<Rigidbody>();
-        _camera = GetComponentInChildren<Camera>();
         _audioSource = GetComponent<AudioSource>();
         _fallSound = Resources.Load("Sounds/hurt_fall") as AudioClip;
         _healthBar = GameObject.Find("HealthBar").GetComponent<Slider>();
         _health = maxHealth;
         _healthBar.maxValue = _health;
         _healthBar.value = _health;
+        
+        Debug.Log("before is owner" + IsOwner + IsLocalPlayer );
+        if (!IsOwner)
+            return;
+        Debug.Log(" after  is owner");
+        _camera = gameObject.GetComponentInChildren<Camera>();
+        _camera.enabled = true;
+        Debug.Log("Camera enabled");
+        gameObject.GetComponentInChildren<AudioListener>().enabled = true;
     }
+    
+    
+    
 
     private void Update() {
+        Debug.Log("lcoalplayer?" + IsLocalPlayer);
+        if (!IsLocalPlayer)
+            return;
+        Debug.Log("Afterlocalplayer");
         _xAxis = Input.GetAxis("Horizontal");
         _zAxis = Input.GetAxis("Vertical");
         jump = Input.GetButton("Jump");
@@ -104,6 +123,7 @@ public class Player : MonoBehaviour {
         bool destroyBlock = Input.GetMouseButtonDown(0);
         bool buildBlock = Input.GetMouseButtonDown(1);
         bool shoot = Input.GetKeyDown(KeyCode.T);
+        bool rpc_call = Input.GetKeyDown(KeyCode.U);
 
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
@@ -113,11 +133,21 @@ public class Player : MonoBehaviour {
             PerformRaycastAction(RaycastAction.BuildBlock, hitRange);
         if (shoot)
             PerformRaycastAction(RaycastAction.Shoot, float.PositiveInfinity);
+        if (rpc_call) {
+            Debug.Log("RPCCalled");
+            GameObject chunk = GameObject.Find("World").GetComponent<World>().FindChunk(new Vector3(0,1,0));
+            chunk.GetComponent<Chunk>().PingServerRpc("TestRPC");
 
-        PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
+            
+
+        }
+
+        //PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
     }
 
     private void FixedUpdate() {
+        if (!IsLocalPlayer)
+            return;
         CheckAndToggleGrounded();
         
         // Fall Damage
@@ -181,24 +211,26 @@ public class Player : MonoBehaviour {
                     GameObject chunk = hit.transform.gameObject;
                     Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
                     chunk.GetComponent<Chunk>().DestroyBlock(localCoordinate);
-                    _world.GetComponent<World>().UpdateMeshCollider(chunk);
+                    //_world.GetComponent<World>().UpdateMeshCollider(chunk);
                     break;
                 case RaycastAction.BuildBlock:
                     chunk = GameObject.Find("World").GetComponent<World>().FindChunk(hit.point - (ray.direction / 10000.0f));
                     localCoordinate = hit.point - (ray.direction / 10000.0f) - chunk.transform.position;
                     chunk.GetComponent<Chunk>().BuildBlock(localCoordinate);
-                    _world.GetComponent<World>().UpdateMeshCollider(chunk);
+                    //_world.GetComponent<World>().UpdateMeshCollider(chunk);
+                    Debug.Log("NOW SENDING RPC");
+                    chunk.GetComponent<Chunk>().PingServerRpc("TESTRPC");
                     break;
                 case RaycastAction.Shoot:
                     chunk = hit.transform.gameObject;
                     localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
                     chunk.GetComponent<Chunk>().DamageBlock(localCoordinate, 50);
-                    _world.GetComponent<World>().UpdateMeshCollider(chunk);
+                    //_world.GetComponent<World>().UpdateMeshCollider(chunk);
                     break;
                 case RaycastAction.HighlightBlock:
                     Vector3 coord = hit.point - (ray.direction / 10000.0f);
-                    highlightBlock.SetActive(true);
-                    highlightBlock.transform.position = new Vector3(Mathf.FloorToInt(coord.x + 0.5f), Mathf.FloorToInt(coord.y) + 0.5f, Mathf.FloorToInt(coord.z + 0.5f));
+                    //highlightBlock.SetActive(true);
+                    //highlightBlock.transform.position = new Vector3(Mathf.FloorToInt(coord.x + 0.5f), Mathf.FloorToInt(coord.y) + 0.5f, Mathf.FloorToInt(coord.z + 0.5f));
                     break;
                 default:
                     Debug.Log("Error in Player.cs: Illegal RaycastAction in method PerformRaycastAction");
@@ -208,7 +240,7 @@ public class Player : MonoBehaviour {
         }
         else {
             if (raycastAction == RaycastAction.HighlightBlock) {
-                highlightBlock.SetActive(false);
+                //highlightBlock.SetActive(false);
             }
         }
     }

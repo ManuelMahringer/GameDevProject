@@ -2,10 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Unity.Netcode;
 
-public class World : MonoBehaviour {
+public class World : NetworkBehaviour {
     // Reference to the Chunk Prefab. Drag a Prefab into this field in the Inspector.
-    [SerializeField] private GameObject myPrefab;
+    [SerializeField] private GameObject chunkPrefab;
     public PhysicMaterial worldMaterial;
     public int size;
     
@@ -41,7 +42,7 @@ public class World : MonoBehaviour {
     }
 
 
-    void Start() {
+    public void StartTest() {
         worldSize = size * chunkSize;
         chunks = new GameObject[size, size];
         // Instantiate chunks
@@ -49,8 +50,10 @@ public class World : MonoBehaviour {
             for (int y = 0; y < size; y++) {
                 Debug.Log("instantiate now");
 
-                chunks[x, y] = Instantiate(myPrefab, new Vector3(-worldSize / 2 + chunkSize * x, 1, -worldSize / 2 + chunkSize * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
-                AddMeshCollider(x, y);
+                chunks[x, y] = Instantiate(chunkPrefab, new Vector3(-worldSize / 2 + chunkSize * x, 1, -worldSize / 2 + chunkSize * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
+                chunks[x, y].GetComponent<NetworkObject>().Spawn();
+                Debug.Log("spawned");
+                //AddMeshCollider(x, y);
             }
         }
     }
