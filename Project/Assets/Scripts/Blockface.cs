@@ -1,5 +1,7 @@
+using System;
 using UnityEngine;
 using System.Collections;
+using Object = System.Object;
 
 
 public enum BlockFace
@@ -21,6 +23,7 @@ public enum BlockType
     Earth = 100,
 }
 
+[Serializable]
 public class Block
 {
     public bool empty;
@@ -46,5 +49,9 @@ public class Block
             Debug.Log("damaged");
             id += 4;
         }
+    }
+
+    public override string ToString() {
+        return "Id: " + id + ", empty: " + empty + ", health: " + health;
     }
 }
