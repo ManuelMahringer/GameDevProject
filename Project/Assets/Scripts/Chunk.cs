@@ -89,6 +89,7 @@ public class Chunk : NetworkBehaviour
         BuildBlockClientRpc(hit);
         UpdateChunk();
     }
+    
     [ClientRpc]
     public void BuildBlockClientRpc(Vector3 hit) {
         if (IsOwner)
