@@ -68,4 +68,20 @@ public class World : NetworkBehaviour {
             }
         }
     }
+
+    public void SerializeChunks() {
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                chunks[x,y].GetComponent<Chunk>().Serialize("test", x,y);
+            }
+        }
+    }
+
+    public void LoadChunks() {
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                chunks[x,y].GetComponent<Chunk>().Load("test", x,y);
+            }
+        }
+    }
 }

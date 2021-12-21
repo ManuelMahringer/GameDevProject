@@ -137,9 +137,14 @@ public class Player : NetworkBehaviour {
             Debug.Log("RPCCalled");
             //GameObject chunk = GameObject.Find("World").GetComponent<World>().FindChunkServerRpc(new Vector3(0,1,0));
             //chunk.GetComponent<Chunk>().PingServerRpc("TestRPC");
+        }
 
-            
+        if (Input.GetKeyDown(KeyCode.Z)) {
+            _world.GetComponent<World>().SerializeChunks();
+        }
 
+        if (Input.GetKeyDown(KeyCode.U)) {
+            _world.GetComponent<World>().LoadChunks();
         }
 
         //PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);

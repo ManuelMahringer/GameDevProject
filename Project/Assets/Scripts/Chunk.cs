@@ -1,28 +1,42 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Random = UnityEngine.Random;
 
 
-public class Chunk : NetworkBehaviour
-{
+public class Chunk : NetworkBehaviour {
     public PhysicMaterial worldMaterial;
     Mesh chunkMesh;
     float blockSize = 1;
 
     RVector3 chunkPosition;
-    public RVector3 Position { get { return chunkPosition; } set { chunkPosition = value; } }
+
+    public RVector3 Position {
+        get { return chunkPosition; }
+        set { chunkPosition = value; }
+    }
 
     public RVector3 chunkSize;
-    public RVector3 Size { get { return chunkSize; } set { chunkSize = value; } }
+
+    public RVector3 Size {
+        get { return chunkSize; }
+        set { chunkSize = value; }
+    }
 
     public Block[,,] chunkBlocks;
-    public Block[,,] ReturnChunkBlocks { get { return chunkBlocks; } }
 
-    public Chunk ThisChunk { get { return this; } }
+    public Block[,,] ReturnChunkBlocks {
+        get { return chunkBlocks; }
+    }
+
+    public Chunk ThisChunk {
+        get { return this; }
+    }
 
     public int seed;
     public int intensity;
@@ -39,14 +53,12 @@ public class Chunk : NetworkBehaviour
 
     public Material highlightBlockMaterial;
 
-    [ServerRpc (RequireOwnership = false)]
+    [ServerRpc(RequireOwnership = false)]
     public void PingServerRpc(string sometext) {
-        Debug.Log("ServerRPC Called " + sometext); 
-        
+        Debug.Log("ServerRPC Called " + sometext);
     }
-    
-    void Awake()
-    {
+
+    void Awake() {
         textureAtlas = transform.GetComponent<MeshRenderer>().material.mainTexture;
 
         atlasSize = new Vector2(textureAtlas.width / textureBlockSize.x, textureAtlas.height / textureBlockSize.y);
@@ -58,37 +70,34 @@ public class Chunk : NetworkBehaviour
     }
 
 
-    public void DestroyBlock(Vector3 hit) 
-    {
+    public void DestroyBlock(Vector3 hit) {
         Debug.Log(hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
         UpdateChunk();
     }
-    
-    [ServerRpc (RequireOwnership = false)]
-    public void DestroyBlockServerRpc(Vector3 hit) 
-    {
+
+    [ServerRpc(RequireOwnership = false)]
+    public void DestroyBlockServerRpc(Vector3 hit) {
         Debug.Log("DESTROY BLOCK PER RPC");
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
         UpdateChunk();
         DestroyBlockClientRpc(hit);
     }
-    
+
     [ClientRpc]
-    public void DestroyBlockClientRpc(Vector3 hit) 
-    {
+    public void DestroyBlockClientRpc(Vector3 hit) {
         Debug.Log("DESTROY BLOCK PER CLIENT RPC");
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
         UpdateChunk();
     }
 
-    public void BuildBlock(Vector3 hit) 
-    {
+    public void BuildBlock(Vector3 hit) {
         Debug.Log("NORMAL BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
         BuildBlockClientRpc(hit);
         UpdateChunk();
     }
+
     [ClientRpc]
     public void BuildBlockClientRpc(Vector3 hit) {
         if (IsOwner)
@@ -97,54 +106,46 @@ public class Chunk : NetworkBehaviour
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
         UpdateChunk();
     }
-    
-    [ServerRpc (RequireOwnership = false)]
-    public void BuildBlockServerRpc(Vector3 hit) 
-    {
+
+    [ServerRpc(RequireOwnership = false)]
+    public void BuildBlockServerRpc(Vector3 hit) {
         Debug.Log(hit.x + " " + hit.y + " " + hit.z);
-        
+
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
         Debug.Log("BUILDING");
         UpdateChunk();
     }
 
-    public void DamageBlock(Vector3 hit, int damage)
-    {
+    public void DamageBlock(Vector3 hit, int damage) {
         Debug.Log(hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].DamageBlock(damage);
         Debug.Log("Damaging");
         UpdateChunk();
     }
 
-    public void GenerateChunk()
-    {
+    public void GenerateChunk() {
         float[,] chunkHeights = Noise.Generate(chunkSize.x + 1, chunkSize.y + 1, seed, intensity);
         chunkBlocks = new Block[chunkSize.x + 1, chunkSize.y + 1, chunkSize.z + 1];
 
-        for (int x = 0; x <= chunkSize.x; x++)
-        {
-            for (int z = 0; z <= chunkSize.z; z++)
-            {
-                for (int y = 0; y <= chunkSize.y; y++)
-                {
+        for (int x = 0; x <= chunkSize.x; x++) {
+            for (int z = 0; z <= chunkSize.z; z++) {
+                for (int y = 0; y <= chunkSize.y; y++) {
                     chunkBlocks[x, y, z] = new Block(true);
-                    
-                    if (y <= chunkHeights[x, z])
-                    {
+
+                    if (y <= chunkHeights[x, z]) {
                         chunkBlocks[x, y, z] = new Block(false);
-                        chunkBlocks[x, y, z].id = (byte)Random.Range(0, 4);
+                        chunkBlocks[x, y, z].id = (byte) Random.Range(0, 4);
                         //Debug.Log("Creating Block with id" + chunkBlocks[x, y, z].id);
                     }
-                    
                 }
             }
         }
+
         UpdateChunk();
     }
-    private void AddVerticies(int x, int y, int z)
-    {
-        if (CheckSides(new RVector3(x, y, z), BlockFace.Top))
-        {
+
+    private void AddVerticies(int x, int y, int z) {
+        if (CheckSides(new RVector3(x, y, z), BlockFace.Top)) {
             VerticiesIndex = chunkVerticies.Count;
 
 
@@ -156,8 +157,7 @@ public class Chunk : NetworkBehaviour
             UpdateChunkUV(chunkBlocks[x, y, z].id);
         }
 
-        if (CheckSides(new RVector3(x, y, z), BlockFace.Bottom))
-        {
+        if (CheckSides(new RVector3(x, y, z), BlockFace.Bottom)) {
             VerticiesIndex = chunkVerticies.Count;
 
             chunkVerticies.Add(new Vector3(x, y, z));
@@ -167,8 +167,8 @@ public class Chunk : NetworkBehaviour
 
             UpdateChunkUV(chunkBlocks[x, y, z].id);
         }
-        if (CheckSides(new RVector3(x, y, z), BlockFace.Right))
-        {
+
+        if (CheckSides(new RVector3(x, y, z), BlockFace.Right)) {
             VerticiesIndex = chunkVerticies.Count;
 
             chunkVerticies.Add(new Vector3(x + blockSize, y, z));
@@ -179,8 +179,7 @@ public class Chunk : NetworkBehaviour
             UpdateChunkUV(chunkBlocks[x, y, z].id);
         }
 
-        if (CheckSides(new RVector3(x, y, z), BlockFace.Left))
-        {
+        if (CheckSides(new RVector3(x, y, z), BlockFace.Left)) {
             VerticiesIndex = chunkVerticies.Count;
 
             chunkVerticies.Add(new Vector3(x, y, z + blockSize));
@@ -191,8 +190,7 @@ public class Chunk : NetworkBehaviour
             UpdateChunkUV(chunkBlocks[x, y, z].id);
         }
 
-        if (CheckSides(new RVector3(x, y, z), BlockFace.Far))
-        {
+        if (CheckSides(new RVector3(x, y, z), BlockFace.Far)) {
             VerticiesIndex = chunkVerticies.Count;
 
             chunkVerticies.Add(new Vector3(x, y, z + blockSize));
@@ -203,8 +201,7 @@ public class Chunk : NetworkBehaviour
             UpdateChunkUV(chunkBlocks[x, y, z].id);
         }
 
-        if (CheckSides(new RVector3(x, y, z), BlockFace.Near))
-        {
+        if (CheckSides(new RVector3(x, y, z), BlockFace.Near)) {
             VerticiesIndex = chunkVerticies.Count;
 
             chunkVerticies.Add(new Vector3(x, y, z));
@@ -215,9 +212,8 @@ public class Chunk : NetworkBehaviour
             UpdateChunkUV(chunkBlocks[x, y, z].id);
         }
     }
-    
-    public void UpdateChunk()
-    {
+
+    public void UpdateChunk() {
         //Debug.Log("start updating " + Time.time * 1000);
 
         chunkVerticies = new List<Vector3>();
@@ -226,103 +222,102 @@ public class Chunk : NetworkBehaviour
 
         chunkMesh.Clear();
 
-        for (var y = 0; y <= chunkSize.y; y++)
-        {
-            for (var x = 0; x <= chunkSize.x; x++)
-            {
-                for (var z = 0; z <= chunkSize.z; z++)
-                {
-                    if (!chunkBlocks[x, y, z].empty)
-                    {
+        for (var y = 0; y <= chunkSize.y; y++) {
+            for (var x = 0; x <= chunkSize.x; x++) {
+                for (var z = 0; z <= chunkSize.z; z++) {
+                    if (!chunkBlocks[x, y, z].empty) {
                         AddVerticies(x, y, z);
                     }
                 }
             }
-
         }
+
         //Debug.Log("before finzalize "+  +Time.time * 1000);
         FinalizeChunk();
-        
+
         DestroyImmediate(gameObject.GetComponent<MeshCollider>());
         MeshCollider mc = gameObject.AddComponent<MeshCollider>();
         mc.material = worldMaterial;
-        
+
         Debug.Log("updated chunk");
     }
 
-    public bool CheckSides(RVector3 blockPosition, BlockFace blockFace)
-    {
+    public bool CheckSides(RVector3 blockPosition, BlockFace blockFace) {
         int x, y, z;
         x = blockPosition.x;
         y = blockPosition.y;
         z = blockPosition.z;
 
 
-        switch (blockFace)
-        {
-
-            case BlockFace.Top:    //Checks top face
-                if (y + 1 <= chunkSize.y)
-                {
+        switch (blockFace) {
+            case BlockFace.Top: //Checks top face
+                if (y + 1 <= chunkSize.y) {
                     //Debug.Log(chunkBlocks[x, y + 1, z].empty);
-                    if (!chunkBlocks[x, y + 1, z].empty)
-                    { return false; }
+                    if (!chunkBlocks[x, y + 1, z].empty) {
+                        return false;
+                    }
                 }
+
                 break;
 
 
-            case BlockFace.Bottom:    //Checks bottom face
+            case BlockFace.Bottom: //Checks bottom face
                 if (y - 1 >= 0)
-                    if(!chunkBlocks[x, y - 1, z].empty)
-                { return false; }
+                    if (!chunkBlocks[x, y - 1, z].empty) {
+                        return false;
+                    }
+
                 break;
 
-            case BlockFace.Right:    //Checks right face
+            case BlockFace.Right: //Checks right face
 
 
-                if (x + 1 <= chunkSize.x)
-                {
-                    if (!chunkBlocks[x + 1, y, z].empty)
-                    { return false; }
+                if (x + 1 <= chunkSize.x) {
+                    if (!chunkBlocks[x + 1, y, z].empty) {
+                        return false;
+                    }
                 }
+
                 break;
 
 
-            case BlockFace.Left:    //Checks Left face
+            case BlockFace.Left: //Checks Left face
 
-                if (x - 1 >= 0)
-                {
-                    if (!chunkBlocks[x - 1, y, z].empty)
-                    { return false; }
+                if (x - 1 >= 0) {
+                    if (!chunkBlocks[x - 1, y, z].empty) {
+                        return false;
+                    }
                 }
+
                 break;
 
 
-            case BlockFace.Far:    //Checks Far face
+            case BlockFace.Far: //Checks Far face
 
-                if (z + 1 <= chunkSize.z)
-                {
-                    if (!chunkBlocks[x, y, z + 1].empty)
-                    { return false; }
+                if (z + 1 <= chunkSize.z) {
+                    if (!chunkBlocks[x, y, z + 1].empty) {
+                        return false;
+                    }
                 }
+
                 break;
 
 
-            case BlockFace.Near:    //Checks Near face
+            case BlockFace.Near: //Checks Near face
 
-                if (z - 1 >= 0)
-                {
-                    if (!chunkBlocks[x, y, z - 1].empty)
-                    { return false; }
+                if (z - 1 >= 0) {
+                    if (!chunkBlocks[x, y, z - 1].empty) {
+                        return false;
+                    }
                 }
-                break;
 
+                break;
         }
+
         return true;
     }
 
-    void UpdateChunkUV(byte blockID)
-    { 
+    void UpdateChunkUV(byte blockID) {
         chunkTriangles.Add(VerticiesIndex);
         chunkTriangles.Add(VerticiesIndex + 1);
         chunkTriangles.Add(VerticiesIndex + 2);
@@ -334,8 +329,8 @@ public class Chunk : NetworkBehaviour
         Vector2 textureInterval = new Vector2(1 / atlasSize.x, 1 / atlasSize.y);
 
         Vector2 textureID = new Vector2(textureInterval.x * (blockID % atlasSize.x), textureInterval.y * Mathf.FloorToInt(blockID / (2 * atlasSize.y)));
-        
-        
+
+
         /*.Log("texID " + textureID);
         Debug.Log("atlasid x " + atlasSize.x + " y " + atlasSize.y);
         Debug.Log("HÄÄ" +textureInterval.x * (blockID % atlasSize.x));
@@ -346,11 +341,51 @@ public class Chunk : NetworkBehaviour
         chunkUV.Add(new Vector2(textureID.x, textureID.y));
     }
 
-    void FinalizeChunk()
-    {
+    void FinalizeChunk() {
         chunkMesh.vertices = chunkVerticies.ToArray();
         chunkMesh.triangles = chunkTriangles.ToArray();
         chunkMesh.uv = chunkUV.ToArray();
         chunkMesh.RecalculateNormals();
+    }
+
+    public void Serialize(string worldName, int x, int y) {
+        BinaryFormatter bf = new BinaryFormatter();
+        string savePath = Application.persistentDataPath + "/" + worldName + "_" + x + y + ".chunk";
+
+        using var fileStream = File.Create(savePath);
+        bf.Serialize(fileStream, chunkBlocks);
+
+        Debug.Log(savePath);
+        Debug.Log("Serialized");
+    }
+
+    public void Load(string worldName, int x, int y) {
+        string loadPath = Application.persistentDataPath + "/" + worldName + "_" + x + y + ".chunk";
+
+        if (File.Exists(loadPath)) {
+            BinaryFormatter bf = new BinaryFormatter();
+            using var fileStream = File.Open(loadPath, FileMode.Open);
+            var updatedBlocks = (Block[,,]) bf.Deserialize(fileStream);
+
+            Debug.Log("Deserialized");
+            // for (var x = 0; x < chunkSize.x; x++) {
+            //     for (var z = 0; z < chunkSize.z; z++) {
+            //         for (var y = 0; y < chunkSize.y; y++) {
+            //             var serialized = blocks[x, y, z];
+            //             var original = chunkBlocks[x, y, z];
+            //             if (original.empty != serialized.empty || original.id != serialized.id || original.health != serialized.health) {
+            //                 Debug.Log("Unequal: " + original + ", serialized: " + serialized);
+            //             }
+            //         }
+            //     }
+            // }
+            // Debug.Log(blocks);
+
+            chunkBlocks = updatedBlocks;
+            UpdateChunk();
+        }
+        else {
+            Debug.Log("Error: Chunk.cs: Chunk file was not found");
+        }
     }
 }
