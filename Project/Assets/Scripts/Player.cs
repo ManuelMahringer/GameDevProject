@@ -32,7 +32,6 @@ public class Player : NetworkBehaviour {
 
     [Header("Ground Tag Specification")]
     public String groundTag = "";
-    public GameObject highlightBlock;
 
     [Header("Jumping State")]
     [SerializeField]
@@ -62,7 +61,9 @@ public class Player : NetworkBehaviour {
     private bool _wasGrounded;
     private bool _wasFalling;
     private float _startOfFall;
+    private GameObject _highlightBlock;
 
+    
     private enum RaycastAction {
         DestroyBlock,
         BuildBlock,
@@ -95,6 +96,7 @@ public class Player : NetworkBehaviour {
         _health = maxHealth;
         _healthBar.maxValue = _health;
         _healthBar.value = _health;
+        _highlightBlock = GameObject.Find("Highlight Slab");
         
         Debug.Log("before is owner" + IsOwner + IsLocalPlayer );
         if (!IsOwner)
@@ -147,7 +149,7 @@ public class Player : NetworkBehaviour {
             _world.GetComponent<World>().LoadChunks();
         }
 
-        //PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
+        PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
     }
 
     private void FixedUpdate() {
@@ -235,19 +237,34 @@ public class Player : NetworkBehaviour {
                     //_world.GetComponent<World>().UpdateMeshCollider(chunk);
                     break;
                 case RaycastAction.HighlightBlock:
+                    float epsilon = 0.0001f;
+                    var blockDim = _highlightBlock.transform.localScale;
+                    float blockThickness = blockDim.x;
+                    float blockSize = blockDim.y;
                     Vector3 coord = hit.point - (ray.direction / 10000.0f);
-                    //highlightBlock.SetActive(true);
-                    //highlightBlock.transform.position = new Vector3(Mathf.FloorToInt(coord.x + 0.5f), Mathf.FloorToInt(coord.y) + 0.5f, Mathf.FloorToInt(coord.z + 0.5f));
+                    Vector3 blockPos = new Vector3(Mathf.FloorToInt(coord.x) + blockSize/2, Mathf.FloorToInt(coord.y) + blockSize/2, Mathf.FloorToInt(coord.z) + blockSize/2);
+                    if (Math.Abs(hit.point.x - Mathf.Round(hit.point.x)) < epsilon) {  // looking at x face
+                        _highlightBlock.transform.rotation = Quaternion.Euler(0, 0, 0);
+                        blockPos.x += ray.direction.x > 0 ? blockSize / 2 - blockThickness / 2 : -blockSize / 2 + blockThickness / 2;
+                    } else if (Math.Abs(hit.point.z - Mathf.Round(hit.point.z)) < epsilon) { // looking at z face
+                        _highlightBlock.transform.rotation = Quaternion.Euler(0, 90, 0);
+                        blockPos.z += ray.direction.z > 0 ? blockSize / 2 - blockThickness / 2 : -blockSize / 2 + blockThickness / 2;
+                    } else {  // looking at y face
+                        _highlightBlock.transform.rotation = Quaternion.Euler(0, 0, 90);
+                        blockPos.y += ray.direction.y > 0 ? blockSize / 2 - blockThickness / 2 : -blockSize / 2 + blockThickness / 2;
+                    }
+                    _highlightBlock.transform.position = blockPos;
+                    _highlightBlock.SetActive(true);
                     break;
                 default:
                     Debug.Log("Error in Player.cs: Illegal RaycastAction in method PerformRaycastAction");
                     break;
             }
-            //if (hit.transform.gameObject.GetComponent<Chunk>() != null) {}
+            // if (hit.transform.gameObject.GetComponent<Chunk>() != null) {}
         }
         else {
             if (raycastAction == RaycastAction.HighlightBlock) {
-                //highlightBlock.SetActive(false);
+                _highlightBlock.SetActive(false);
             }
         }
     }

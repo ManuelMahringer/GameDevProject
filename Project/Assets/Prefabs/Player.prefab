@@ -350,7 +350,6 @@ MonoBehaviour:
   appliedForceMode: 0
   hitRange: 5
   groundTag: 
-  highlightBlock: {fileID: 0}
   jump: 0
   isGrounded: 0
   currentSpeed: 0
