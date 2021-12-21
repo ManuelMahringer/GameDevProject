@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using System.Threading.Tasks;
 using Unity.Netcode;
@@ -353,5 +355,46 @@ public class Chunk : NetworkBehaviour
         chunkMesh.triangles = chunkTriangles.ToArray();
         chunkMesh.uv = chunkUV.ToArray();
         chunkMesh.RecalculateNormals();
+    }
+    
+    public void Serialize(string worldName, int x, int y) {
+        BinaryFormatter bf = new BinaryFormatter();
+        string savePath = Application.persistentDataPath + "/" + worldName + "_" + x + y + ".chunk";
+
+        using var fileStream = File.Create(savePath);
+        bf.Serialize(fileStream, chunkBlocks);
+
+        Debug.Log(savePath);
+        Debug.Log("Serialized");
+    }
+
+    public void Load(string worldName, int x, int y) {
+        string loadPath = Application.persistentDataPath + "/" + worldName + "_" + x + y + ".chunk";
+
+        if (File.Exists(loadPath)) {
+            BinaryFormatter bf = new BinaryFormatter();
+            using var fileStream = File.Open(loadPath, FileMode.Open);
+            var updatedBlocks = (Block[,,]) bf.Deserialize(fileStream);
+
+            Debug.Log("Deserialized");
+            // for (var x = 0; x < chunkSize.x; x++) {
+            //     for (var z = 0; z < chunkSize.z; z++) {
+            //         for (var y = 0; y < chunkSize.y; y++) {
+            //             var serialized = blocks[x, y, z];
+            //             var original = chunkBlocks[x, y, z];
+            //             if (original.empty != serialized.empty || original.id != serialized.id || original.health != serialized.health) {
+            //                 Debug.Log("Unequal: " + original + ", serialized: " + serialized);
+            //             }
+            //         }
+            //     }
+            // }
+            // Debug.Log(blocks);
+
+            chunkBlocks = updatedBlocks;
+            UpdateChunk();
+        }
+        else {
+            Debug.Log("Error: Chunk.cs: Chunk file was not found");
+        }
     }
 }
