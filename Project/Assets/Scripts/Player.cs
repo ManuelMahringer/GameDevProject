@@ -97,6 +97,8 @@ public class Player : NetworkBehaviour {
         _healthBar.maxValue = _health;
         _healthBar.value = _health;
         _highlightBlock = GameObject.Find("Highlight Slab");
+
+        transform.position = new Vector3(0, 7, 0);
         
         Debug.Log("before is owner" + IsOwner + IsLocalPlayer );
         if (!IsOwner)
