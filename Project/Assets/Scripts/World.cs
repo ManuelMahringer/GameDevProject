@@ -74,10 +74,10 @@ public class World : NetworkBehaviour {
         }
     }
 
-    public void SerializeChunks() {
+    public void SerializeChunks(string mapName) {
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
-                chunks[x,y].GetComponent<Chunk>().Serialize("test", x,y);
+                chunks[x,y].GetComponent<Chunk>().Serialize(mapName, x,y);
             }
         }
     }

@@ -12,6 +12,8 @@ public class MouseLook : NetworkBehaviour {
     [Header("Vertical angle range")]
     public float minVert = -90.0f;
     public float maxVert = 90.0f;
+
+    public bool active;
     
     private Camera _playerCamera;
     private float _rotX;
@@ -21,12 +23,13 @@ public class MouseLook : NetworkBehaviour {
             return;
         }
         _playerCamera = GetComponentInChildren<Camera>();
+        active = true;
         //Cursor.lockState = CursorLockMode.Locked;
         //Cursor.visible = false;
     }
 
     void Update() {
-        if (!IsOwner) {
+        if (!IsOwner || !active) {
             return;
         }
         // Rotate camera around x

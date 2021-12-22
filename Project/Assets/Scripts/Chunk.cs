@@ -359,11 +359,11 @@ public class Chunk : NetworkBehaviour
         chunkMesh.RecalculateNormals();
     }
     
-    public void Serialize(string worldName, int x, int y) {
+    public void Serialize(string mapName, int x, int y) {
         BinaryFormatter bf = new BinaryFormatter();
-        string savePath = Application.persistentDataPath + Path.DirectorySeparatorChar + worldName + Path.DirectorySeparatorChar + worldName + "_" + x + y + ".chunk";
+        string savePath = Application.persistentDataPath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + y + ".chunk";
 
-        Directory.CreateDirectory(Application.persistentDataPath + Path.DirectorySeparatorChar + worldName);
+        Directory.CreateDirectory(Application.persistentDataPath + Path.DirectorySeparatorChar + mapName);
         
         using var fileStream = File.Create(savePath);
         bf.Serialize(fileStream, chunkBlocks);
@@ -372,8 +372,8 @@ public class Chunk : NetworkBehaviour
         Debug.Log("Serialized");
     }
 
-    public void Load(string worldName, int x, int y) {
-        string loadPath = Application.persistentDataPath + Path.DirectorySeparatorChar + worldName + Path.DirectorySeparatorChar + worldName + "_" + x + y + ".chunk";
+    public void Load(string mapName, int x, int y) {
+        string loadPath = Application.persistentDataPath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + y + ".chunk";
 
         if (File.Exists(loadPath)) {
             BinaryFormatter bf = new BinaryFormatter();
