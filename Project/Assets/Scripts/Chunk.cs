@@ -55,7 +55,9 @@ public class Chunk : NetworkBehaviour
         chunkMesh = this.GetComponent<MeshFilter>().mesh;
         chunkMesh.MarkDynamic();
         if (IsOwnedByServer) {
-            GenerateChunk();
+            if (ComponentManager.Map.Name == "Generate") { // dummy option to still be able to generate the random map TODO: remove
+                GenerateChunk();
+            }
         }
     }
 
@@ -359,8 +361,10 @@ public class Chunk : NetworkBehaviour
     
     public void Serialize(string worldName, int x, int y) {
         BinaryFormatter bf = new BinaryFormatter();
-        string savePath = Application.persistentDataPath + "/" + worldName + "_" + x + y + ".chunk";
+        string savePath = Application.persistentDataPath + Path.DirectorySeparatorChar + worldName + Path.DirectorySeparatorChar + worldName + "_" + x + y + ".chunk";
 
+        Directory.CreateDirectory(Application.persistentDataPath + Path.DirectorySeparatorChar + worldName);
+        
         using var fileStream = File.Create(savePath);
         bf.Serialize(fileStream, chunkBlocks);
 
@@ -369,7 +373,7 @@ public class Chunk : NetworkBehaviour
     }
 
     public void Load(string worldName, int x, int y) {
-        string loadPath = Application.persistentDataPath + "/" + worldName + "_" + x + y + ".chunk";
+        string loadPath = Application.persistentDataPath + Path.DirectorySeparatorChar + worldName + Path.DirectorySeparatorChar + worldName + "_" + x + y + ".chunk";
 
         if (File.Exists(loadPath)) {
             BinaryFormatter bf = new BinaryFormatter();

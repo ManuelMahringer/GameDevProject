@@ -42,8 +42,10 @@ public class World : NetworkBehaviour {
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
                 Debug.Log("instantiate now");
-
                 chunks[x, y] = Instantiate(chunkPrefab, new Vector3(-worldSize / 2 + chunkSize * x, 1, -worldSize / 2 + chunkSize * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
+                if (ComponentManager.Map.Name != "Generate") { // dummy option to still be able to generate the random map TODO: remove
+                    chunks[x, y].GetComponent<Chunk>().Load(ComponentManager.Map.Name, x, y);
+                }
                 chunks[x, y].GetComponent<NetworkObject>().Spawn();
                 //Debug.Log("spawned");
                 //AddMeshCollider(x, y);
@@ -62,6 +64,9 @@ public class World : NetworkBehaviour {
                 Debug.Log("instantiate now");
                 chunks[x, y].GetComponent<NetworkObject>().Despawn();
                 chunks[x, y] = Instantiate(chunkPrefab, new Vector3(-worldSize / 2 + chunkSize * x, 1, -worldSize / 2 + chunkSize * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
+                if (ComponentManager.Map.Name != "Generate") { // dummy option to still be able to generate the random map TODO: remove
+                    chunks[x, y].GetComponent<Chunk>().Load(ComponentManager.Map.Name, x, y);
+                }
                 chunks[x, y].GetComponent<NetworkObject>().Spawn();
                 //Debug.Log("spawned");
                 //AddMeshCollider(x, y);
