@@ -70,6 +70,7 @@ public class Player : NetworkBehaviour {
     private float _startOfFall;
     private GameObject _highlightBlock;
     private SaveMapPopup _saveMapPopup;
+    private LoadMapPopup _loadMapPopup;
 
     private enum RaycastAction {
         DestroyBlock,
@@ -105,6 +106,7 @@ public class Player : NetworkBehaviour {
         _healthBar.value = _health;
         _highlightBlock = GameObject.Find("Highlight Slab");
         _saveMapPopup = gameObject.AddComponent<SaveMapPopup>();
+        _loadMapPopup = gameObject.AddComponent<LoadMapPopup>();
         
         transform.position = new Vector3(0, 7, 0);
 
@@ -135,6 +137,7 @@ public class Player : NetworkBehaviour {
         bool shoot = Input.GetKeyDown(KeyCode.T);
         bool rpc_call = Input.GetKeyDown(KeyCode.U);
         bool saveMap = Input.GetKeyDown(KeyCode.Z);
+        bool loadMap = Input.GetKeyDown(KeyCode.U);
         
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
@@ -153,8 +156,8 @@ public class Player : NetworkBehaviour {
             _saveMapPopup.Open(this);
         }
 
-        if (Input.GetKeyDown(KeyCode.U)) {
-            _world.GetComponent<World>().LoadChunks();
+        if (loadMap) {
+            _loadMapPopup.Open(this);
         }
 
         PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
@@ -325,6 +328,53 @@ public class SaveMapPopup : MonoBehaviour {
 
         if (GUI.Button(new Rect(5, 60, windowRect.width - 10, 20), "Save")) {
             _world.SerializeChunks(mapName);
+            Close();
+        }
+        if (GUI.Button(new Rect(5, 80, windowRect.width - 10, 20), "Cancel")) {
+            Close();
+        }
+    }
+}
+
+public class LoadMapPopup : MonoBehaviour {
+
+    private World _world;
+    private Player _player;
+    private MouseLook _mouseLook;
+    private Rect windowRect = new Rect((Screen.width - 200) / 2, (Screen.height - 300) / 2, 200, 100);
+    private bool show;
+    private string mapName; // has to be class variable otherwise it doesn't work!
+
+    private void Start() {
+        _world = GameObject.Find("World").GetComponent<World>();
+    }
+
+    public void Open(Player player) {
+        show = true;
+        _player = player;
+        _player.popupActive = true;
+        _mouseLook = player.GetComponent<MouseLook>();
+        _mouseLook.active = false;
+    }
+
+    private void Close() {
+        show = false;
+        _player.popupActive = false;
+        _mouseLook.active = true;
+    }
+    
+    void OnGUI() {
+        if (show) {
+            windowRect = GUI.Window(0, windowRect, DialogWindow, "Load Map");
+        }
+    }
+    
+    void DialogWindow(int windowID) {
+        GUI.Label(new Rect(5, 20, windowRect.width - 10, 20), "Map Name:");
+        mapName = GUI.TextField(new Rect(5, 40, windowRect.width - 10, 20), mapName);
+
+        if (GUI.Button(new Rect(5, 60, windowRect.width - 10, 20), "Load")) {
+            _world.LoadChunks(mapName);
             Close();
         }
         if (GUI.Button(new Rect(5, 80, windowRect.width - 10, 20), "Cancel")) {
