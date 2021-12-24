@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
@@ -53,10 +54,17 @@ public class Player : NetworkBehaviour {
     private float currentSpeed;
 
     public bool popupActive;
+    public bool mouseActive;
 
     private bool IsFalling => !isGrounded && _rb.velocity.y < 0;
+
+    private const float SensitivityHor = 5.0f;
+    private const float SensitivityVer = 5.0f;
+    private const float MINVert = -90.0f;
+    private const float MAXVert = 90.0f;
     
     private GameMode _gameMode;
+    private Camera _playerCamera;
     private float _health;
     private GameObject _world;
     private Rigidbody _rb;
@@ -76,7 +84,8 @@ public class Player : NetworkBehaviour {
     private GameObject _highlightBlock;
     private MapPopup _saveMapPopup;
     private MapPopup _loadMapPopup;
-
+    private float _rotX;
+    
     private enum RaycastAction {
         DestroyBlock,
         BuildBlock,
@@ -115,6 +124,12 @@ public class Player : NetworkBehaviour {
         _saveMapPopup.action = MapPopup.MapPopupAction.Save;
         _loadMapPopup = gameObject.AddComponent<MapPopup>();
         _loadMapPopup.action = MapPopup.MapPopupAction.Load;
+        
+        _playerCamera = GetComponentInChildren<Camera>();
+        mouseActive = true;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+        
         transform.position = new Vector3(0, 7, 0);
 
         Debug.Log("before is owner" + IsOwner + IsLocalPlayer);
@@ -153,6 +168,7 @@ public class Player : NetworkBehaviour {
         bool rpc_call = Input.GetKeyDown(KeyCode.U);
         bool saveMap = Input.GetKeyDown(KeyCode.Z);
         bool loadMap = Input.GetKeyDown(KeyCode.U);
+        bool deactivateMouse = Input.GetKeyDown(KeyCode.Escape);
         
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
@@ -167,15 +183,45 @@ public class Player : NetworkBehaviour {
             //GameObject chunk = GameObject.Find("World").GetComponent<World>().FindChunkServerRpc(new Vector3(0,1,0));
             //chunk.GetComponent<Chunk>().PingServerRpc("TestRPC");
         }
-        if (saveMap) {
+        if (saveMap)
             _saveMapPopup.Open(this);
-        }
-
-        if (loadMap) {
+        if (loadMap)
             _loadMapPopup.Open(this);
+        if (mouseActive && deactivateMouse) {
+            DeactivateMouse();
+        } else if (!mouseActive && deactivateMouse) {
+            ActivateMouse();
         }
 
+        ProcessMouseInput();
         PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
+    }
+
+    public void DeactivateMouse() {
+        mouseActive = false;
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+    }
+
+    public void ActivateMouse() {
+        mouseActive = true;
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    private void ProcessMouseInput() {
+        if (!IsOwner || !mouseActive) {
+            return;
+        }
+
+        // Rotate camera around x
+        _rotX -= Input.GetAxis("Mouse Y") * SensitivityVer;
+        _rotX = Mathf.Clamp(_rotX, MINVert, MAXVert);
+        _playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0);
+
+        // Rotate player object around y
+        float rotY = Input.GetAxis("Mouse X") * SensitivityHor;
+        transform.Rotate(0, rotY, 0);
     }
 
     private void FixedUpdate() {
@@ -326,7 +372,6 @@ public class MapPopup : MonoBehaviour {
 
     private World _world;
     private Player _player;
-    private MouseLook _mouseLook;
     private Rect windowRect = new Rect((Screen.width - 200) / 2, (Screen.height - 300) / 2, 200, 100);
     private bool show;
     private string mapName; // has to be class variable otherwise it doesn't work!
@@ -339,20 +384,16 @@ public class MapPopup : MonoBehaviour {
         show = true;
         _player = player;
         _player.popupActive = true;
-        _mouseLook = player.GetComponent<MouseLook>();
-        _mouseLook.active = false;
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        _player.DeactivateMouse();
     }
 
     private void Close() {
+        mapName = "";
         show = false;
         _player.popupActive = false;
-        _mouseLook.active = true;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        _player.ActivateMouse();
     }
-    
+
     void OnGUI() {
         if (show) {
             windowRect = GUI.Window(0, windowRect, DialogWindow, $"{action.ToString()} Map");
