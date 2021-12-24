@@ -10,7 +10,9 @@ using System.Linq;
 
 public class MainMenu : MonoBehaviour {
     [SerializeField]
-    private TMP_Dropdown dropdown;
+    private TMP_Dropdown mapDropdown;
+    [SerializeField]
+    private TMP_Dropdown gameModeDropdown;
     private List<Map> maps;
     
     private void Start() {
@@ -19,14 +21,18 @@ public class MainMenu : MonoBehaviour {
         maps = mapPaths.Zip(mapNames, (mapPath, mapName) => new Map {Path = mapPath, Name = mapName}).ToList();
         maps.Add(new Map {Name = "Generate", Path = ""}); // dummy option to still be able to generate the random map TODO: remove
         
-        dropdown.ClearOptions();
-        dropdown.AddOptions(mapNames.ToList());
-        dropdown.AddOptions(new List<string> { "Generate" }); // dummy option to still be able to generate the random map TODO: remove
+        mapDropdown.ClearOptions();
+        mapDropdown.AddOptions(mapNames.ToList());
+        mapDropdown.AddOptions(new List<string> { "Generate" }); // dummy option to still be able to generate the random map TODO: remove
+        
+        gameModeDropdown.ClearOptions();
+        gameModeDropdown.AddOptions(((GameMode[])Enum.GetValues(typeof(GameMode))).Select(gm => gm.ToString()).ToList());
     }
 
     public void PlayGame() {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
-        ComponentManager.Map = maps[dropdown.value];
+        ComponentManager.Map = maps[mapDropdown.value];
+        ComponentManager.gameMode = (GameMode)gameModeDropdown.value;
     }
     
     public void QuitGame() {

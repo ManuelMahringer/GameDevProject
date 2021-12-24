@@ -8,6 +8,10 @@ using UnityEngine.Networking;
 using Unity.Netcode;
 using UnityEditor;
 
+public enum GameMode {
+    Build,
+    Fight
+}
 
 // Player Controller Basics: https://www.youtube.com/watch?v=NEUzB5vPYrE
 // Fall Damage: https://www.youtube.com/watch?v=D897sarRL3w
@@ -52,6 +56,7 @@ public class Player : NetworkBehaviour {
 
     private bool IsFalling => !isGrounded && _rb.velocity.y < 0;
     
+    private GameMode _gameMode;
     private float _health;
     private GameObject _world;
     private Rigidbody _rb;
@@ -96,6 +101,7 @@ public class Player : NetworkBehaviour {
     private void Start() {
         if (!IsLocalPlayer)
             return;
+        _gameMode = ComponentManager.gameMode;
         _world = GameObject.Find("World");
         _rb = GetComponent<Rigidbody>();
         _audioSource = GetComponent<AudioSource>();
@@ -118,6 +124,14 @@ public class Player : NetworkBehaviour {
         _camera.enabled = true;
         Debug.Log("Camera enabled");
         gameObject.GetComponentInChildren<AudioListener>().enabled = true;
+
+        if (_gameMode == GameMode.Build) {
+            _rb.isKinematic = true;
+            hitRange = Single.PositiveInfinity;
+            isGrounded = true;
+            _healthBar.gameObject.SetActive(false);
+            runSpeed = walkSpeed = 8f;
+        }
     }
 
 
@@ -166,6 +180,12 @@ public class Player : NetworkBehaviour {
     private void FixedUpdate() {
         if (!IsLocalPlayer)
             return;
+        
+        if (_gameMode == GameMode.Build) {
+            BuildingModeMovement();
+            return;
+        }
+        
         CheckAndToggleGrounded();
 
         // Fall Damage
@@ -192,7 +212,7 @@ public class Player : NetworkBehaviour {
             _rb.velocity = Vector3.zero; // artificial friction when grounded
         }
 
-        _rb.MovePosition(transform.position + currentSpeed * _dxz * Time.deltaTime);
+        _rb.MovePosition(transform.position + _dxz * (currentSpeed * Time.deltaTime));
 
         // Jump
         if (jump && isGrounded) {
@@ -207,6 +227,13 @@ public class Player : NetworkBehaviour {
             _health = maxHealth;
             _healthBar.value = _health;
         }
+    }
+
+    private void BuildingModeMovement() {
+        bool down = Input.GetKey(KeyCode.LeftShift);
+        float yAxis = jump && down || !jump && !down ? 0f : jump ? 1f : -1f;
+        _dxz = Vector3.ClampMagnitude(transform.TransformDirection(_xAxis, yAxis, _zAxis), 1f);
+        transform.position += _dxz * (currentSpeed * Time.deltaTime);
     }
 
     private void CheckAndToggleGrounded() {

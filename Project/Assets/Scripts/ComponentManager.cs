@@ -8,6 +8,7 @@ public class ComponentManager : MonoBehaviour
     public static ComponentManager control;      // cheeky self-reference
     public static Mode mode;                    // our component reference
     public static Map Map { get; set; }
+    public static GameMode gameMode;
 
     void Awake()
     {
