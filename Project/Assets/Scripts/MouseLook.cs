@@ -24,8 +24,8 @@ public class MouseLook : NetworkBehaviour {
         }
         _playerCamera = GetComponentInChildren<Camera>();
         active = true;
-        //Cursor.lockState = CursorLockMode.Locked;
-        //Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void Update() {

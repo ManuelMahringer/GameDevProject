@@ -74,8 +74,8 @@ public class Player : NetworkBehaviour {
     private bool _wasFalling;
     private float _startOfFall;
     private GameObject _highlightBlock;
-    private SaveMapPopup _saveMapPopup;
-    private LoadMapPopup _loadMapPopup;
+    private MapPopup _saveMapPopup;
+    private MapPopup _loadMapPopup;
 
     private enum RaycastAction {
         DestroyBlock,
@@ -111,9 +111,10 @@ public class Player : NetworkBehaviour {
         _healthBar.maxValue = _health;
         _healthBar.value = _health;
         _highlightBlock = GameObject.Find("Highlight Slab");
-        _saveMapPopup = gameObject.AddComponent<SaveMapPopup>();
-        _loadMapPopup = gameObject.AddComponent<LoadMapPopup>();
-        
+        _saveMapPopup = gameObject.AddComponent<MapPopup>();
+        _saveMapPopup.action = MapPopup.MapPopupAction.Save;
+        _loadMapPopup = gameObject.AddComponent<MapPopup>();
+        _loadMapPopup.action = MapPopup.MapPopupAction.Load;
         transform.position = new Vector3(0, 7, 0);
 
         Debug.Log("before is owner" + IsOwner + IsLocalPlayer);
@@ -316,7 +317,12 @@ public class Player : NetworkBehaviour {
     }
 }
 
-public class SaveMapPopup : MonoBehaviour {
+public class MapPopup : MonoBehaviour {
+    public enum MapPopupAction {
+        Load, Save
+    }
+    
+    public MapPopupAction action;
 
     private World _world;
     private Player _player;
@@ -335,17 +341,21 @@ public class SaveMapPopup : MonoBehaviour {
         _player.popupActive = true;
         _mouseLook = player.GetComponent<MouseLook>();
         _mouseLook.active = false;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     private void Close() {
         show = false;
         _player.popupActive = false;
         _mouseLook.active = true;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
     
     void OnGUI() {
         if (show) {
-            windowRect = GUI.Window(0, windowRect, DialogWindow, "Save Map");
+            windowRect = GUI.Window(0, windowRect, DialogWindow, $"{action.ToString()} Map");
         }
     }
     
@@ -353,55 +363,12 @@ public class SaveMapPopup : MonoBehaviour {
         GUI.Label(new Rect(5, 20, windowRect.width - 10, 20), "Map Name:");
         mapName = GUI.TextField(new Rect(5, 40, windowRect.width - 10, 20), mapName);
 
-        if (GUI.Button(new Rect(5, 60, windowRect.width - 10, 20), "Save")) {
-            _world.SerializeChunks(mapName);
-            Close();
-        }
-        if (GUI.Button(new Rect(5, 80, windowRect.width - 10, 20), "Cancel")) {
-            Close();
-        }
-    }
-}
-
-public class LoadMapPopup : MonoBehaviour {
-
-    private World _world;
-    private Player _player;
-    private MouseLook _mouseLook;
-    private Rect windowRect = new Rect((Screen.width - 200) / 2, (Screen.height - 300) / 2, 200, 100);
-    private bool show;
-    private string mapName; // has to be class variable otherwise it doesn't work!
-
-    private void Start() {
-        _world = GameObject.Find("World").GetComponent<World>();
-    }
-
-    public void Open(Player player) {
-        show = true;
-        _player = player;
-        _player.popupActive = true;
-        _mouseLook = player.GetComponent<MouseLook>();
-        _mouseLook.active = false;
-    }
-
-    private void Close() {
-        show = false;
-        _player.popupActive = false;
-        _mouseLook.active = true;
-    }
-    
-    void OnGUI() {
-        if (show) {
-            windowRect = GUI.Window(0, windowRect, DialogWindow, "Load Map");
-        }
-    }
-    
-    void DialogWindow(int windowID) {
-        GUI.Label(new Rect(5, 20, windowRect.width - 10, 20), "Map Name:");
-        mapName = GUI.TextField(new Rect(5, 40, windowRect.width - 10, 20), mapName);
-
-        if (GUI.Button(new Rect(5, 60, windowRect.width - 10, 20), "Load")) {
-            _world.LoadChunks(mapName);
+        if (GUI.Button(new Rect(5, 60, windowRect.width - 10, 20), action.ToString())) {
+            if (action == MapPopupAction.Load) {
+                _world.LoadChunks(mapName);
+            } else if (action == MapPopupAction.Save) {
+                _world.SerializeChunks(mapName);
+            }
             Close();
         }
         if (GUI.Button(new Rect(5, 80, windowRect.width - 10, 20), "Cancel")) {
