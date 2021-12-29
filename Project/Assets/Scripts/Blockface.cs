@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using System.Collections;
+using Unity.Netcode;
 using Object = System.Object;
 
 
@@ -24,26 +25,27 @@ public enum BlockType
 }
 
 [Serializable]
-public class Block
-{
-    public bool empty;
-    public byte id = 0;
-    public int health;
-
-    public Block ReturnBlock => this;
+public struct Block : INetworkSerializable{
+    public bool Empty {
+        get => health == 0;
+        set => health = (byte) (value ? 0 : 100);
+    }
+    public byte id;
+    public byte health; // sbyte because we want to go "below 0"
 
     public Block(bool isEmpty)
     {
-        empty = isEmpty;
-        health = 100;
+        health = 0;
+        id = 0;
+        Empty = isEmpty;
     }
 
-    public void DamageBlock(int points)
+    public void DamageBlock(byte points)
     {
         Debug.Log("Damage to block from " + health + " to " + (health - points));
         health -= points;
         if(health <= 0){
-            empty = true;
+            Empty = true;
             Debug.Log("setting to empty");
         }else if (health <= 50) {
             Debug.Log("damaged");
@@ -52,6 +54,12 @@ public class Block
     }
 
     public override string ToString() {
-        return "Id: " + id + ", empty: " + empty + ", health: " + health;
+        return "Id: " + id + ", empty: " + Empty + ", health: " + health;
+    }
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter {
+        //serializer.SerializeValue(ref empty);
+        serializer.SerializeValue(ref id);
+        serializer.SerializeValue(ref health);
     }
 }

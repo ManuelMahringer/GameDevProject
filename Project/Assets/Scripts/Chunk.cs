@@ -17,7 +17,6 @@ public class Chunk : NetworkBehaviour {
     public int intensity;
     public Vector2 textureBlockSize;
 
-    
     private Block[,,] chunkBlocks;
     private Mesh chunkMesh;
     private List<Vector3> chunkVertices = new List<Vector3>();
@@ -44,15 +43,40 @@ public class Chunk : NetworkBehaviour {
     [ServerRpc(RequireOwnership = false)]
     public void DestroyBlockServerRpc(Vector3 hit) {
         Debug.Log("DESTROY BLOCK PER RPC");
-        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
-        UpdateChunk();
+        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = true;
         DestroyBlockClientRpc(hit);
+        //DestroyBlockSerializedClientRpc(chunkBlocks);
+        //UpdateChunk();
     }
 
     [ClientRpc]
+    private void DestroyBlockSerializedClientRpc(Block[] blocks) {
+        Debug.Log("DESTROY BLOCK SERIALIZED CLIENT RPC");
+        Debug.Log("Serialized object " + blocks);
+        Debug.Log("Orignal object " + chunkBlocks);
+        Debug.Log("Length of serialized " + blocks.Length);
+        Debug.Log("Length of original " + chunkBlocks.Length);
+        
+        // for (int x = 0; x < chunkSize.x; x++) {
+        //     for (int z = 0; z < chunkSize.z; z++) {
+        //         for (int y = 0; y < chunkSize.x; y++) {
+        //             Debug.Log("Original " + chunkBlocks[x,y,z]);
+        //             Debug.Log("Serialized " + blocks[x,y,z]);
+        //         }
+        //     }   
+        // }
+        // for (int e = 0; e < chunkSize.x; e++) {
+        //     Debug.Log(blocks[e]);
+        // }
+        
+        //chunkBlocks = blocks;
+        UpdateChunk();
+    }
+    
+    [ClientRpc]
     private void DestroyBlockClientRpc(Vector3 hit) {
         Debug.Log("DESTROY BLOCK PER CLIENT RPC");
-        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
+        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = true;
         UpdateChunk();
     }
 
@@ -60,7 +84,7 @@ public class Chunk : NetworkBehaviour {
         if (!IsOwner)
             Debug.Log("SERVER BUILD BLOCK NOT CALLED BY OWNER - THIS SHOULD NEVER HAPPEN");
         Debug.Log("NORMAL BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
-        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
+        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = false;
         BuildBlockClientRpc(hit);
         UpdateChunk();
     }
@@ -68,11 +92,11 @@ public class Chunk : NetworkBehaviour {
     [ClientRpc]
     private void BuildBlockClientRpc(Vector3 hit) {
         Debug.Log("Client RPC BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
-        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
+        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = false;
         UpdateChunk();
     }
     
-    public void DamageBlock(Vector3 hit, int damage) {
+    public void DamageBlock(Vector3 hit, byte damage) {
         Debug.Log(hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].DamageBlock(damage);
         Debug.Log("Damaging");
@@ -227,7 +251,7 @@ public class Chunk : NetworkBehaviour {
         for (var y = 0; y <= chunkSize.y; y++) {
             for (var x = 0; x <= chunkSize.x; x++) {
                 for (var z = 0; z <= chunkSize.z; z++) {
-                    if (!chunkBlocks[x, y, z].empty) {
+                    if (!chunkBlocks[x, y, z].Empty) {
                         AddVertices(x, y, z);
                     }
                 }
@@ -254,7 +278,7 @@ public class Chunk : NetworkBehaviour {
             case BlockFace.Top: //Checks top face
                 if (y + 1 <= chunkSize.y) {
                     //Debug.Log(chunkBlocks[x, y + 1, z].empty);
-                    if (!chunkBlocks[x, y + 1, z].empty) {
+                    if (!chunkBlocks[x, y + 1, z].Empty) {
                         return false;
                     }
                 }
@@ -263,7 +287,7 @@ public class Chunk : NetworkBehaviour {
 
             case BlockFace.Bottom: //Checks bottom face
                 if (y - 1 >= 0) {
-                    if (!chunkBlocks[x, y - 1, z].empty) {
+                    if (!chunkBlocks[x, y - 1, z].Empty) {
                         return false;
                     }
                 }
@@ -273,7 +297,7 @@ public class Chunk : NetworkBehaviour {
 
 
                 if (x + 1 <= chunkSize.x) {
-                    if (!chunkBlocks[x + 1, y, z].empty) {
+                    if (!chunkBlocks[x + 1, y, z].Empty) {
                         return false;
                     }
                 }
@@ -282,7 +306,7 @@ public class Chunk : NetworkBehaviour {
             case BlockFace.Left: //Checks Left face
 
                 if (x - 1 >= 0) {
-                    if (!chunkBlocks[x - 1, y, z].empty) {
+                    if (!chunkBlocks[x - 1, y, z].Empty) {
                         return false;
                     }
                 }
@@ -291,7 +315,7 @@ public class Chunk : NetworkBehaviour {
             case BlockFace.Far: //Checks Far face
 
                 if (z + 1 <= chunkSize.z) {
-                    if (!chunkBlocks[x, y, z + 1].empty) {
+                    if (!chunkBlocks[x, y, z + 1].Empty) {
                         return false;
                     }
                 }
@@ -300,7 +324,7 @@ public class Chunk : NetworkBehaviour {
 
             case BlockFace.Near: //Checks Near face
                 if (z - 1 >= 0) {
-                    if (!chunkBlocks[x, y, z - 1].empty) {
+                    if (!chunkBlocks[x, y, z - 1].Empty) {
                         return false;
                     }
                 }

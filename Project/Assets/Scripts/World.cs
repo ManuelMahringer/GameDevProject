@@ -16,12 +16,20 @@ public class World : NetworkBehaviour {
     private GameObject[,] chunks;
     private float worldSize;
     
-    public NetworkVariable<char> testNetworkVar = new NetworkVariable<char>('H');
+    public NetworkVariable<Vector3> testNetworkVar = new NetworkVariable<Vector3>(Vector3.zero);
 
     [ServerRpc (RequireOwnership = false)]
-    public void SetTestNetworkVarServerRpc(char c) {
-        Debug.Log("Changed network variable by client request to " + c);
-        testNetworkVar.Value = c;
+    public void SetTestNetworkVarServerRpc(Vector3 v) {
+        Debug.Log("Changed network variable by client request to " + v);
+        testNetworkVar.Value = v;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ReceiveTestVectorServerRpc(Vector3[] vs) {
+        Debug.Log("SERVER RECEIVED VECTORS:");
+        foreach (var v in vs) {
+            Debug.Log(v);
+        }
     }
     
     [ServerRpc (RequireOwnership = false)]
