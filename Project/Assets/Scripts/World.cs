@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Unity.Netcode;
@@ -15,26 +16,25 @@ public class World : NetworkBehaviour {
     private GameObject[,] chunks;
     private float worldSize;
     
+    public NetworkVariable<char> testNetworkVar = new NetworkVariable<char>('H');
+
     [ServerRpc (RequireOwnership = false)]
-    public void FindChunkServerRpc(Vector3 worldCoordinate) {
-        Debug.Log("found chunk " + Mathf.FloorToInt((worldSize / 2 + worldCoordinate.x) / chunkSize) + " " + Mathf.FloorToInt((worldSize / 2 + worldCoordinate.z) / chunkSize));
-        GameObject chunk = chunks[Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.x) / chunkSize)), Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.z) / chunkSize))];
+    public void SetTestNetworkVarServerRpc(char c) {
+        Debug.Log("Changed network variable by client request to " + c);
+        testNetworkVar.Value = c;
+    }
+    
+    [ServerRpc (RequireOwnership = false)]
+    public void BuildBlockServerRpc(Vector3 worldCoordinate) {
+        //Debug.Log("found chunk " + Mathf.FloorToInt((worldSize / 2 + worldCoordinate.x) / chunkSize) + " " + Mathf.FloorToInt((worldSize / 2 + worldCoordinate.z) / chunkSize));
+        // Finds the correct chunk to build
+        int chunkX = Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.x) / chunkSize));
+        int chunkZ = Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.z) / chunkSize));
+        GameObject chunk = chunks[chunkX, chunkZ];
         Vector3 localCoordinate = worldCoordinate - chunk.transform.position;
-        chunk.GetComponent<Chunk>().BuildBlock(localCoordinate);
+        chunk.GetComponent<Chunk>().BuildBlockServer(localCoordinate);
     }
-
-    private void AddMeshCollider(int x, int z) {
-        MeshCollider mc = chunks[x, z].AddComponent<MeshCollider>();
-        mc.material = worldMaterial;
-    }
-
-    public void UpdateMeshCollider(GameObject chunk) {
-        Destroy(chunk.GetComponent<MeshCollider>());
-        MeshCollider mc = chunk.AddComponent<MeshCollider>();
-        mc.material = worldMaterial;
-    }
-
-
+    
     public void BuildWorld() {
         worldSize = size * chunkSize;
         chunks = new GameObject[size, size];
@@ -83,10 +83,40 @@ public class World : NetworkBehaviour {
     }
 
     public void LoadChunks(string mapName) {
+        Debug.Log(chunks);
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
                 chunks[x,y].GetComponent<Chunk>().Load(mapName, x,y);
             }
         }
+    }
+    
+    private void AddMeshCollider(int x, int z) {
+        MeshCollider mc = chunks[x, z].AddComponent<MeshCollider>();
+        mc.material = worldMaterial;
+    }
+
+    public void UpdateMeshCollider(GameObject chunk) {
+        Destroy(chunk.GetComponent<MeshCollider>());
+        MeshCollider mc = chunk.AddComponent<MeshCollider>();
+        mc.material = worldMaterial;
+    }
+}
+
+class MyNetworkVariable : NetworkVariableBase {
+    public override void WriteDelta(FastBufferWriter writer) {
+        throw new System.NotImplementedException();
+    }
+
+    public override void WriteField(FastBufferWriter writer) {
+        throw new System.NotImplementedException();
+    }
+
+    public override void ReadField(FastBufferReader reader) {
+        throw new System.NotImplementedException();
+    }
+
+    public override void ReadDelta(FastBufferReader reader, bool keepDirtyDelta) {
+        throw new System.NotImplementedException();
     }
 }

@@ -96,6 +96,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worldMaterial: {fileID: 13400000, guid: 0484e9abac8a6984dabefe4c524439b8, type: 2}
+  blockSize: 1
   chunkSize:
     x: 16
     y: 16
@@ -103,7 +104,6 @@ MonoBehaviour:
   seed: 100
   intensity: 3
   textureBlockSize: {x: 32, y: 32}
-  highlightBlockMaterial: {fileID: 2100000, guid: a1981fef895c9314f8b5aeda0e8a09c1, type: 2}
 --- !u!114 &-3403030191125352430
 MonoBehaviour:
   m_ObjectHideFlags: 0

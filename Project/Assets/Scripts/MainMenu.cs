@@ -33,6 +33,7 @@ public class MainMenu : MonoBehaviour {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
         ComponentManager.Map = maps[mapDropdown.value];
         ComponentManager.gameMode = (GameMode)gameModeDropdown.value;
+        Debug.Log(ComponentManager.Map.Name);
     }
     
     public void QuitGame() {

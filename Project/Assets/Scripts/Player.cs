@@ -62,11 +62,11 @@ public class Player : NetworkBehaviour {
     private const float SensitivityVer = 5.0f;
     private const float MINVert = -90.0f;
     private const float MAXVert = 90.0f;
-    
+
+    private World _world;
     private GameMode _gameMode;
     private Camera _playerCamera;
     private float _health;
-    private GameObject _world;
     private Rigidbody _rb;
     private Camera _camera;
     private Slider _healthBar;
@@ -111,7 +111,7 @@ public class Player : NetworkBehaviour {
         if (!IsLocalPlayer)
             return;
         _gameMode = ComponentManager.gameMode;
-        _world = GameObject.Find("World");
+        _world = GameObject.Find("World").GetComponent<World>();
         _rb = GetComponent<Rigidbody>();
         _audioSource = GetComponent<AudioSource>();
         _fallSound = Resources.Load("Sounds/hurt_fall") as AudioClip;
@@ -191,6 +191,18 @@ public class Player : NetworkBehaviour {
             DeactivateMouse();
         } else if (!mouseActive && deactivateMouse) {
             ActivateMouse();
+        }
+
+        if (Input.GetKeyDown(KeyCode.J)) {
+            Debug.Log(_world.testNetworkVar.Value);
+        }
+
+        if (Input.GetKeyDown(KeyCode.K)) {
+            _world.SetTestNetworkVarServerRpc('K');
+        }
+
+        if (Input.GetKeyDown(KeyCode.L)) {
+            _world.SetTestNetworkVarServerRpc('L');
         }
 
         ProcessMouseInput();
@@ -310,7 +322,7 @@ public class Player : NetworkBehaviour {
                     break;
                 case RaycastAction.BuildBlock:
                     Debug.Log("Calling BuildBlock Server RPC ");
-                    GameObject.Find("World").GetComponent<World>().FindChunkServerRpc(hit.point - (ray.direction / 10000.0f));
+                    _world.BuildBlockServerRpc(hit.point - (ray.direction / 10000.0f));
                     /*localCoordinate = hit.point - (ray.direction / 10000.0f) - chunk.transform.position;
                     chunk.GetComponent<Chunk>().BuildBlockServerRpc(localCoordinate);
                     //_world.GetComponent<World>().UpdateMeshCollider(chunk);
