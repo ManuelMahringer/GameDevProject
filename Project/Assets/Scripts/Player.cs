@@ -151,7 +151,7 @@ public class Player : NetworkBehaviour {
         
         // Debug.Log("BEFORE CHUNK SEND");
         // _world.GetInitialChunkDataServerRpc();
-
+        
     }
 
 
@@ -198,20 +198,7 @@ public class Player : NetworkBehaviour {
         } else if (!mouseActive && deactivateMouse) {
             ActivateMouse();
         }
-
-        if (Input.GetKeyDown(KeyCode.J)) {
-            // Debug.Log(_world.testNetworkVar.Value);
-            _world.ReceiveTestVectorServerRpc(new[] { new Vector3(0,0,0), new Vector3(0,42,0)});
-        }
-
-        if (Input.GetKeyDown(KeyCode.K)) {
-            _world.SetTestNetworkVarServerRpc(Vector3.up);
-        }
-
-        if (Input.GetKeyDown(KeyCode.L)) {
-            _world.SetTestNetworkVarServerRpc(Vector3.down);
-        }
-
+        
         ProcessMouseInput();
         PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
     }

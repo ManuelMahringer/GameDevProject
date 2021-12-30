@@ -10,8 +10,6 @@ public class GameNetworkManager : MonoBehaviour {
 
         if (ComponentManager.mode == Mode.Client) {
             NetworkManager.Singleton.StartClient();
-            //Debug.Log("Before chunk send");
-            // GameObject.Find("World").GetComponent<World>().GetInitialChunkDataRpc();
         }
         if (ComponentManager.mode == Mode.Server) {
             NetworkManager.Singleton.StartServer();
