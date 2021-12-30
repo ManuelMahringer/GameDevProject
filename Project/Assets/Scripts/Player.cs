@@ -148,13 +148,19 @@ public class Player : NetworkBehaviour {
             _healthBar.gameObject.SetActive(false);
             runSpeed = walkSpeed = 8f;
         }
+        
+        // Debug.Log("BEFORE CHUNK SEND");
+        // _world.GetInitialChunkDataServerRpc();
+
     }
+
 
 
     private void Update() {
         //Debug.Log("lcoalplayer?" + IsLocalPlayer);
         if (!IsLocalPlayer)
             return;
+
         //Debug.Log("Afterlocalplayer");
         _xAxis = Input.GetAxis("Horizontal");
         _zAxis = Input.GetAxis("Vertical");
@@ -308,7 +314,6 @@ public class Player : NetworkBehaviour {
             Debug.Log("Error in Player.cs: raycast should always hit an element underneath!");
         }
     }
-
     private void PerformRaycastAction(RaycastAction raycastAction, float range) {
         Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
         Ray ray = _camera.ScreenPointToRay(midPoint);

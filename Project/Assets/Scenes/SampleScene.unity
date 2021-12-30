@@ -441,7 +441,7 @@ MonoBehaviour:
     ForceSamePrefabs: 1
     RecycleNetworkIds: 1
     NetworkIdRecycleDelay: 120
-    RpcHashSize: 0
+    RpcHashSize: 1
     LoadSceneTimeOut: 120
     MessageBufferTimeout: 20
     EnableNetworkLogs: 1
@@ -899,6 +899,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worldMaterial: {fileID: 0}
+  blockSize: 1
   chunkSize:
     x: 0
     y: 0
@@ -906,7 +907,6 @@ MonoBehaviour:
   seed: 123
   intensity: 8
   textureBlockSize: {x: 32, y: 32}
-  highlightBlockMaterial: {fileID: 0}
 --- !u!1 &725107788
 GameObject:
   m_ObjectHideFlags: 0
@@ -2269,8 +2269,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chunkPrefab: {fileID: 9031596313245055636, guid: 0a1fbae335bb4854a98513097cc18eda, type: 3}
   worldMaterial: {fileID: 0}
-  size: 4
-  chunkSize: 17
+  size: 8
+  chunkSize: 13
+  testNetworkVar:
+    m_InternalValue: {x: 0, y: 0, z: 0}
 --- !u!114 &1745154813
 MonoBehaviour:
   m_ObjectHideFlags: 0

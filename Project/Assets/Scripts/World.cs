@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
@@ -19,6 +20,31 @@ public class World : NetworkBehaviour {
     public NetworkVariable<Vector3> testNetworkVar = new NetworkVariable<Vector3>(Vector3.zero);
 
     [ServerRpc (RequireOwnership = false)]
+    public void GetInitialChunkDataServerRpc() {
+        if (!IsServer)
+            return;
+        // foreach (var chunk in chunks) {
+        //     var c = chunk.GetComponent<Chunk>();
+        //     c.ReceiveInitialChunkDataClientRpc(c.FlattenBlocks());
+        // }
+        Debug.Log("SERVER: SENDING INITIAL CHUNK DATA");
+        // for (int x = 0; x < size; x++) {
+        //     for (int y = 0; y < size; y++) {
+        //         var c = chunks[x, y].GetComponent<Chunk>();
+        //         StartCoroutine(Test(c));
+        //     }
+        // }
+        var c = chunks[0,0].GetComponent<Chunk>(); 
+        c.ReceiveInitialChunkDataClientRpc(c.FlattenBlocks());
+    }
+    
+    
+    private IEnumerator Test(Chunk c) {
+        yield return new WaitForSeconds(1);
+        c.ReceiveInitialChunkDataClientRpc(c.FlattenBlocks());
+    }
+
+    [ServerRpc (RequireOwnership = false)]
     public void SetTestNetworkVarServerRpc(Vector3 v) {
         Debug.Log("Changed network variable by client request to " + v);
         testNetworkVar.Value = v;
@@ -36,6 +62,11 @@ public class World : NetworkBehaviour {
     public void BuildBlockServerRpc(Vector3 worldCoordinate) {
         //Debug.Log("found chunk " + Mathf.FloorToInt((worldSize / 2 + worldCoordinate.x) / chunkSize) + " " + Mathf.FloorToInt((worldSize / 2 + worldCoordinate.z) / chunkSize));
         // Finds the correct chunk to build
+        if (!IsServer) {
+            Debug.Log("ERROR: BuildBlockServerRpc executed on non-server");
+            return;
+        }
+        Debug.Log("BuildBlockServerRPC");
         int chunkX = Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.x) / chunkSize));
         int chunkZ = Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.z) / chunkSize));
         GameObject chunk = chunks[chunkX, chunkZ];
@@ -81,6 +112,7 @@ public class World : NetworkBehaviour {
             }
         }
     }
+    
 
     public void SerializeChunks(string mapName) {
         for (int x = 0; x < size; x++) {

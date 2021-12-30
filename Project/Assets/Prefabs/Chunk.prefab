@@ -98,9 +98,9 @@ MonoBehaviour:
   worldMaterial: {fileID: 13400000, guid: 0484e9abac8a6984dabefe4c524439b8, type: 2}
   blockSize: 1
   chunkSize:
-    x: 16
-    y: 16
-    z: 16
+    x: 12
+    y: 12
+    z: 12
   seed: 100
   intensity: 3
   textureBlockSize: {x: 32, y: 32}
@@ -119,4 +119,4 @@ MonoBehaviour:
   GlobalObjectIdHash: 951099334
   AlwaysReplicateAsRoot: 0
   DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
+  AutoObjectParentSync: 0

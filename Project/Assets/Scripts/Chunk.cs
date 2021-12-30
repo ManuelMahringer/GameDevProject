@@ -7,6 +7,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using System.Threading.Tasks;
 using Unity.Netcode;
+using UnityEditor;
 using Random = UnityEngine.Random;
 
 
@@ -41,6 +42,13 @@ public class Chunk : NetworkBehaviour {
         }
     }
 
+    [ClientRpc]
+    public void ReceiveInitialChunkDataClientRpc(Block[] blocks) {
+        Debug.Log("CHUNK BLOCKS RECEIVED");
+        chunkBlocks = ExpandBlocks(chunkSize.x+1, chunkSize.y+1, chunkSize.z+1, blocks);
+        UpdateChunk();
+    }
+    
     [ServerRpc(RequireOwnership = false)]
     public void DestroyBlockServerRpc(Vector3 hit) {
         Debug.Log("DESTROY BLOCK PER RPC");
@@ -69,16 +77,26 @@ public class Chunk : NetworkBehaviour {
     // }
 
     public void BuildBlockServer(Vector3 hit) {
-        if (!IsOwner)
+        if (!IsServer)
             Debug.Log("SERVER BUILD BLOCK NOT CALLED BY OWNER - THIS SHOULD NEVER HAPPEN");
         Debug.Log("NORMAL BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = false;
+        Debug.Log("Calling the serialized method");
         BuildBlockSerializedClientRpc(FlattenBlocks());
+        // Chunk Size debug
+        // int sendSize = 2000;
+        // Block[] sendVec = new Block[sendSize];
+        // var vectorHurensohn = FlattenBlocks();
+        // for (int i = 0; i < sendSize; i++) {
+        //     sendVec[i] = vectorHurensohn[i];
+        // }
+        // BuildBlockSerializedClientRpc(sendVec);
     }
 
     [ClientRpc]
     private void BuildBlockSerializedClientRpc(Block[] blocks) {
         Debug.Log("BUILD BLOCK SERIALIZED CLIENT RPC");
+        Debug.Log(blocks);
         chunkBlocks = ExpandBlocks(chunkSize.x+1, chunkSize.y+1, chunkSize.z+1, blocks);
         UpdateChunk();
     }
@@ -97,10 +115,11 @@ public class Chunk : NetworkBehaviour {
         UpdateChunk();
     }
 
-    private Block[] FlattenBlocks() {
+    public Block[] FlattenBlocks() {
         return chunkBlocks.Cast<Block>().ToArray();
     }
-
+    
+    // https://stackoverflow.com/questions/62381835/how-to-get-a-2d-array-of-strings-across-the-photon-network-in-a-unity-multi-play
     private Block[,,] ExpandBlocks(int elCountX, int elCountY, int elSize, Block[] blocks) {
         Block[,,] expBlocks = new Block[elCountX, elCountY, elSize];
         for (var x = 0; x < elCountX; x++) {

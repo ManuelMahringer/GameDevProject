@@ -31,7 +31,7 @@ public class Block : INetworkSerializable {
         set => health = (byte) (value ? 0 : 100);
     }
     public byte id;
-    public byte health; // sbyte because we want to go "below 0"
+    public byte health;
 
     public Block() {}
     
