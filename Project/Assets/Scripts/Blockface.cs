@@ -25,7 +25,7 @@ public enum BlockType
 }
 
 [Serializable]
-public struct Block : INetworkSerializable{
+public class Block : INetworkSerializable {
     public bool Empty {
         get => health == 0;
         set => health = (byte) (value ? 0 : 100);
@@ -33,6 +33,8 @@ public struct Block : INetworkSerializable{
     public byte id;
     public byte health; // sbyte because we want to go "below 0"
 
+    public Block() {}
+    
     public Block(bool isEmpty)
     {
         health = 0;
@@ -58,7 +60,6 @@ public struct Block : INetworkSerializable{
     }
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter {
-        //serializer.SerializeValue(ref empty);
         serializer.SerializeValue(ref id);
         serializer.SerializeValue(ref health);
     }

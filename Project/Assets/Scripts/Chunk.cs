@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using System.Threading.Tasks;
@@ -44,57 +45,50 @@ public class Chunk : NetworkBehaviour {
     public void DestroyBlockServerRpc(Vector3 hit) {
         Debug.Log("DESTROY BLOCK PER RPC");
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = true;
-        DestroyBlockClientRpc(hit);
-        //DestroyBlockSerializedClientRpc(chunkBlocks);
-        //UpdateChunk();
+        DestroyBlockSerializedClientRpc(FlattenBlocks());
     }
 
     [ClientRpc]
     private void DestroyBlockSerializedClientRpc(Block[] blocks) {
         Debug.Log("DESTROY BLOCK SERIALIZED CLIENT RPC");
-        Debug.Log("Serialized object " + blocks);
-        Debug.Log("Orignal object " + chunkBlocks);
-        Debug.Log("Length of serialized " + blocks.Length);
-        Debug.Log("Length of original " + chunkBlocks.Length);
-        
-        // for (int x = 0; x < chunkSize.x; x++) {
-        //     for (int z = 0; z < chunkSize.z; z++) {
-        //         for (int y = 0; y < chunkSize.x; y++) {
-        //             Debug.Log("Original " + chunkBlocks[x,y,z]);
-        //             Debug.Log("Serialized " + blocks[x,y,z]);
-        //         }
-        //     }   
-        // }
-        // for (int e = 0; e < chunkSize.x; e++) {
-        //     Debug.Log(blocks[e]);
-        // }
-        
-        //chunkBlocks = blocks;
+        chunkBlocks = ExpandBlocks(chunkSize.x+1, chunkSize.y+1, chunkSize.z+1, blocks);
         UpdateChunk();
     }
     
-    [ClientRpc]
-    private void DestroyBlockClientRpc(Vector3 hit) {
-        Debug.Log("DESTROY BLOCK PER CLIENT RPC");
-        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = true;
-        UpdateChunk();
-    }
+    // [ClientRpc]
+    // private void DestroyBlockClientRpc(Vector3 hit) {
+    //     Debug.Log("DESTROY BLOCK PER CLIENT RPC");
+    //     chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = true;
+    //     
+    //     var flattened = FlattenBlocks();
+    //     var unflattened = ExpandBlocks(chunkBlocks.GetLength(0), chunkBlocks.GetLength(1), chunkBlocks.GetLength(2), flattened);
+    //     Debug.Log(unflattened);
+    //     chunkBlocks = unflattened;
+    //     UpdateChunk();
+    //
+    // }
 
     public void BuildBlockServer(Vector3 hit) {
         if (!IsOwner)
             Debug.Log("SERVER BUILD BLOCK NOT CALLED BY OWNER - THIS SHOULD NEVER HAPPEN");
         Debug.Log("NORMAL BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = false;
-        BuildBlockClientRpc(hit);
-        UpdateChunk();
+        BuildBlockSerializedClientRpc(FlattenBlocks());
     }
 
     [ClientRpc]
-    private void BuildBlockClientRpc(Vector3 hit) {
-        Debug.Log("Client RPC BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
-        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = false;
+    private void BuildBlockSerializedClientRpc(Block[] blocks) {
+        Debug.Log("BUILD BLOCK SERIALIZED CLIENT RPC");
+        chunkBlocks = ExpandBlocks(chunkSize.x+1, chunkSize.y+1, chunkSize.z+1, blocks);
         UpdateChunk();
     }
+
+    // [ClientRpc]
+    // private void BuildBlockClientRpc(Vector3 hit) {
+    //     Debug.Log("Client RPC BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
+    //     chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = false;
+    //     UpdateChunk();
+    // }
     
     public void DamageBlock(Vector3 hit, byte damage) {
         Debug.Log(hit.x + " " + hit.y + " " + hit.z);
@@ -102,7 +96,22 @@ public class Chunk : NetworkBehaviour {
         Debug.Log("Damaging");
         UpdateChunk();
     }
-    
+
+    private Block[] FlattenBlocks() {
+        return chunkBlocks.Cast<Block>().ToArray();
+    }
+
+    private Block[,,] ExpandBlocks(int elCountX, int elCountY, int elSize, Block[] blocks) {
+        Block[,,] expBlocks = new Block[elCountX, elCountY, elSize];
+        for (var x = 0; x < elCountX; x++) {
+            for (var y = 0; y < elCountY; y++) {
+                for (var z = 0; z < elSize; z++) {
+                    expBlocks[x, y, z] = blocks[(x * elCountY * elSize) + (y * elSize) + z];
+                }    
+            }
+        }
+        return expBlocks;
+    }
     
     // [ServerRpc(RequireOwnership = false)]
     // public void BuildBlockServerRpc(Vector3 hit) {
