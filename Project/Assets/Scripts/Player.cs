@@ -90,6 +90,8 @@ public class Player : NetworkBehaviour {
     private Slider _healthBar;
     private AudioSource _audioSource;
     private AudioClip _fallSound;
+    private AudioClip _handgunSound;
+    private AudioClip _assaultRifleSound;
     private RaycastHit _hit;
     private float _xAxis;
     private float _zAxis;
@@ -151,6 +153,8 @@ public class Player : NetworkBehaviour {
         _rb = GetComponent<Rigidbody>();
         _audioSource = GetComponent<AudioSource>();
         _fallSound = Resources.Load("Sounds/hurt_fall") as AudioClip;
+        _handgunSound = Resources.Load("Sounds/handgun") as AudioClip;
+        _assaultRifleSound = Resources.Load("Sounds/assault_rifle") as AudioClip;
         _healthBar = GameObject.Find("HealthBar").GetComponent<Slider>();
         _health = maxHealth;
         _healthBar.maxValue = _health;
@@ -389,6 +393,10 @@ public class Player : NetworkBehaviour {
                             localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
                             Debug.Log("Shoot Block with " + (byte)_activeWeapon.LerpDamage(hit.distance) + " damage");
                             chunk.GetComponent<Chunk>().DamageBlock(localCoordinate, (sbyte)_activeWeapon.LerpDamage(hit.distance));
+                            if (_activeWeapon.Name == "Handgun")
+                                _audioSource.PlayOneShot(_handgunSound);
+                            else if (_activeWeapon.Name == "AssaultRifle")
+                                _audioSource.PlayOneShot(_assaultRifleSound);
                             //_world.GetComponent<World>().UpdateMeshCollider(chunk);
                         } else if (hit.collider.CompareTag(PlayerTag)) {
                             ulong shotPlayer = hit.collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
