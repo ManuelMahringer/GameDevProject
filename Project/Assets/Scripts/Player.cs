@@ -25,6 +25,9 @@ public enum GameMode {
 //  - https://www.youtube.com/watch?v=BLfNP4Sc_iA
 //  - https://www.youtube.com/watch?v=Gtw7VyuMdDc
 public class Player : NetworkBehaviour {
+    private static readonly string WorldTag = "World";
+    private static readonly string PlayerTag = "Player";
+    
     [Header("Health & Damage")]
     public float maxHealth = 100f;
 
@@ -100,6 +103,7 @@ public class Player : NetworkBehaviour {
     private MapPopup _saveMapPopup;
     private MapPopup _loadMapPopup;
     private float _rotX;
+    private float _tFired;
 
     private enum RaycastAction {
         DestroyBlock,
@@ -107,21 +111,9 @@ public class Player : NetworkBehaviour {
         Shoot,
         HighlightBlock
     }
-
-    public void Shoot() {
-        Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
-        Ray ray = _camera.ScreenPointToRay(midPoint);
-        if (Physics.Raycast(ray, out var hit, _activeWeapon.Range, mask)) {
-            if (hit.collider.CompareTag("Player")) {
-                ulong shotPlayer = hit.collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
-                Debug.Log("Shot player " + hit.collider.name);
-                PlayerShotServerRpc(shotPlayer, _activeWeapon.Damage);
-            }
-        }
-    }
     
     private void TakeDamage(float amount) {
-        Debug.Log("Take Damage: " + amount);
+        //Debug.Log("Take Damage: " + amount);
         _audioSource.PlayOneShot(_fallSound);
         _health -= amount;
         _healthBar.value = _health;
@@ -129,15 +121,15 @@ public class Player : NetworkBehaviour {
             Die();
         }
     }
+    
+    private void Die() {
+        Debug.Log("PLAYER DIES");
+    }
 
     [ClientRpc]
     private void TakeDamageClientRpc(float amount) {
         Debug.Log("Player " + this.transform.name + " took " + amount + " damage");
         TakeDamage(amount);
-    }
-
-    private void Die() {
-        Debug.Log("PLAYER DIES");
     }
 
     [ServerRpc]
@@ -228,7 +220,7 @@ public class Player : NetworkBehaviour {
             if (_activeWeapon.Name == "Shovel")
                 PerformRaycastAction(RaycastAction.DestroyBlock, hitRange);
             else
-                Shoot();
+                PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
         }
         if (buildBlock)
             if (_activeWeapon.Name == "Shovel")
@@ -321,7 +313,7 @@ public class Player : NetworkBehaviour {
                 TakeDamage(fallDamage);
             }
 
-            Debug.Log("Fall Distance: " + (_startOfFall - transform.position.y));
+            //Debug.Log("Fall Distance: " + (_startOfFall - transform.position.y));
         }
 
         _wasGrounded = isGrounded;
@@ -391,9 +383,31 @@ public class Player : NetworkBehaviour {
                     chunk.GetComponent<Chunk>().PingServerRpc("TESTRPC");*/
                     break;
                 case RaycastAction.Shoot:
-                    chunk = hit.transform.gameObject;
-                    localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
-                    chunk.GetComponent<Chunk>().DamageBlock(localCoordinate, 50);
+                    if (Time.time - _tFired > _activeWeapon.Firerate) {
+                        if (hit.collider.CompareTag(WorldTag)) {
+                            chunk = hit.transform.gameObject;
+                            localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
+                            Debug.Log("Shoot Block with " + (byte)_activeWeapon.LerpDamage(hit.distance) + " damage");
+                            chunk.GetComponent<Chunk>().DamageBlock(localCoordinate, (sbyte)_activeWeapon.LerpDamage(hit.distance));
+                            //_world.GetComponent<World>().UpdateMeshCollider(chunk);
+                        } else if (hit.collider.CompareTag(PlayerTag)) {
+                            ulong shotPlayer = hit.collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
+                            Debug.Log("Shoot Player " + hit.collider.name + " with " + _activeWeapon.LerpDamage(hit.distance) + " damage");
+                            PlayerShotServerRpc(shotPlayer, _activeWeapon.LerpDamage(hit.distance));
+                        }
+                        _tFired = Time.time;
+                    }
+
+                    // Player
+                    // Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
+                    // Ray ray = _camera.ScreenPointToRay(midPoint);
+                    // if (Physics.Raycast(ray, out var hit, _activeWeapon.Range, mask)) {
+                    //     if (hit.collider.CompareTag("Player")) {
+                    //         ulong shotPlayer = hit.collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
+                    //         Debug.Log("Shot player " + hit.collider.name);
+                    //         PlayerShotServerRpc(shotPlayer, _activeWeapon.Damage);
+                    //     }
+                    // }
                     //_world.GetComponent<World>().UpdateMeshCollider(chunk);
                     break;
                 case RaycastAction.HighlightBlock:

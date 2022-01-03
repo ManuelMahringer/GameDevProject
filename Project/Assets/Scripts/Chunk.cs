@@ -115,7 +115,7 @@ public class Chunk : NetworkBehaviour {
     //     UpdateChunk();
     // }
     
-    public void DamageBlock(Vector3 hit, byte damage) {
+    public void DamageBlock(Vector3 hit, sbyte damage) {
         Debug.Log(hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].DamageBlock(damage);
         Debug.Log("Damaging");

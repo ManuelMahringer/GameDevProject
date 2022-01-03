@@ -28,10 +28,10 @@ public enum BlockType
 public class Block : INetworkSerializable {
     public bool Empty {
         get => health == 0;
-        set => health = (byte) (value ? 0 : 100);
+        set => health = (sbyte) (value ? 0 : 100);
     }
     public byte id;
-    public byte health;
+    public sbyte health;
 
     public Block() {}
     
@@ -42,14 +42,14 @@ public class Block : INetworkSerializable {
         Empty = isEmpty;
     }
 
-    public void DamageBlock(byte points)
+    public void DamageBlock(sbyte points)
     {
         Debug.Log("Damage to block from " + health + " to " + (health - points));
         health -= points;
-        if(health <= 0){
+        if (health <= 0){
             Empty = true;
             Debug.Log("setting to empty");
-        }else if (health <= 50) {
+        } else if (health <= 50 && id < 4) {
             Debug.Log("damaged");
             id += 4;
         }
