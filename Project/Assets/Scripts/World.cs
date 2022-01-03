@@ -12,6 +12,7 @@ public class World : NetworkBehaviour {
     public PhysicMaterial worldMaterial;
     public int size;
     
+    
     [SerializeField] public float chunkSize;
 
     private GameObject[,] chunks;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,6 +9,10 @@ using UnityEngine.Serialization;
 using UnityEngine.Networking;
 using Unity.Netcode;
 using UnityEditor;
+using UnityEngine.Networking.Types;
+
+// using UnityEditor.Build.Content;
+// using UnityEngine.Networking.Types;
 
 public enum GameMode {
     Build,
@@ -56,6 +61,16 @@ public class Player : NetworkBehaviour {
     public bool popupActive;
     public bool mouseActive;
 
+    private Weapon _activeWeapon;
+
+    [SerializeField]
+    private LayerMask mask;
+    
+    [SerializeField]
+    private List<GameObject> weaponModels;
+
+    private readonly Dictionary<string, Weapon> weapons = new Dictionary<string, Weapon> {{"Handgun", new Handgun()}, {"AssaultRifle", new AssaultRifle()}, {"Shovel", new Shovel()}};
+
     private bool IsFalling => !isGrounded && _rb.velocity.y < 0;
 
     private const float SensitivityHor = 5.0f;
@@ -85,7 +100,7 @@ public class Player : NetworkBehaviour {
     private MapPopup _saveMapPopup;
     private MapPopup _loadMapPopup;
     private float _rotX;
-    
+
     private enum RaycastAction {
         DestroyBlock,
         BuildBlock,
@@ -93,7 +108,19 @@ public class Player : NetworkBehaviour {
         HighlightBlock
     }
 
-    public void TakeDamage(float amount) {
+    public void Shoot() {
+        Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
+        Ray ray = _camera.ScreenPointToRay(midPoint);
+        if (Physics.Raycast(ray, out var hit, _activeWeapon.Range, mask)) {
+            if (hit.collider.CompareTag("Player")) {
+                ulong shotPlayer = hit.collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
+                Debug.Log("Shot player " + hit.collider.name);
+                PlayerShotServerRpc(shotPlayer, _activeWeapon.Damage);
+            }
+        }
+    }
+    
+    private void TakeDamage(float amount) {
         Debug.Log("Take Damage: " + amount);
         _audioSource.PlayOneShot(_fallSound);
         _health -= amount;
@@ -103,11 +130,28 @@ public class Player : NetworkBehaviour {
         }
     }
 
+    [ClientRpc]
+    private void TakeDamageClientRpc(float amount) {
+        Debug.Log("Player " + this.transform.name + " took " + amount + " damage");
+        TakeDamage(amount);
+    }
+
     private void Die() {
         Debug.Log("PLAYER DIES");
     }
 
+    [ServerRpc]
+    private void PlayerShotServerRpc(ulong id, float damage) {
+        Player shotPlayer = GameNetworkManager.GetPlayerById(id);
+        Debug.Log("Shot Player Game Object " + shotPlayer);
+        shotPlayer.TakeDamageClientRpc(damage);
+    }
+    
     private void Start() {
+        // Set player name with network id
+        // transform.name = "Player " + GetComponent<NetworkObject>().NetworkObjectId;
+        GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this);
+        
         if (!IsLocalPlayer)
             return;
         _gameMode = ComponentManager.gameMode;
@@ -124,7 +168,8 @@ public class Player : NetworkBehaviour {
         _saveMapPopup.action = MapPopup.MapPopupAction.Save;
         _loadMapPopup = gameObject.AddComponent<MapPopup>();
         _loadMapPopup.action = MapPopup.MapPopupAction.Load;
-        
+        SwitchWeapons("Handgun");
+
         _playerCamera = GetComponentInChildren<Camera>();
         mouseActive = true;
         Cursor.lockState = CursorLockMode.Locked;
@@ -148,13 +193,11 @@ public class Player : NetworkBehaviour {
             _healthBar.gameObject.SetActive(false);
             runSpeed = walkSpeed = 8f;
         }
-        
+
         // Debug.Log("BEFORE CHUNK SEND");
         // _world.GetInitialChunkDataServerRpc();
-        
+
     }
-
-
 
     private void Update() {
         //Debug.Log("lcoalplayer?" + IsLocalPlayer);
@@ -175,13 +218,21 @@ public class Player : NetworkBehaviour {
         bool saveMap = Input.GetKeyDown(KeyCode.Z);
         bool loadMap = Input.GetKeyDown(KeyCode.U);
         bool deactivateMouse = Input.GetKeyDown(KeyCode.Escape);
-        
+        bool assaultRifle = Input.GetKeyDown(KeyCode.Alpha1);
+        bool handgun = Input.GetKeyDown(KeyCode.Alpha2);
+        bool shovel = Input.GetKeyDown(KeyCode.Alpha3);
+
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
-        if (destroyBlock)
-            PerformRaycastAction(RaycastAction.DestroyBlock, hitRange);
+        if (destroyBlock) {
+            if (_activeWeapon.Name == "Shovel")
+                PerformRaycastAction(RaycastAction.DestroyBlock, hitRange);
+            else
+                Shoot();
+        }
         if (buildBlock)
-            PerformRaycastAction(RaycastAction.BuildBlock, hitRange);
+            if (_activeWeapon.Name == "Shovel")
+                PerformRaycastAction(RaycastAction.BuildBlock, hitRange);
         if (shoot)
             PerformRaycastAction(RaycastAction.Shoot, float.PositiveInfinity);
         if (rpc_call) {
@@ -198,9 +249,26 @@ public class Player : NetworkBehaviour {
         } else if (!mouseActive && deactivateMouse) {
             ActivateMouse();
         }
-        
+
+        if (handgun)
+            SwitchWeapons("Handgun");
+        if (assaultRifle)
+            SwitchWeapons("AssaultRifle");
+        if (shovel)
+            SwitchWeapons("Shovel");
+
         ProcessMouseInput();
         PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
+    }
+
+    private void SwitchWeapons(string weaponName) {
+        _activeWeapon = weapons[weaponName];
+        weaponModels.ForEach(w => w.SetActive(false));
+        weaponModels.SingleOrDefault(w => w.transform.name == weaponName)?.SetActive(true);
+    }
+
+    private void OnDisable() {
+        GameNetworkManager.UnregisterPlayer(NetworkObject.NetworkObjectId);
     }
 
     public void DeactivateMouse() {

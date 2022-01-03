@@ -2576,6 +2576,18 @@ PrefabInstance:
       propertyPath: highlightBlock
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 6568169588386428647, guid: 9d0a2c77fe8b6d24784984b8c2cbd529, type: 3}
+      propertyPath: weapons.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6568169588386428647, guid: 9d0a2c77fe8b6d24784984b8c2cbd529, type: 3}
+      propertyPath: weapons.Array.data[0]
+      value: 
+      objectReference: {fileID: 6568169588169612749}
+    - target: {fileID: 6568169588386428647, guid: 9d0a2c77fe8b6d24784984b8c2cbd529, type: 3}
+      propertyPath: weapons.Array.data[1]
+      value: 
+      objectReference: {fileID: 6568169588169612748}
     - target: {fileID: 6568169588386428654, guid: 9d0a2c77fe8b6d24784984b8c2cbd529, type: 3}
       propertyPath: m_Name
       value: Player
@@ -2590,3 +2602,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9d0a2c77fe8b6d24784984b8c2cbd529, type: 3}
+--- !u!1 &6568169588169612748 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4327970998324946514, guid: 9d0a2c77fe8b6d24784984b8c2cbd529, type: 3}
+  m_PrefabInstance: {fileID: 6568169588169612747}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6568169588169612749 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2559375446747254674, guid: 9d0a2c77fe8b6d24784984b8c2cbd529, type: 3}
+  m_PrefabInstance: {fileID: 6568169588169612747}
+  m_PrefabAsset: {fileID: 0}
