@@ -16,11 +16,12 @@ public enum BlockFace {
 }
 
 public enum BlockType {
-    Grass = 0, // Type and corresponding health 
+    Grass = 0,
     Earth = 1,
     Metal = 2,
     Stone = 3,
 }
+
 
 // public enum BlockType {
 //     Grass = 120, // Type and corresponding health 
@@ -29,35 +30,19 @@ public enum BlockType {
 //     Earth = 100,
 // }
 
-public static class BlockUtils {
-    public static BlockType IdToBlockType(byte id) {
-        switch (id) {
-            case 0: case 4:
-                return BlockType.Grass;
-            case 1: case 5:
-                return BlockType.Earth;
-            case 2: case 6:
-                return BlockType.Metal;
-            case 3: case 7:
-                return BlockType.Stone;
-            default:
-                Debug.Log("Error in Block.cs: IdToBlockType: invalid id");
-                return BlockType.Grass;
-        }
-    }
-    
-    public static byte BlockTypeToId(BlockType bt) {
+public static class BlockProperties {
+    public static sbyte MaxHealth(BlockType bt) {
         switch (bt) {
-            case BlockType.Grass:
-                return 0;
             case BlockType.Earth:
-                return 1;
+                return 30;
+            case BlockType.Grass:
+                return 30;
             case BlockType.Metal:
-                return 2;
+                return 100;
             case BlockType.Stone:
-                return 3;
+                return 70;
             default:
-                Debug.Log("Error in Block.cs: BlockTypeToId: invalid BlockType");
+                Debug.Log("Error in Blockface.cs: BlockProperties.MaxHealth invalid BlockType");
                 return 0;
         }
     }
@@ -68,8 +53,10 @@ public static class BlockUtils {
 public class Block : INetworkSerializable {
     public bool Empty {
         get => health == 0;
-        set => health = (sbyte) (value ? 0 : 100);
+        set => health = (sbyte) (value ? 0 : MaxHealth);
     }
+
+    public sbyte MaxHealth => BlockProperties.MaxHealth((BlockType) id);
 
     public byte id;
     public sbyte health;
@@ -77,9 +64,9 @@ public class Block : INetworkSerializable {
     public Block() {
     }
 
-    public Block(bool isEmpty) {
+    public Block(bool isEmpty, byte id) {
         health = 0;
-        id = 0;
+        this.id = id;
         Empty = isEmpty;
     }
 
@@ -90,7 +77,7 @@ public class Block : INetworkSerializable {
             Empty = true;
             Debug.Log("setting to empty");
         }
-        else if (health <= 50 && id < 4) {
+        else if (health <= MaxHealth / 2 && id < 4) {
             Debug.Log("damaged");
             id += 4;
         }

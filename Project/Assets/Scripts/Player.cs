@@ -219,8 +219,10 @@ public class Player : NetworkBehaviour {
         if (destroyBlock) {
             if (_activeWeapon.Name == "Shovel")
                 PerformRaycastAction(RaycastAction.DestroyBlock, hitRange);
-            else
+            else {
                 PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
+                PlayWeaponSound(_activeWeapon);                
+            }
         }
 
         if (buildBlock)
@@ -374,6 +376,15 @@ public class Player : NetworkBehaviour {
         }
     }
 
+    private void PlayWeaponSound(Weapon activeWeapon) {
+        if (Time.time - _tFired > _activeWeapon.Firerate) {
+            if (activeWeapon.Name == "Handgun")
+                _audioSource.PlayOneShot(_handgunSound);
+            else if (activeWeapon.Name == "AssaultRifle")
+                _audioSource.PlayOneShot(_assaultRifleSound);    
+        }
+    }
+
     private void PerformRaycastAction(RaycastAction raycastAction, float range) {
         Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
         Ray ray = _camera.ScreenPointToRay(midPoint);
@@ -389,11 +400,11 @@ public class Player : NetworkBehaviour {
                     Debug.Log("Inventory at place " + destBlockId % _inventory.Size + " with " + _inventory.Items[destBlockId % _inventory.Size] + " blocks");
                     break;
                 case RaycastAction.BuildBlock:
-                    if (_inventory.Items[BlockUtils.BlockTypeToId(_activeBlock)] > 0) {
+                    if (_inventory.Items[(byte) _activeBlock] > 0) {
                         _inventory.Remove(_activeBlock);
                         _world.BuildBlockServerRpc(hit.point - (ray.direction / 10000.0f), _activeBlock);
-                        Debug.Log("Inventory at place " + BlockUtils.BlockTypeToId(_activeBlock) % _inventory.Size + " with " +
-                                  _inventory.Items[BlockUtils.BlockTypeToId(_activeBlock)] + " blocks");
+                        Debug.Log("Inventory at place " + (byte) _activeBlock % _inventory.Size + " with " +
+                                  _inventory.Items[(byte)_activeBlock] + " blocks");
                     }
                     break;
                 case RaycastAction.Shoot:
@@ -410,11 +421,6 @@ public class Player : NetworkBehaviour {
                             Debug.Log("Shoot Player " + hit.collider.name + " with " + _activeWeapon.LerpDamage(hit.distance) + " damage");
                             PlayerShotServerRpc(shotPlayer, _activeWeapon.LerpDamage(hit.distance));
                         }
-
-                        if (_activeWeapon.Name == "Handgun")
-                            _audioSource.PlayOneShot(_handgunSound);
-                        else if (_activeWeapon.Name == "AssaultRifle")
-                            _audioSource.PlayOneShot(_assaultRifleSound);
                         _tFired = Time.time;
                     }
 

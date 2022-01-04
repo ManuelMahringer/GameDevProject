@@ -195,11 +195,11 @@ public class Chunk : NetworkBehaviour {
         for (int x = 0; x <= chunkSize.x; x++) {
             for (int z = 0; z <= chunkSize.z; z++) {
                 for (int y = 0; y <= chunkSize.y; y++) {
-                    chunkBlocks[x, y, z] = new Block(true);
+                    chunkBlocks[x, y, z] = new Block(true, 0);
 
                     if (y <= chunkHeights[x, z]) {
-                        chunkBlocks[x, y, z] = new Block(false);
-                        chunkBlocks[x, y, z].id = (byte) Random.Range(0, 4);
+                        chunkBlocks[x, y, z] = new Block(false, (byte) Random.Range(0, 4));
+                        //chunkBlocks[x, y, z].id = (byte) Random.Range(0, 4);
                         //Debug.Log("Creating Block with id" + chunkBlocks[x, y, z].id);
                     }
                 }
