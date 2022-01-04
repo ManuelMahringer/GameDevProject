@@ -159,7 +159,7 @@ public class Player : NetworkBehaviour {
         _loadMapPopup.action = MapPopup.MapPopupAction.Load;
         SwitchWeapons("Handgun");
         _activeBlock = BlockType.Grass;
-        _inventory = new PlayerInventory();
+        _inventory = gameObject.AddComponent<PlayerInventory>();
 
         _playerCamera = GetComponentInChildren<Camera>();
         mouseActive = true;
@@ -201,10 +201,8 @@ public class Player : NetworkBehaviour {
         _respawn = Input.GetKey(KeyCode.R);
 
         bool run = Input.GetKey(KeyCode.LeftShift);
-        bool destroyBlock = !popupActive && Input.GetMouseButtonDown(0);
-        bool buildBlock = !popupActive && Input.GetMouseButtonDown(1);
-        bool shoot = Input.GetKeyDown(KeyCode.T);
-        bool rpc_call = Input.GetKeyDown(KeyCode.U);
+        bool destroyBlock = mouseActive && Input.GetMouseButtonDown(0);
+        bool buildBlock = mouseActive && Input.GetMouseButtonDown(1);
         bool saveMap = Input.GetKeyDown(KeyCode.Z);
         bool loadMap = Input.GetKeyDown(KeyCode.U);
         bool deactivateMouse = Input.GetKeyDown(KeyCode.Escape);
@@ -219,20 +217,13 @@ public class Player : NetworkBehaviour {
         if (destroyBlock) {
             if (_activeWeapon.Name == "Shovel")
                 PerformRaycastAction(RaycastAction.DestroyBlock, hitRange);
-            else {
+            else
                 PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
-                PlayWeaponSound(_activeWeapon);                
-            }
         }
 
         if (buildBlock)
             if (_activeWeapon.Name == "Shovel")
                 PerformRaycastAction(RaycastAction.BuildBlock, hitRange);
-        if (shoot)
-            PerformRaycastAction(RaycastAction.Shoot, float.PositiveInfinity);
-        if (rpc_call) {
-            Debug.Log("RPCCalled");
-        }
 
         if (saveMap)
             _saveMapPopup.Open(this);
@@ -290,7 +281,7 @@ public class Player : NetworkBehaviour {
     }
 
     private void ProcessMouseInput() {
-        if (!IsOwner || !mouseActive) {
+        if (!IsLocalPlayer || !mouseActive) {
             return;
         }
 
@@ -381,7 +372,7 @@ public class Player : NetworkBehaviour {
             if (activeWeapon.Name == "Handgun")
                 _audioSource.PlayOneShot(_handgunSound);
             else if (activeWeapon.Name == "AssaultRifle")
-                _audioSource.PlayOneShot(_assaultRifleSound);    
+                _audioSource.PlayOneShot(_assaultRifleSound);
         }
     }
 
@@ -404,11 +395,13 @@ public class Player : NetworkBehaviour {
                         _inventory.Remove(_activeBlock);
                         _world.BuildBlockServerRpc(hit.point - (ray.direction / 10000.0f), _activeBlock);
                         Debug.Log("Inventory at place " + (byte) _activeBlock % _inventory.Size + " with " +
-                                  _inventory.Items[(byte)_activeBlock] + " blocks");
+                                  _inventory.Items[(byte) _activeBlock] + " blocks");
                     }
+
                     break;
                 case RaycastAction.Shoot:
                     if (Time.time - _tFired > _activeWeapon.Firerate) {
+                        PlayWeaponSound(_activeWeapon);
                         if (hit.collider.CompareTag(WorldTag)) {
                             chunk = hit.transform.gameObject;
                             localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
@@ -421,6 +414,7 @@ public class Player : NetworkBehaviour {
                             Debug.Log("Shoot Player " + hit.collider.name + " with " + _activeWeapon.LerpDamage(hit.distance) + " damage");
                             PlayerShotServerRpc(shotPlayer, _activeWeapon.LerpDamage(hit.distance));
                         }
+
                         _tFired = Time.time;
                     }
 
@@ -465,31 +459,42 @@ public class Player : NetworkBehaviour {
             // if (hit.transform.gameObject.GetComponent<Chunk>() != null) {}
         }
         else {
-            if (raycastAction == RaycastAction.HighlightBlock) {
-                _highlightBlock.SetActive(false);
+            switch (raycastAction) {
+                case RaycastAction.HighlightBlock:
+                    _highlightBlock.SetActive(false);
+                    break;
+                case RaycastAction.Shoot:
+                    if (Time.time - _tFired > _activeWeapon.Firerate) {
+                        PlayWeaponSound(_activeWeapon);
+                        _tFired = Time.time;
+                    }
+                    break;
             }
         }
     }
+
     private void OnGUI() {
+        if (!IsLocalPlayer)
+            return;
         _inventory.Draw(_activeBlock);
     }
 }
 
-public class PlayerInventory {
+public class PlayerInventory : MonoBehaviour {
     public int[] Items => _items;
     public int Size => _items.Length;
 
     private readonly int[] _items = new int[Enum.GetNames(typeof(BlockType)).Length];
     private readonly GUIStyle _guiStyle = new GUIStyle();
     private readonly GUIStyle _selectedStyle = new GUIStyle();
-    private readonly Dictionary<int, Texture2D> _blockTextures;
+    private Dictionary<int, Texture2D> _blockTextures;
 
     private readonly int initX = Screen.width - 150;
     private readonly int initY = Screen.height - 200;
     private readonly int dx = 40;
     private readonly int borderSize = 2;
 
-    public PlayerInventory() {
+    public void Start() {
         _blockTextures = new Dictionary<int, Texture2D> {
             {0, Resources.Load<Texture2D>("BlockImages/grass")},
             {1, Resources.Load<Texture2D>("BlockImages/earth")},
@@ -498,7 +503,8 @@ public class PlayerInventory {
         };
         _guiStyle.fontSize = 30;
         _guiStyle.fontStyle = FontStyle.Bold;
-        
+        _guiStyle.normal.textColor = Color.white;
+
         _selectedStyle.border = new RectOffset(borderSize, borderSize, borderSize, borderSize);
         _selectedStyle.normal.background = Resources.Load<Texture2D>("BlockImages/border");
     }
@@ -515,8 +521,9 @@ public class PlayerInventory {
         int dy = 0;
         for (int blockType = 0; blockType < _items.Length; blockType++) {
             if (blockType == (int) activeBlock) {
-                GUI.Box(new Rect(initX - 5, initY - 5 + dy, 70, 40), GUIContent.none, _selectedStyle);
+                GUI.Box(new Rect(initX - 5, initY - 5 + dy, _items[blockType].ToString().Length * 20 + 50, 40), GUIContent.none, _selectedStyle);
             }
+
             GUI.DrawTexture(new Rect(initX, initY + dy, 30, 30), _blockTextures[blockType]);
             GUI.Label(new Rect(initX + dx, initY + dy, 30, 30), _items[blockType].ToString(), _guiStyle);
             dy += 40;
