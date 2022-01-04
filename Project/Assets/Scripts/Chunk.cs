@@ -18,10 +18,10 @@ public class Chunk : NetworkBehaviour {
     public int seed;
     public int intensity;
     public Vector2 textureBlockSize;
+    public Block[,,] chunkBlocks;
 
     private World _world;
     private Vector3 pos;
-    private Block[,,] chunkBlocks;
     private Mesh chunkMesh;
     private List<Vector3> chunkVertices = new List<Vector3>();
     private List<Vector2> chunkUV = new List<Vector2>();
@@ -83,11 +83,13 @@ public class Chunk : NetworkBehaviour {
     //
     // }
 
-    public void BuildBlockServer(Vector3 hit) {
+    public void BuildBlockServer(Vector3 hit, BlockType blockType) {
         if (!IsServer)
             Debug.Log("SERVER BUILD BLOCK NOT CALLED BY OWNER - THIS SHOULD NEVER HAPPEN");
         Debug.Log("NORMAL BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
-        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = false;
+        Block block = chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)];
+        block.id = (byte) blockType;
+        block.Empty = false;
         Debug.Log("Calling the serialized method");
         BuildBlockSerializedClientRpc(FlattenBlocks());
         // Chunk Size debug

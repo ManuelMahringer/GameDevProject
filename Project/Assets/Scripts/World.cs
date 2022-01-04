@@ -38,14 +38,14 @@ public class World : NetworkBehaviour {
     }
     
     [ServerRpc (RequireOwnership = false)]
-    public void BuildBlockServerRpc(Vector3 worldCoordinate) {
+    public void BuildBlockServerRpc(Vector3 worldCoordinate, BlockType blockType) {
         // Finds the correct chunk to build
         Debug.Log("BuildBlockServerRPC");
         int chunkX = Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.x) / chunkSize));
         int chunkZ = Mathf.Abs(Mathf.FloorToInt((worldSize / 2 + worldCoordinate.z) / chunkSize));
         GameObject chunk = chunks[chunkX, chunkZ];
         Vector3 localCoordinate = worldCoordinate - chunk.transform.position;
-        chunk.GetComponent<Chunk>().BuildBlockServer(localCoordinate);
+        chunk.GetComponent<Chunk>().BuildBlockServer(localCoordinate, blockType);
     }
     
     public void BuildWorld() {

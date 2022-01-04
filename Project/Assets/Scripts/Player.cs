@@ -27,52 +27,44 @@ public enum GameMode {
 public class Player : NetworkBehaviour {
     private static readonly string WorldTag = "World";
     private static readonly string PlayerTag = "Player";
-    
-    [Header("Health & Damage")]
-    public float maxHealth = 100f;
+
+    [Header("Health & Damage")] public float maxHealth = 100f;
 
     public float fallDmgDistThreshold = 2.5f;
     public float fallDmgMultiplier = 15f;
 
-    [Header("Walk / Run Settings")]
-    public float walkSpeed = 3.5f;
+    [Header("Walk / Run Settings")] public float walkSpeed = 3.5f;
 
     public float runSpeed = 5f;
 
-    [Header("Jump Settings")]
-    public float jumpForce = 12_000f;
+    [Header("Jump Settings")] public float jumpForce = 12_000f;
 
     public ForceMode appliedForceMode = ForceMode.Force;
 
-    [Header("Build/Destroy Settings")]
-    public float hitRange = 5f;
+    [Header("Build/Destroy Settings")] public float hitRange = 5f;
 
-    [Header("Ground Tag Specification")]
-    public String groundTag = "";
+    [Header("Ground Tag Specification")] public String groundTag = "";
 
-    [Header("Jumping State")]
-    [SerializeField]
+    [Header("Jumping State")] [SerializeField]
     private bool jump;
 
-    [SerializeField]
-    private bool isGrounded;
+    [SerializeField] private bool isGrounded;
 
-    [Header("Current Player Speed")]
-    [SerializeField]
+    [Header("Current Player Speed")] [SerializeField]
     private float currentSpeed;
 
     public bool popupActive;
     public bool mouseActive;
 
     private Weapon _activeWeapon;
+    private BlockType _activeBlock;
 
-    [SerializeField]
-    private LayerMask mask;
-    
-    [SerializeField]
-    private List<GameObject> weaponModels;
+    [SerializeField] private LayerMask mask;
 
-    private readonly Dictionary<string, Weapon> weapons = new Dictionary<string, Weapon> {{"Handgun", new Handgun()}, {"AssaultRifle", new AssaultRifle()}, {"Shovel", new Shovel()}};
+    [SerializeField] private List<GameObject> weaponModels;
+
+    private readonly Dictionary<string, Weapon> weapons = new Dictionary<string, Weapon>
+        {{"Handgun", new Handgun()}, {"AssaultRifle", new AssaultRifle()}, {"Shovel", new Shovel()}};
 
     private bool IsFalling => !isGrounded && _rb.velocity.y < 0;
 
@@ -106,6 +98,7 @@ public class Player : NetworkBehaviour {
     private MapPopup _loadMapPopup;
     private float _rotX;
     private float _tFired;
+    private PlayerInventory _inventory;
 
     private enum RaycastAction {
         DestroyBlock,
@@ -113,7 +106,7 @@ public class Player : NetworkBehaviour {
         Shoot,
         HighlightBlock
     }
-    
+
     private void TakeDamage(float amount) {
         //Debug.Log("Take Damage: " + amount);
         _audioSource.PlayOneShot(_fallSound);
@@ -123,7 +116,7 @@ public class Player : NetworkBehaviour {
             Die();
         }
     }
-    
+
     private void Die() {
         Debug.Log("PLAYER DIES");
     }
@@ -140,12 +133,12 @@ public class Player : NetworkBehaviour {
         Debug.Log("Shot Player Game Object " + shotPlayer);
         shotPlayer.TakeDamageClientRpc(damage);
     }
-    
+
     private void Start() {
         // Set player name with network id
         // transform.name = "Player " + GetComponent<NetworkObject>().NetworkObjectId;
         GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this);
-        
+
         if (!IsLocalPlayer)
             return;
         _gameMode = ComponentManager.gameMode;
@@ -165,12 +158,14 @@ public class Player : NetworkBehaviour {
         _loadMapPopup = gameObject.AddComponent<MapPopup>();
         _loadMapPopup.action = MapPopup.MapPopupAction.Load;
         SwitchWeapons("Handgun");
+        _activeBlock = BlockType.Grass;
+        _inventory = new PlayerInventory();
 
         _playerCamera = GetComponentInChildren<Camera>();
         mouseActive = true;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-        
+
         transform.position = new Vector3(0, 7, 0);
 
         Debug.Log("before is owner" + IsOwner + IsLocalPlayer);
@@ -192,7 +187,6 @@ public class Player : NetworkBehaviour {
 
         // Debug.Log("BEFORE CHUNK SEND");
         // _world.GetInitialChunkDataServerRpc();
-
     }
 
     private void Update() {
@@ -217,6 +211,8 @@ public class Player : NetworkBehaviour {
         bool assaultRifle = Input.GetKeyDown(KeyCode.Alpha1);
         bool handgun = Input.GetKeyDown(KeyCode.Alpha2);
         bool shovel = Input.GetKeyDown(KeyCode.Alpha3);
+        bool iterBlocks = Input.mouseScrollDelta.y < 0;
+        bool iterBlocksRev = Input.mouseScrollDelta.y > 0;
 
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
@@ -226,6 +222,7 @@ public class Player : NetworkBehaviour {
             else
                 PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
         }
+
         if (buildBlock)
             if (_activeWeapon.Name == "Shovel")
                 PerformRaycastAction(RaycastAction.BuildBlock, hitRange);
@@ -233,16 +230,16 @@ public class Player : NetworkBehaviour {
             PerformRaycastAction(RaycastAction.Shoot, float.PositiveInfinity);
         if (rpc_call) {
             Debug.Log("RPCCalled");
-            //GameObject chunk = GameObject.Find("World").GetComponent<World>().FindChunkServerRpc(new Vector3(0,1,0));
-            //chunk.GetComponent<Chunk>().PingServerRpc("TestRPC");
         }
+
         if (saveMap)
             _saveMapPopup.Open(this);
         if (loadMap)
             _loadMapPopup.Open(this);
         if (mouseActive && deactivateMouse) {
             DeactivateMouse();
-        } else if (!mouseActive && deactivateMouse) {
+        }
+        else if (!mouseActive && deactivateMouse) {
             ActivateMouse();
         }
 
@@ -252,6 +249,17 @@ public class Player : NetworkBehaviour {
             SwitchWeapons("AssaultRifle");
         if (shovel)
             SwitchWeapons("Shovel");
+
+        if (iterBlocks) {
+            _activeBlock = (BlockType) (((int) _activeBlock + 1) % _inventory.Size);
+            Debug.Log("New active block " + _activeBlock);
+        }
+
+        if (iterBlocksRev) {
+            int nextBlock = ((int) _activeBlock - 1) % _inventory.Size;
+            _activeBlock = (BlockType) (nextBlock < 0 ? nextBlock + _inventory.Size : nextBlock); // we have to do this because unity modulo operation is shit
+            Debug.Log("New active block " + _activeBlock + " (rev)");
+        }
 
         ProcessMouseInput();
         PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
@@ -297,12 +305,12 @@ public class Player : NetworkBehaviour {
     private void FixedUpdate() {
         if (!IsLocalPlayer)
             return;
-        
+
         if (_gameMode == GameMode.Build) {
             BuildingModeMovement();
             return;
         }
-        
+
         CheckAndToggleGrounded();
 
         // Fall Damage
@@ -365,6 +373,7 @@ public class Player : NetworkBehaviour {
             Debug.Log("Error in Player.cs: raycast should always hit an element underneath!");
         }
     }
+
     private void PerformRaycastAction(RaycastAction raycastAction, float range) {
         Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
         Ray ray = _camera.ScreenPointToRay(midPoint);
@@ -373,58 +382,57 @@ public class Player : NetworkBehaviour {
                 case RaycastAction.DestroyBlock:
                     GameObject chunk = hit.transform.gameObject;
                     Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
-                    //chunk.GetComponent<Chunk>().DestroyBlock(localCoordinate);
                     chunk.GetComponent<Chunk>().DestroyBlockServerRpc(localCoordinate);
-                    //_world.GetComponent<World>().UpdateMeshCollider(chunk);
+                    byte destBlockId = chunk.GetComponent<Chunk>()
+                        .chunkBlocks[Mathf.FloorToInt(localCoordinate.x), Mathf.FloorToInt(localCoordinate.y), Mathf.FloorToInt(localCoordinate.z)].id;
+                    _inventory.Add((BlockType) destBlockId);
+                    Debug.Log("Inventory at place " + destBlockId % _inventory.Size + " with " + _inventory.Items[destBlockId % _inventory.Size] + " blocks");
                     break;
                 case RaycastAction.BuildBlock:
-                    Debug.Log("Calling BuildBlock Server RPC ");
-                    _world.BuildBlockServerRpc(hit.point - (ray.direction / 10000.0f));
-                    /*localCoordinate = hit.point - (ray.direction / 10000.0f) - chunk.transform.position;
-                    chunk.GetComponent<Chunk>().BuildBlockServerRpc(localCoordinate);
-                    //_world.GetComponent<World>().UpdateMeshCollider(chunk);
-                    Debug.Log("NOW SENDING RPC");
-                    chunk.GetComponent<Chunk>().PingServerRpc("TESTRPC");*/
+                    if (_inventory.Items[BlockUtils.BlockTypeToId(_activeBlock)] > 0) {
+                        _inventory.Remove(_activeBlock);
+                        _world.BuildBlockServerRpc(hit.point - (ray.direction / 10000.0f), _activeBlock);
+                        Debug.Log("Inventory at place " + BlockUtils.BlockTypeToId(_activeBlock) % _inventory.Size + " with " +
+                                  _inventory.Items[BlockUtils.BlockTypeToId(_activeBlock)] + " blocks");
+                    }
                     break;
                 case RaycastAction.Shoot:
                     if (Time.time - _tFired > _activeWeapon.Firerate) {
                         if (hit.collider.CompareTag(WorldTag)) {
                             chunk = hit.transform.gameObject;
                             localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
-                            Debug.Log("Shoot Block with " + (byte)_activeWeapon.LerpDamage(hit.distance) + " damage");
-                            chunk.GetComponent<Chunk>().DamageBlock(localCoordinate, (sbyte)_activeWeapon.LerpDamage(hit.distance));
-                            if (_activeWeapon.Name == "Handgun")
-                                _audioSource.PlayOneShot(_handgunSound);
-                            else if (_activeWeapon.Name == "AssaultRifle")
-                                _audioSource.PlayOneShot(_assaultRifleSound);
+                            Debug.Log("Shoot Block with " + (byte) _activeWeapon.LerpDamage(hit.distance) + " damage");
+                            chunk.GetComponent<Chunk>().DamageBlock(localCoordinate, (sbyte) _activeWeapon.LerpDamage(hit.distance));
                             //_world.GetComponent<World>().UpdateMeshCollider(chunk);
-                        } else if (hit.collider.CompareTag(PlayerTag)) {
+                        }
+                        else if (hit.collider.CompareTag(PlayerTag)) {
                             ulong shotPlayer = hit.collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
                             Debug.Log("Shoot Player " + hit.collider.name + " with " + _activeWeapon.LerpDamage(hit.distance) + " damage");
                             PlayerShotServerRpc(shotPlayer, _activeWeapon.LerpDamage(hit.distance));
                         }
+
+                        if (_activeWeapon.Name == "Handgun")
+                            _audioSource.PlayOneShot(_handgunSound);
+                        else if (_activeWeapon.Name == "AssaultRifle")
+                            _audioSource.PlayOneShot(_assaultRifleSound);
                         _tFired = Time.time;
                     }
 
-                    // Player
-                    // Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
-                    // Ray ray = _camera.ScreenPointToRay(midPoint);
-                    // if (Physics.Raycast(ray, out var hit, _activeWeapon.Range, mask)) {
-                    //     if (hit.collider.CompareTag("Player")) {
-                    //         ulong shotPlayer = hit.collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
-                    //         Debug.Log("Shot player " + hit.collider.name);
-                    //         PlayerShotServerRpc(shotPlayer, _activeWeapon.Damage);
-                    //     }
-                    // }
-                    //_world.GetComponent<World>().UpdateMeshCollider(chunk);
                     break;
                 case RaycastAction.HighlightBlock:
+                    if (_activeWeapon.Name != "Shovel") {
+                        // only highlight blocks when in building mode
+                        _highlightBlock.SetActive(false);
+                        break;
+                    }
+
                     float epsilon = 0.0001f;
                     var blockDim = _highlightBlock.transform.localScale;
                     float blockThickness = blockDim.x;
                     float blockSize = blockDim.y;
                     Vector3 coord = hit.point - (ray.direction / 10000.0f);
-                    Vector3 blockPos = new Vector3(Mathf.FloorToInt(coord.x) + blockSize / 2, Mathf.FloorToInt(coord.y) + blockSize / 2, Mathf.FloorToInt(coord.z) + blockSize / 2);
+                    Vector3 blockPos = new Vector3(Mathf.FloorToInt(coord.x) + blockSize / 2, Mathf.FloorToInt(coord.y) + blockSize / 2,
+                        Mathf.FloorToInt(coord.z) + blockSize / 2);
                     if (Math.Abs(hit.point.x - Mathf.Round(hit.point.x)) < epsilon) {
                         // looking at x face
                         _highlightBlock.transform.rotation = Quaternion.Euler(0, 0, 0);
@@ -456,13 +464,66 @@ public class Player : NetworkBehaviour {
             }
         }
     }
+    private void OnGUI() {
+        _inventory.Draw(_activeBlock);
+    }
+}
+
+public class PlayerInventory {
+    public int[] Items => _items;
+    public int Size => _items.Length;
+
+    private readonly int[] _items = new int[Enum.GetNames(typeof(BlockType)).Length];
+    private readonly GUIStyle _guiStyle = new GUIStyle();
+    private readonly GUIStyle _selectedStyle = new GUIStyle();
+    private readonly Dictionary<int, Texture2D> _blockTextures;
+
+    private readonly int initX = Screen.width - 150;
+    private readonly int initY = Screen.height - 200;
+    private readonly int dx = 40;
+    private readonly int borderSize = 2;
+
+    public PlayerInventory() {
+        _blockTextures = new Dictionary<int, Texture2D> {
+            {0, Resources.Load<Texture2D>("BlockImages/grass")},
+            {1, Resources.Load<Texture2D>("BlockImages/earth")},
+            {2, Resources.Load<Texture2D>("BlockImages/iron")},
+            {3, Resources.Load<Texture2D>("BlockImages/stone")}
+        };
+        _guiStyle.fontSize = 30;
+        _guiStyle.fontStyle = FontStyle.Bold;
+        
+        _selectedStyle.border = new RectOffset(borderSize, borderSize, borderSize, borderSize);
+        _selectedStyle.normal.background = Resources.Load<Texture2D>("BlockImages/border");
+    }
+
+    public void Add(BlockType blockType) {
+        _items[(int) blockType % _items.Length] += 1;
+    }
+
+    public void Remove(BlockType blockType) {
+        _items[(int) blockType] -= 1;
+    }
+
+    public void Draw(BlockType activeBlock) {
+        int dy = 0;
+        for (int blockType = 0; blockType < _items.Length; blockType++) {
+            if (blockType == (int) activeBlock) {
+                GUI.Box(new Rect(initX - 5, initY - 5 + dy, 70, 40), GUIContent.none, _selectedStyle);
+            }
+            GUI.DrawTexture(new Rect(initX, initY + dy, 30, 30), _blockTextures[blockType]);
+            GUI.Label(new Rect(initX + dx, initY + dy, 30, 30), _items[blockType].ToString(), _guiStyle);
+            dy += 40;
+        }
+    }
 }
 
 public class MapPopup : MonoBehaviour {
     public enum MapPopupAction {
-        Load, Save
+        Load,
+        Save
     }
-    
+
     public MapPopupAction action;
 
     private World _world;
@@ -494,7 +555,7 @@ public class MapPopup : MonoBehaviour {
             windowRect = GUI.Window(0, windowRect, DialogWindow, $"{action.ToString()} Map");
         }
     }
-    
+
     void DialogWindow(int windowID) {
         GUI.Label(new Rect(5, 20, windowRect.width - 10, 20), "Map Name:");
         mapName = GUI.TextField(new Rect(5, 40, windowRect.width - 10, 20), mapName);
@@ -502,11 +563,14 @@ public class MapPopup : MonoBehaviour {
         if (GUI.Button(new Rect(5, 60, windowRect.width - 10, 20), action.ToString())) {
             if (action == MapPopupAction.Load) {
                 _world.LoadChunks(mapName);
-            } else if (action == MapPopupAction.Save) {
+            }
+            else if (action == MapPopupAction.Save) {
                 _world.SerializeChunks(mapName);
             }
+
             Close();
         }
+
         if (GUI.Button(new Rect(5, 80, windowRect.width - 10, 20), "Cancel")) {
             Close();
         }
