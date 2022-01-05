@@ -77,6 +77,7 @@ public class Player : NetworkBehaviour {
     private World _world;
     private GameMode _gameMode;
     private Camera _playerCamera;
+    private Camera _weaponCamera;
     private float _health;
     private Rigidbody _rb;
     private Camera _camera;
@@ -162,11 +163,12 @@ public class Player : NetworkBehaviour {
         _activeBlock = BlockType.Grass;
         _inventory = gameObject.AddComponent<PlayerInventory>();
         weaponModels.ForEach(w => w.layer = LayerMask.NameToLayer(WeaponLayerName));
-        
+
         _playerCamera = GetComponentInChildren<Camera>();
-        mouseActive = true;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        // mouseActive = true;
+        // Cursor.lockState = CursorLockMode.Locked;
+        // Cursor.visible = false;
+        DeactivateMouse();
 
         transform.position = new Vector3(0, 7, 0);
 
@@ -174,8 +176,12 @@ public class Player : NetworkBehaviour {
         if (!IsOwner)
             return;
         Debug.Log(" after  is owner");
-        _camera = gameObject.GetComponentInChildren<Camera>();
+        
+        Camera[] cameras = gameObject.GetComponentsInChildren<Camera>();
+        _camera = cameras[0];
         _camera.enabled = true;
+        _weaponCamera = cameras[1];
+        _weaponCamera.enabled = true;
         Debug.Log("Camera enabled");
         gameObject.GetComponentInChildren<AudioListener>().enabled = true;
 
@@ -205,14 +211,14 @@ public class Player : NetworkBehaviour {
         bool run = Input.GetKey(KeyCode.LeftShift);
         bool destroyBlock = mouseActive && Input.GetMouseButtonDown(0);
         bool buildBlock = mouseActive && Input.GetMouseButtonDown(1);
-        bool saveMap = Input.GetKeyDown(KeyCode.Z);
-        bool loadMap = Input.GetKeyDown(KeyCode.U);
+        bool saveMap = mouseActive && Input.GetKeyDown(KeyCode.Z);
+        bool loadMap = mouseActive && Input.GetKeyDown(KeyCode.U);
         bool deactivateMouse = Input.GetKeyDown(KeyCode.Escape);
-        bool assaultRifle = Input.GetKeyDown(KeyCode.Alpha1);
-        bool handgun = Input.GetKeyDown(KeyCode.Alpha2);
-        bool shovel = Input.GetKeyDown(KeyCode.Alpha3);
-        bool iterBlocks = Input.mouseScrollDelta.y < 0;
-        bool iterBlocksRev = Input.mouseScrollDelta.y > 0;
+        bool assaultRifle = mouseActive && Input.GetKeyDown(KeyCode.Alpha1);
+        bool handgun = mouseActive && Input.GetKeyDown(KeyCode.Alpha2);
+        bool shovel = mouseActive && Input.GetKeyDown(KeyCode.Alpha3);
+        bool iterBlocks = mouseActive && Input.mouseScrollDelta.y < 0;
+        bool iterBlocksRev = mouseActive && Input.mouseScrollDelta.y > 0;
 
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
@@ -468,6 +474,7 @@ public class Player : NetworkBehaviour {
                         PlayWeaponSound(_activeWeapon);
                         _tFired = Time.time;
                     }
+
                     break;
             }
         }
