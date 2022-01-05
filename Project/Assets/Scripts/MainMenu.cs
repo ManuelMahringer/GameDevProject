@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.IO;
 using System.Linq;
+using Unity.Netcode;
 
 public class MainMenu : MonoBehaviour {
     [SerializeField]
@@ -27,6 +28,8 @@ public class MainMenu : MonoBehaviour {
         
         gameModeDropdown.ClearOptions();
         gameModeDropdown.AddOptions(((GameMode[])Enum.GetValues(typeof(GameMode))).Select(gm => gm.ToString()).ToList());
+        
+        //Debug.Log(NetworkManager.Singleton.ConnectedClients);
     }
 
     public void PlayGame() {

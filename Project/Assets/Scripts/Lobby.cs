@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using TMPro;
@@ -9,6 +10,9 @@ using Unity.Netcode;
 using UnityEngine.UI;
 
 public class Lobby : NetworkBehaviour {
+    [SerializeField]
+    private TMP_Dropdown mapDropdown;
+    
     // per default network variables can only be set by the server
     private NetworkVariable<int> _players = new NetworkVariable<int>(0);
 
@@ -46,6 +50,13 @@ public class Lobby : NetworkBehaviour {
         _redTMPTexts[0] = GameObject.Find("Player3").GetComponentInChildren<TMP_Text>();
         _redTMPTexts[1] = GameObject.Find("Player4").GetComponentInChildren<TMP_Text>();
         _redTMPTexts[2] = GameObject.Find("Player5").GetComponentInChildren<TMP_Text>();
+        
+        string[] mapPaths = Directory.GetDirectories(Application.persistentDataPath);
+        string[] mapNames = mapPaths.Select(path => path.Split(Path.DirectorySeparatorChar).Last()).ToArray();
+
+        mapDropdown.ClearOptions();
+        mapDropdown.AddOptions(mapNames.ToList());
+        mapDropdown.AddOptions(new List<string> { "Generate" }); // dummy option to still be able to generate the random map TODO: remove
         
     }
     
