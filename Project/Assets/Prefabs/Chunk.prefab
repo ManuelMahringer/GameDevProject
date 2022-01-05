@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: -3403030191125352430}
   m_Layer: 0
   m_Name: Chunk
-  m_TagString: Untagged
+  m_TagString: World
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -96,14 +96,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worldMaterial: {fileID: 13400000, guid: 0484e9abac8a6984dabefe4c524439b8, type: 2}
+  blockSize: 1
   chunkSize:
-    x: 16
-    y: 16
-    z: 16
+    x: 12
+    y: 12
+    z: 12
   seed: 100
   intensity: 3
   textureBlockSize: {x: 32, y: 32}
-  highlightBlockMaterial: {fileID: 2100000, guid: a1981fef895c9314f8b5aeda0e8a09c1, type: 2}
 --- !u!114 &-3403030191125352430
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -119,4 +119,4 @@ MonoBehaviour:
   GlobalObjectIdHash: 951099334
   AlwaysReplicateAsRoot: 0
   DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
+  AutoObjectParentSync: 0

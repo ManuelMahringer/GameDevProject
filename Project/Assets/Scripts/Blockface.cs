@@ -1,11 +1,11 @@
 using System;
 using UnityEngine;
 using System.Collections;
+using Unity.Netcode;
 using Object = System.Object;
 
 
-public enum BlockFace
-{
+public enum BlockFace {
     All,
     Top, //Y+
     Bottom, //Y-
@@ -15,43 +15,80 @@ public enum BlockFace
     Near //Z-    
 }
 
-public enum BlockType
-{
-    Grass = 100, // Type and corresponding health 
-    Stone = 200,
-    Metal = 300,
-    Earth = 100,
+public enum BlockType {
+    Grass = 0,
+    Earth = 1,
+    Metal = 2,
+    Stone = 3,
 }
 
+
+// public enum BlockType {
+//     Grass = 120, // Type and corresponding health 
+//     Stone = 200,
+//     Metal = 300,
+//     Earth = 100,
+// }
+
+public static class BlockProperties {
+    public static sbyte MaxHealth(BlockType bt) {
+        switch (bt) {
+            case BlockType.Earth:
+                return 30;
+            case BlockType.Grass:
+                return 30;
+            case BlockType.Metal:
+                return 100;
+            case BlockType.Stone:
+                return 70;
+            default:
+                Debug.Log("Error in Blockface.cs: BlockProperties.MaxHealth invalid BlockType");
+                return 0;
+        }
+    }
+}
+
+
 [Serializable]
-public class Block
-{
-    public bool empty;
-    public byte id = 0;
-    public int health;
-
-    public Block ReturnBlock => this;
-
-    public Block(bool isEmpty)
-    {
-        empty = isEmpty;
-        health = 100;
+public class Block : INetworkSerializable {
+    public bool Empty {
+        get => health == 0;
+        set => health = (sbyte) (value ? 0 : MaxHealth);
     }
 
-    public void DamageBlock(int points)
-    {
+    public sbyte MaxHealth => BlockProperties.MaxHealth((BlockType) id);
+
+    public byte id;
+    public sbyte health;
+
+    public Block() {
+    }
+
+    public Block(bool isEmpty, byte id) {
+        health = 0;
+        this.id = id;
+        Empty = isEmpty;
+    }
+
+    public void DamageBlock(sbyte points) {
         Debug.Log("Damage to block from " + health + " to " + (health - points));
         health -= points;
-        if(health <= 0){
-            empty = true;
+        if (health <= 0) {
+            Empty = true;
             Debug.Log("setting to empty");
-        }else if (health <= 50) {
+        }
+        else if (health <= MaxHealth / 2 && id < 4) {
             Debug.Log("damaged");
             id += 4;
         }
     }
 
     public override string ToString() {
-        return "Id: " + id + ", empty: " + empty + ", health: " + health;
+        return "Id: " + id + ", empty: " + Empty + ", health: " + health;
+    }
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter {
+        serializer.SerializeValue(ref id);
+        serializer.SerializeValue(ref health);
     }
 }

@@ -2,10 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using System.Threading.Tasks;
 using Unity.Netcode;
+using UnityEditor;
 using Random = UnityEngine.Random;
 
 
@@ -16,9 +18,10 @@ public class Chunk : NetworkBehaviour {
     public int seed;
     public int intensity;
     public Vector2 textureBlockSize;
+    public Block[,,] chunkBlocks;
 
-    
-    private Block[,,] chunkBlocks;
+    private World _world;
+    private Vector3 pos;
     private Mesh chunkMesh;
     private List<Vector3> chunkVertices = new List<Vector3>();
     private List<Vector2> chunkUV = new List<Vector2>();
@@ -26,37 +29,16 @@ public class Chunk : NetworkBehaviour {
     private int verticesIndex;
     private Texture textureAtlas;
     private Vector2 atlasSize;
-    
-    // RVector3 chunkPosition;
-    //
-    // public RVector3 Position {
-    //     get { return chunkPosition; }
-    //     set { chunkPosition = value; }
-    // }
-
-
-    // public RVector3 Size {
-    //     get { return chunkSize; }
-    //     set { chunkSize = value; }
-    // }
-
-
-    // public Block[,,] ReturnChunkBlocks {
-    //     get { return chunkBlocks; }
-    // }
-    //
-    // public Chunk ThisChunk {
-    //     get { return this; }
-    // }
-    
-    [ServerRpc(RequireOwnership = false)]
-    public void PingServerRpc(string sometext) {
-        Debug.Log("ServerRPC Called " + sometext);
-    }
 
     void Awake() {
+        _world = GameObject.Find("World").GetComponent<World>();
         textureAtlas = transform.GetComponent<MeshRenderer>().material.mainTexture;
-
+        
+        float worldSize = _world.size * _world.chunkSize;
+        int posX = (int) ((transform.position.x + worldSize / 2) / _world.chunkSize);
+        int posZ = (int) ((transform.position.z + worldSize / 2) / _world.chunkSize);
+        pos = new Vector3(posX, 1, posZ);
+            
         atlasSize = new Vector2(textureAtlas.width / textureBlockSize.x, textureAtlas.height / textureBlockSize.y);
         chunkMesh = GetComponent<MeshFilter>().mesh;
         chunkMesh.MarkDynamic();
@@ -66,61 +48,116 @@ public class Chunk : NetworkBehaviour {
                 GenerateChunk();
                 Debug.Log("GENERATING MAP");
             }
+            else {
+                Load(ComponentManager.Map.Name, (int) pos.x, (int) pos.z);
+            }
         }
     }
 
-    public void DestroyBlock(Vector3 hit) {
-        Debug.Log(hit.x + " " + hit.y + " " + hit.z);
-        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
+    [ClientRpc]
+    public void ReceiveInitialChunkDataClientRpc(Block[] blocks) {
+        Debug.Log("CHUNK BLOCKS RECEIVED");
+        chunkBlocks = ExpandBlocks(chunkSize.x+1, chunkSize.y+1, chunkSize.z+1, blocks);
         UpdateChunk();
     }
-
+    
     [ServerRpc(RequireOwnership = false)]
     public void DestroyBlockServerRpc(Vector3 hit) {
         Debug.Log("DESTROY BLOCK PER RPC");
-        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
-        UpdateChunk();
-        DestroyBlockClientRpc(hit);
+        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = true;
+        DestroyBlockSerializedClientRpc(FlattenBlocks());
     }
 
     [ClientRpc]
-    public void DestroyBlockClientRpc(Vector3 hit) {
-        Debug.Log("DESTROY BLOCK PER CLIENT RPC");
-        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
+    private void DestroyBlockSerializedClientRpc(Block[] blocks) {
+        Debug.Log("DESTROY BLOCK SERIALIZED CLIENT RPC");
+        chunkBlocks = ExpandBlocks(chunkSize.x+1, chunkSize.y+1, chunkSize.z+1, blocks);
         UpdateChunk();
     }
+    
+    // [ClientRpc]
+    // private void DestroyBlockClientRpc(Vector3 hit) {
+    //     Debug.Log("DESTROY BLOCK PER CLIENT RPC");
+    //     chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = true;
+    //     
+    //     UpdateChunk();
+    //
+    // }
 
-    public void BuildBlock(Vector3 hit) {
+    public void BuildBlockServer(Vector3 hit, BlockType blockType) {
+        if (!IsServer)
+            Debug.Log("SERVER BUILD BLOCK NOT CALLED BY OWNER - THIS SHOULD NEVER HAPPEN");
         Debug.Log("NORMAL BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
-        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
-        BuildBlockClientRpc(hit);
-        UpdateChunk();
+        Block block = chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)];
+        block.id = (byte) blockType;
+        block.Empty = false;
+        Debug.Log("Calling the serialized method");
+        BuildBlockSerializedClientRpc(FlattenBlocks());
+        // Chunk Size debug
+        // int sendSize = 2000;
+        // Block[] sendVec = new Block[sendSize];
+        // var flat = FlattenBlocks();
+        // for (int i = 0; i < sendSize; i++) {
+        //     sendVec[i] = flat[i];
+        // }
+        // BuildBlockSerializedClientRpc(sendVec);
     }
 
     [ClientRpc]
-    public void BuildBlockClientRpc(Vector3 hit) {
-        if (IsOwner)
-            return;
-        Debug.Log("Client RPC BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
-        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
+    private void BuildBlockSerializedClientRpc(Block[] blocks) {
+        Debug.Log("BUILD BLOCK SERIALIZED CLIENT RPC");
+        Debug.Log(blocks);
+        chunkBlocks = ExpandBlocks(chunkSize.x+1, chunkSize.y+1, chunkSize.z+1, blocks);
         UpdateChunk();
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void BuildBlockServerRpc(Vector3 hit) {
-        Debug.Log(hit.x + " " + hit.y + " " + hit.z);
-
-        chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
-        Debug.Log("BUILDING");
-        UpdateChunk();
-    }
-
-    public void DamageBlock(Vector3 hit, int damage) {
+    // [ClientRpc]
+    // private void BuildBlockClientRpc(Vector3 hit) {
+    //     Debug.Log("Client RPC BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
+    //     chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = false;
+    //     UpdateChunk();
+    // }
+    
+    public void DamageBlock(Vector3 hit, sbyte damage) {
         Debug.Log(hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].DamageBlock(damage);
         Debug.Log("Damaging");
         UpdateChunk();
     }
+    
+    // Flatten 3D block array to 1D to be able to send it over network
+    public Block[] FlattenBlocks() {
+        return chunkBlocks.Cast<Block>().ToArray();
+    }
+    
+    // Expand the flattened 1D block array back to 3D
+    // https://stackoverflow.com/questions/62381835/how-to-get-a-2d-array-of-strings-across-the-photon-network-in-a-unity-multi-play
+    private Block[,,] ExpandBlocks(int elCountX, int elCountY, int elSize, Block[] blocks) {
+        Block[,,] expBlocks = new Block[elCountX, elCountY, elSize];
+        for (var x = 0; x < elCountX; x++) {
+            for (var y = 0; y < elCountY; y++) {
+                for (var z = 0; z < elSize; z++) {
+                    expBlocks[x, y, z] = blocks[(x * elCountY * elSize) + (y * elSize) + z];
+                }    
+            }
+        }
+        return expBlocks;
+    }
+    
+    // [ServerRpc(RequireOwnership = false)]
+    // public void BuildBlockServerRpc(Vector3 hit) {
+    //     Debug.Log(hit.x + " " + hit.y + " " + hit.z);
+    //
+    //     chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = false;
+    //     Debug.Log("BUILDING");
+    //     UpdateChunk();
+    // }
+    
+    // public void DestroyBlock(Vector3 hit) {
+    //     Debug.Log(hit.x + " " + hit.y + " " + hit.z);
+    //     chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
+    //     UpdateChunk();
+    // }
     
     public void Serialize(string mapName, int x, int y) {
         BinaryFormatter bf = new BinaryFormatter();
@@ -159,11 +196,11 @@ public class Chunk : NetworkBehaviour {
         for (int x = 0; x <= chunkSize.x; x++) {
             for (int z = 0; z <= chunkSize.z; z++) {
                 for (int y = 0; y <= chunkSize.y; y++) {
-                    chunkBlocks[x, y, z] = new Block(true);
+                    chunkBlocks[x, y, z] = new Block(true, 0);
 
                     if (y <= chunkHeights[x, z]) {
-                        chunkBlocks[x, y, z] = new Block(false);
-                        chunkBlocks[x, y, z].id = (byte) Random.Range(0, 4);
+                        chunkBlocks[x, y, z] = new Block(false, (byte) Random.Range(0, 4));
+                        //chunkBlocks[x, y, z].id = (byte) Random.Range(0, 4);
                         //Debug.Log("Creating Block with id" + chunkBlocks[x, y, z].id);
                     }
                 }
@@ -254,7 +291,7 @@ public class Chunk : NetworkBehaviour {
         for (var y = 0; y <= chunkSize.y; y++) {
             for (var x = 0; x <= chunkSize.x; x++) {
                 for (var z = 0; z <= chunkSize.z; z++) {
-                    if (!chunkBlocks[x, y, z].empty) {
+                    if (!chunkBlocks[x, y, z].Empty) {
                         AddVertices(x, y, z);
                     }
                 }
@@ -281,7 +318,7 @@ public class Chunk : NetworkBehaviour {
             case BlockFace.Top: //Checks top face
                 if (y + 1 <= chunkSize.y) {
                     //Debug.Log(chunkBlocks[x, y + 1, z].empty);
-                    if (!chunkBlocks[x, y + 1, z].empty) {
+                    if (!chunkBlocks[x, y + 1, z].Empty) {
                         return false;
                     }
                 }
@@ -290,7 +327,7 @@ public class Chunk : NetworkBehaviour {
 
             case BlockFace.Bottom: //Checks bottom face
                 if (y - 1 >= 0) {
-                    if (!chunkBlocks[x, y - 1, z].empty) {
+                    if (!chunkBlocks[x, y - 1, z].Empty) {
                         return false;
                     }
                 }
@@ -300,7 +337,7 @@ public class Chunk : NetworkBehaviour {
 
 
                 if (x + 1 <= chunkSize.x) {
-                    if (!chunkBlocks[x + 1, y, z].empty) {
+                    if (!chunkBlocks[x + 1, y, z].Empty) {
                         return false;
                     }
                 }
@@ -309,7 +346,7 @@ public class Chunk : NetworkBehaviour {
             case BlockFace.Left: //Checks Left face
 
                 if (x - 1 >= 0) {
-                    if (!chunkBlocks[x - 1, y, z].empty) {
+                    if (!chunkBlocks[x - 1, y, z].Empty) {
                         return false;
                     }
                 }
@@ -318,7 +355,7 @@ public class Chunk : NetworkBehaviour {
             case BlockFace.Far: //Checks Far face
 
                 if (z + 1 <= chunkSize.z) {
-                    if (!chunkBlocks[x, y, z + 1].empty) {
+                    if (!chunkBlocks[x, y, z + 1].Empty) {
                         return false;
                     }
                 }
@@ -327,7 +364,7 @@ public class Chunk : NetworkBehaviour {
 
             case BlockFace.Near: //Checks Near face
                 if (z - 1 >= 0) {
-                    if (!chunkBlocks[x, y, z - 1].empty) {
+                    if (!chunkBlocks[x, y, z - 1].Empty) {
                         return false;
                     }
                 }
