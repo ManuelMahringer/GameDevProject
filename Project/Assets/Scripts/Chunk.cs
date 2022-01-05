@@ -43,13 +43,17 @@ public class Chunk : NetworkBehaviour {
         chunkMesh = GetComponent<MeshFilter>().mesh;
         chunkMesh.MarkDynamic();
         if (IsOwnedByServer) {
-            if (ComponentManager.Map.Name == "Generate") {
+            //if (ComponentManager.Map.Name == "Generate") {
+            if (_world.selectedMap.Value == "Generate") {
                 // dummy option to still be able to generate the random map TODO: remove
                 GenerateChunk();
                 Debug.Log("GENERATING MAP");
             }
             else {
-                Load(ComponentManager.Map.Name, (int) pos.x, (int) pos.z);
+                string mapName = _world.selectedMap.Value;
+                // he host was für eine map junge
+                Debug.Log("Selected World in Chunk " + _world.selectedMap.Value);
+                Load(mapName, (int) pos.x, (int) pos.z);
             }
         }
     }

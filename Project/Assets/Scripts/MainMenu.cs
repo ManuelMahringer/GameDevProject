@@ -34,9 +34,9 @@ public class MainMenu : MonoBehaviour {
 
     public void PlayGame() {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
-        ComponentManager.Map = maps[mapDropdown.value];
+        //ComponentManager.Map = maps[mapDropdown.value];
         ComponentManager.gameMode = (GameMode)gameModeDropdown.value;
-        Debug.Log(ComponentManager.Map.Name);
+        //Debug.Log(ComponentManager.Map.Name);
     }
     
     public void QuitGame() {

@@ -12,6 +12,7 @@ public class World : NetworkBehaviour {
     public PhysicMaterial worldMaterial;
     public int size;
     
+    public NetworkVariable<NetworkString> selectedMap = new NetworkVariable<NetworkString>(0);
     
     [SerializeField] public float chunkSize;
 
@@ -55,9 +56,11 @@ public class World : NetworkBehaviour {
         for (int x = 0; x < size; x++) {
             for (int z = 0; z < size; z++) {
                 Debug.Log("instantiate now");
+                Debug.Log("Selected World " + selectedMap.Value);
                 chunks[x, z] = Instantiate(chunkPrefab, new Vector3(-worldSize / 2 + chunkSize * x, 1, -worldSize / 2 + chunkSize * z), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
-                if (ComponentManager.Map.Name != "Generate") { // dummy option to still be able to generate the random map TODO: remove
-                    chunks[x, z].GetComponent<Chunk>().Load(ComponentManager.Map.Name, x, z);
+                //if (ComponentManager.Map.Name != "Generate") { // dummy option to still be able to generate the random map TODO: remove
+                if (selectedMap.Value == "Generate") {
+                    chunks[x, z].GetComponent<Chunk>().Load(selectedMap.Value, x, z);
                 }
                 chunks[x, z].GetComponent<NetworkObject>().Spawn();
                 //Debug.Log("spawned");
@@ -77,8 +80,8 @@ public class World : NetworkBehaviour {
                 Debug.Log("instantiate now");
                 chunks[x, y].GetComponent<NetworkObject>().Despawn();
                 chunks[x, y] = Instantiate(chunkPrefab, new Vector3(-worldSize / 2 + chunkSize * x, 1, -worldSize / 2 + chunkSize * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
-                if (ComponentManager.Map.Name != "Generate") { // dummy option to still be able to generate the random map TODO: remove
-                    chunks[x, y].GetComponent<Chunk>().Load(ComponentManager.Map.Name, x, y);
+                if (selectedMap.Value != "Generate") { // dummy option to still be able to generate the random map TODO: remove
+                    chunks[x, y].GetComponent<Chunk>().Load(selectedMap.Value, x, y);
                 }
                 chunks[x, y].GetComponent<NetworkObject>().Spawn();
                 //Debug.Log("spawned");

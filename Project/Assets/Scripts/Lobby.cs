@@ -12,6 +12,9 @@ using UnityEngine.UI;
 public class Lobby : NetworkBehaviour {
     [SerializeField]
     private TMP_Dropdown mapDropdown;
+    private List<Map> maps;
+
+    private World _world;
     
     // per default network variables can only be set by the server
     private NetworkVariable<int> _players = new NetworkVariable<int>(0);
@@ -37,8 +40,12 @@ public class Lobby : NetworkBehaviour {
     }
     
     void Start() {
-        if (IsServer) {
-            _registered_count = 1; // me - the host
+        _world = GameObject.Find("World").GetComponent<World>();
+        
+        Debug.Log("is HOst " +IsHost + " server" + IsServer );
+        if (!IsHost) {
+            GameObject.Find("ButtonStart").SetActive(false);
+            mapDropdown.gameObject.SetActive(false);
         }
 
         GameObject.Find("internalClientID").GetComponent<Text>().text = NetworkManager.LocalClientId.ToString();
@@ -54,10 +61,12 @@ public class Lobby : NetworkBehaviour {
         string[] mapPaths = Directory.GetDirectories(Application.persistentDataPath);
         string[] mapNames = mapPaths.Select(path => path.Split(Path.DirectorySeparatorChar).Last()).ToArray();
 
+        maps = mapPaths.Zip(mapNames, (mapPath, mapName) => new Map {Path = mapPath, Name = mapName}).ToList();
+        maps.Add(new Map {Name = "Generate", Path = ""}); // dummy option to still be able to generate the random map TODO: remove
+        
         mapDropdown.ClearOptions();
         mapDropdown.AddOptions(mapNames.ToList());
         mapDropdown.AddOptions(new List<string> { "Generate" }); // dummy option to still be able to generate the random map TODO: remove
-        
     }
     
     
@@ -65,10 +74,9 @@ public class Lobby : NetworkBehaviour {
         if(oldVal != newVal)
             GameObject.Find("AmountOfPlayers").GetComponent<Text>().text = _players.Value.ToString();
     }
-    
+
     void OnEnable() {
         _players.OnValueChanged += OnPlayersChanged;
-
     }
 
     // Update is called once per frame
@@ -147,5 +155,17 @@ public class Lobby : NetworkBehaviour {
     }
     public void SubmitNameRed() {
         AddPlayerServerRpc(Team.Red, NetworkManager.LocalClientId, GameObject.Find("InputText").GetComponent<Text>().text);
+    }
+
+    public void StartGame() {
+        //ComponentManager.Map = maps[mapDropdown.value];
+        _world.selectedMap.Value = maps[mapDropdown.value].Name;
+        _world.GetComponent<World>().BuildWorld();
+        CloseLobbyClientRpc();
+    }
+    
+    [ClientRpc]
+    public void CloseLobbyClientRpc() {
+        gameObject.SetActive(false);
     }
 }

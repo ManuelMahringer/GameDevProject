@@ -16,12 +16,12 @@ public class GameNetworkManager : MonoBehaviour {
         }
         if (ComponentManager.mode == Mode.Server) {
             NetworkManager.Singleton.StartServer();
-            GameObject.Find("World").GetComponent<World>().BuildWorld();
+            //GameObject.Find("World").GetComponent<World>().BuildWorld();
         }
         if (ComponentManager.mode == Mode.Host) {
             Debug.Log("starting host");
             NetworkManager.Singleton.StartHost();
-            GameObject.Find("World").GetComponent<World>().BuildWorld();
+            //GameObject.Find("World").GetComponent<World>().BuildWorld();
         }
     }
     

@@ -247,13 +247,11 @@ public class Player : NetworkBehaviour {
 
         if (iterBlocks) {
             _activeBlock = (BlockType) (((int) _activeBlock + 1) % _inventory.Size);
-            Debug.Log("New active block " + _activeBlock);
         }
 
         if (iterBlocksRev) {
             int nextBlock = ((int) _activeBlock - 1) % _inventory.Size;
             _activeBlock = (BlockType) (nextBlock < 0 ? nextBlock + _inventory.Size : nextBlock); // we have to do this because unity modulo operation is shit
-            Debug.Log("New active block " + _activeBlock + " (rev)");
         }
 
         ProcessMouseInput();
