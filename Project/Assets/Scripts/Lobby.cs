@@ -33,8 +33,9 @@ public class Lobby : NetworkBehaviour {
     }
     
     void Start() {
-        if (IsServer) {
-            _registered_count = 1; // me - the host
+        Debug.Log("is HOst " +IsHost + " server" + IsServer );
+        if (!IsHost) {
+            GameObject.Find("ButtonStart").SetActive(false);
         }
 
         GameObject.Find("internalClientID").GetComponent<Text>().text = NetworkManager.LocalClientId.ToString();
@@ -136,5 +137,15 @@ public class Lobby : NetworkBehaviour {
     }
     public void SubmitNameRed() {
         AddPlayerServerRpc(Team.Red, NetworkManager.LocalClientId, GameObject.Find("InputText").GetComponent<Text>().text);
+    }
+
+    public void StartGame() {
+        GameObject.Find("World").GetComponent<World>().BuildWorld();
+        CloseLobbyClientRpc();
+    }
+    
+    [ClientRpc]
+    public void CloseLobbyClientRpc() {
+        gameObject.SetActive(false);
     }
 }
