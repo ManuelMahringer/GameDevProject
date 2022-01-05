@@ -27,6 +27,7 @@ public enum GameMode {
 public class Player : NetworkBehaviour {
     private static readonly string WorldTag = "World";
     private static readonly string PlayerTag = "Player";
+    private static readonly string WeaponLayerName = "Weapon";
 
     [Header("Health & Damage")] public float maxHealth = 100f;
 
@@ -160,7 +161,8 @@ public class Player : NetworkBehaviour {
         SwitchWeapons("Handgun");
         _activeBlock = BlockType.Grass;
         _inventory = gameObject.AddComponent<PlayerInventory>();
-
+        weaponModels.ForEach(w => w.layer = LayerMask.NameToLayer(WeaponLayerName));
+        
         _playerCamera = GetComponentInChildren<Camera>();
         mouseActive = true;
         Cursor.lockState = CursorLockMode.Locked;
@@ -359,7 +361,7 @@ public class Player : NetworkBehaviour {
             if (string.IsNullOrEmpty(groundTag) || String.Compare(_hit.collider.tag, groundTag, StringComparison.Ordinal) == 0)
                 _groundLocation = _hit.point;
             float distanceFromPlayerToGround = Vector3.Distance(transform.position, _groundLocation);
-            isGrounded = !(distanceFromPlayerToGround > 1f + 0.0001f);
+            isGrounded = !(distanceFromPlayerToGround > 0.9f + 0.0001f);
         }
         else {
             isGrounded = false;
@@ -489,8 +491,8 @@ public class PlayerInventory : MonoBehaviour {
     private readonly GUIStyle _selectedStyle = new GUIStyle();
     private Dictionary<int, Texture2D> _blockTextures;
 
-    private readonly int initX = Screen.width - 150;
-    private readonly int initY = Screen.height - 200;
+    private readonly int initX = Screen.width - 100;
+    private readonly int initY = Screen.height / 2;
     private readonly int dx = 40;
     private readonly int borderSize = 2;
 
@@ -503,7 +505,7 @@ public class PlayerInventory : MonoBehaviour {
         };
         _guiStyle.fontSize = 30;
         _guiStyle.fontStyle = FontStyle.Bold;
-        _guiStyle.normal.textColor = Color.white;
+        _guiStyle.normal.textColor = Color.black;
 
         _selectedStyle.border = new RectOffset(borderSize, borderSize, borderSize, borderSize);
         _selectedStyle.normal.background = Resources.Load<Texture2D>("BlockImages/border");
