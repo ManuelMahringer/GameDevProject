@@ -64,6 +64,7 @@ public class Chunk : NetworkBehaviour {
             if (ComponentManager.Map.Name == "Generate") {
                 // dummy option to still be able to generate the random map TODO: remove
                 GenerateChunk();
+                Debug.Log("GENERATING MAP");
             }
         }
     }
