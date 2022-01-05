@@ -169,7 +169,7 @@ public class Chunk : NetworkBehaviour {
         bf.Serialize(fileStream, chunkBlocks);
 
         Debug.Log(savePath);
-        Debug.Log("Serialized");
+        //Debug.Log("Serialized");
     }
 
     public void Load(string mapName, int x, int y) {
@@ -180,7 +180,7 @@ public class Chunk : NetworkBehaviour {
             using var fileStream = File.Open(loadPath, FileMode.Open);
             var updatedBlocks = (Block[,,]) bf.Deserialize(fileStream);
 
-            Debug.Log("Deserialized");
+            //Debug.Log("Deserialized");
             chunkBlocks = updatedBlocks;
             UpdateChunk();
         }
@@ -305,7 +305,7 @@ public class Chunk : NetworkBehaviour {
         MeshCollider mc = gameObject.AddComponent<MeshCollider>();
         mc.material = worldMaterial;
 
-        Debug.Log("updated chunk");
+        //Debug.Log("updated chunk");
     }
 
     private bool CheckSides(RVector3 blockPosition, BlockFace blockFace) {

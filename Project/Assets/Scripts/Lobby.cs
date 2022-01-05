@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using TMPro;
 using UnityEngine;
@@ -9,48 +11,53 @@ using UnityEngine.UI;
 public class Lobby : NetworkBehaviour {
     // per default network variables can only be set by the server
     private NetworkVariable<int> _players = new NetworkVariable<int>(0);
-    //private NetworkVariable<int> _names = new NetworkVariable<int>[6]; 
-    //private NetworkVariable<int> _player0 = new NetworkVariable<int> Everyone, 5);
 
-    //private NetworkVariable<int> _testname = new NetworkVariable<int>();
-    //private Dictionary<ulong, NetworkString> _clientNames = new Dictionary<ulong,NetworkString>();
-    private Dictionary<ulong, int> _clientIds;
-    private TMP_Text[] _playerstrings = new TMP_Text[6];
-    private int _registered_count;
-        
+    private NetworkString p0;
+    private NetworkString p1;
+    private NetworkString p2;
+    private NetworkString p3;
+    private NetworkString p4;
+    private NetworkString p5;
+    private int _playersOnClient = 0;
     
-    // Start is called before the first frame update
-    void Start()
-    {
-        if (IsServer) {
-            _clientIds = new Dictionary<ulong,int>();
-            _registered_count = 1; // me - the host
-        }
-        
-       GameObject.Find("internalClientID").GetComponent<Text>().text = NetworkManager.LocalClientId.ToString();
-       Debug.Log("MAAAAAAAAAANI"+NetworkManager.LocalClientId.ToString());
+    private Dictionary<ulong, string> _clientNamesBlue = new Dictionary<ulong, string>();
+    private Dictionary<ulong, string> _clientNamesRed = new Dictionary<ulong, string>();
+    private TMP_Text[] _blueTMPTexts = new TMP_Text[3];
+    private TMP_Text[] _redTMPTexts = new TMP_Text[3];
+    private int _registered_count;
 
-       Debug.Log(GameObject.Find("Player0").GetComponentInChildren<TMP_Text>().text);
-       _playerstrings[0] = GameObject.Find("Player0").GetComponentInChildren<TMP_Text>();
-       _playerstrings[1] = GameObject.Find("Player1").GetComponentInChildren<TMP_Text>();
-       _playerstrings[2] = GameObject.Find("Player2").GetComponentInChildren<TMP_Text>();
-       _playerstrings[3] = GameObject.Find("Player3").GetComponentInChildren<TMP_Text>();
-       _playerstrings[4] = GameObject.Find("Player4").GetComponentInChildren<TMP_Text>();
-       _playerstrings[5] = GameObject.Find("Player5").GetComponentInChildren<TMP_Text>();
 
-       
+    public enum Team {
+        Red,
+        Blue
     }
     
-    void OnEnable()
-    {
-        // Subscribe for when amount of players value changes
+    void Start() {
+        if (IsServer) {
+            _registered_count = 1; // me - the host
+        }
+
+        GameObject.Find("internalClientID").GetComponent<Text>().text = NetworkManager.LocalClientId.ToString();
+
+        //Debug.Log(GameObject.Find("Player0").GetComponentInChildren<TMP_Text>().text);
+        _blueTMPTexts[0] = GameObject.Find("Player0").GetComponentInChildren<TMP_Text>();
+        _blueTMPTexts[1] = GameObject.Find("Player1").GetComponentInChildren<TMP_Text>();
+        _blueTMPTexts[2] = GameObject.Find("Player2").GetComponentInChildren<TMP_Text>();
+        _redTMPTexts[0] = GameObject.Find("Player3").GetComponentInChildren<TMP_Text>();
+        _redTMPTexts[1] = GameObject.Find("Player4").GetComponentInChildren<TMP_Text>();
+        _redTMPTexts[2] = GameObject.Find("Player5").GetComponentInChildren<TMP_Text>();
+        
+    }
+    
+    
+    void OnPlayersChanged(int oldVal, int newVal) {
+        if(oldVal != newVal)
+            GameObject.Find("AmountOfPlayers").GetComponent<Text>().text = _players.Value.ToString();
+    }
+    
+    void OnEnable() {
         _players.OnValueChanged += OnPlayersChanged;
-        /*
-        for (int i = 0; i < _names.Length; i++) {
-            _names[i]  = new NetworkVariable<NetworkString>("asdf");
-            _names[i].OnValueChanged+= OnNameChanged;
-        }*/
-        //_testname.OnValueChanged += OnNameChanged;
+
     }
 
     // Update is called once per frame
@@ -58,88 +65,76 @@ public class Lobby : NetworkBehaviour {
         if (IsServer)
             _players.Value = NetworkManager.ConnectedClientsIds.Count;
         
-        //Debug.Log("Start printing players");
-        
-        /*foreach (KeyValuePair<ulong, NetworkClient> kvp in NetworkManager.ConnectedClients)
-        {
-            //textBox3.Text += ("Key = {0}, Value = {1}", kvp.Key, kvp.Value);
-            Debug.Log("Key = " + kvp.Key + "  " + "Value = " +kvp.Value.ClientId);
-        }*/
-        //UpdateNames();
-        
-    }
-
-    /*
-    void OnNameChanged(NetworkString oldVal, NetworkString newVal) {
-        Debug.Log("OnNameChangedCalled " + oldVal.ToString() + " " + newVal.ToString());
-        if (oldVal.ToString() != newVal.ToString())
-            UpdateNames();
-    }*/
-
-    void OnPlayersChanged(int oldVal, int newVal) {
-        Debug.Log("On Players Changed called");
-        if(oldVal != newVal)
-            GameObject.Find("AmountOfPlayers").GetComponent<Text>().text = _players.Value.ToString();
+        if (_players.Value != _playersOnClient) {
+            RequestCurrentLobbyServerRpc();
+            _playersOnClient = _players.Value;
+        }
     }
     
-    /*
+    [ServerRpc(RequireOwnership = false)]
+    void RequestCurrentLobbyServerRpc() {
+        UpdateNamesClientRpc(p0, p1, p2, p3, p4, p5);
+    }
+    
+    [ClientRpc]
+    public void UpdateNamesClientRpc(NetworkString p0, NetworkString p1,NetworkString p2,NetworkString p3,NetworkString p4,NetworkString p5) {
+        _blueTMPTexts[0].text = p0.ToString();
+        _blueTMPTexts[1].text = p1.ToString();
+        _blueTMPTexts[2].text = p2.ToString();
+        _redTMPTexts[0].text = p3.ToString();
+        _redTMPTexts[1].text = p4.ToString();
+        _redTMPTexts[2].text = p5.ToString();
+    }
+
+
     [ServerRpc(RequireOwnership = false)]
     void AddPlayerServerRpc(Team team, ulong clientId, NetworkString ns) {
         Debug.Log("SERVERRPC CALLED - I HATE MY LIFE " + ns.ToString());
-        if (_clientNames.ContainsKey(clientId)) {
-            _clientNames[clientId] =  ns;
-            
-        }
-        else {
-            _clientNames.Add(clientId , ns);
-            Debug.Log("Client Names count  " + _clientNames.Count );
-            _names[_clientNames.Count-1].Value = ns.ToString();
-            //_testname.Value = int.Parse(ns);
-        }
-
-        //UpdateNamesClientRpc();
-        Debug.Log("names 2 changed");
-    }
-    
-    
-    [ServerRpc(RequireOwnership = false)]
-    void AddPlayerServerRpc(Team team, ulong clientId) {
-        Debug.Log("SERVERRPC CALLED - I HATE MY LIFE ");
-        if (!_clientIds.ContainsKey(clientId)) {
-            _clientIds[clientId] = _registered_count++; 
-        }
-    }
-    /*
-    [ClientRpc]
-    public void UpdateNamesClientRpc() {
-        for (int i = 0; i < _playerstrings.Length; i++) {
-            Debug.Log("update names on client rpc  called with name " + i + " "  + _names[i].Value.ToString());
-            _playerstrings[i].text = _names[i].Value.ToString();
-
-        }
-    }
-    
-    public void UpdateNames() {
-        for (int i = 0; i < _playerstrings.Length; i++) {
-            //Debug.Log("Value of testname "+ _testname.Value.ToString());
-            //_playerstrings[i].text = _testname.Value.ToString();
-            Debug.Log("Name of " + i + " "  + _names[i].Value);
-            if (_names[i] != null) {
-                _playerstrings[i].text = _names[i].Value.ToString();
+        if (team == Team.Blue) {
+            if (_clientNamesBlue.ContainsKey(clientId)) {
+                _clientNamesBlue[clientId] = ns.ToString();
             }
+            else {
+                _clientNamesBlue.Add(clientId, ns.ToString());
+                switch (_clientNamesBlue.Count - 1) {
+                    case 0:
+                        p0 = ns;
+                        break;
+                    case 1:
+                        p1 = ns;
+                        break;
+                    case 2:
+                        p2 = ns;
+                        break;
+                }
+            }
+        } else if (team == Team.Red) {
+            if (_clientNamesRed.ContainsKey(clientId)) {
+                _clientNamesRed[clientId] = ns.ToString();
+            }
+            else {
+                _clientNamesRed.Add(clientId, ns.ToString());
+                switch (_clientNamesRed.Count - 1) {
+                    case 0:
+                        p3 = ns;
+                        break;
+                    case 1:
+                        p4 = ns;
+                        break;
+                    case 2:
+                        p5 = ns;
+                        break;
+                }
+            }    
         }
+        UpdateNamesClientRpc(p0, p1, p2, p3, p4, p5);
     }
+    
 
-    public void SubmitName() {
-        Debug.Log("submit name called with Input text "+ GameObject.Find("InputText").GetComponent<Text>().text);
-        
-        //Debug.Log("AAA"+GameObject.Find("InputText").GetComponent<Text>().text);
-        //AddPlayerServerRpc(Team.Blue,NetworkManager.LocalClientId, GameObject.Find("InputText").GetComponent<Text>().text);
-        AddPlayerServerRpc(Team.Blue,NetworkManager.LocalClientId);
+    public void SubmitNameBlue() {
+        AddPlayerServerRpc(Team.Blue, NetworkManager.LocalClientId, GameObject.Find("InputText").GetComponent<Text>().text);
     }
-
-    public enum Team {
-        Red,
-        Blue
-    }*/
+    public void SubmitNameRed() {
+        AddPlayerServerRpc(Team.Red, NetworkManager.LocalClientId, GameObject.Find("InputText").GetComponent<Text>().text);
+    }
 }
