@@ -9,8 +9,8 @@ using UnityEngine.UI;
 public class Lobby : NetworkBehaviour {
     // per default network variables can only be set by the server
     private NetworkVariable<int> _players = new NetworkVariable<int>(0);
-    private NetworkVariable<int> _names = new NetworkVariable<int>[6]; 
-    private NetworkVariable<int> _player0 = new NetworkVariable<int> Everyone, 5);
+    //private NetworkVariable<int> _names = new NetworkVariable<int>[6]; 
+    //private NetworkVariable<int> _player0 = new NetworkVariable<int> Everyone, 5);
 
     //private NetworkVariable<int> _testname = new NetworkVariable<int>();
     //private Dictionary<ulong, NetworkString> _clientNames = new Dictionary<ulong,NetworkString>();
@@ -99,7 +99,7 @@ public class Lobby : NetworkBehaviour {
 
         //UpdateNamesClientRpc();
         Debug.Log("names 2 changed");
-    }*/
+    }
     
     
     [ServerRpc(RequireOwnership = false)]
@@ -109,7 +109,7 @@ public class Lobby : NetworkBehaviour {
             _clientIds[clientId] = _registered_count++; 
         }
     }
-    
+    /*
     [ClientRpc]
     public void UpdateNamesClientRpc() {
         for (int i = 0; i < _playerstrings.Length; i++) {
@@ -141,5 +141,5 @@ public class Lobby : NetworkBehaviour {
     public enum Team {
         Red,
         Blue
-    }
+    }*/
 }
