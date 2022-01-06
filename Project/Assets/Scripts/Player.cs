@@ -75,6 +75,12 @@ public class Player : NetworkBehaviour {
     private const float MAXVert = 90.0f;
 
     private AudioSync _audioSync;
+    
+    // [SerializeField]
+    // private Slider healthBar;
+    [SerializeField]
+    public Slider floatingHealthBar;
+    
     private World _world;
     private GameMode _gameMode;
     private Camera _playerCamera;
@@ -116,6 +122,8 @@ public class Player : NetworkBehaviour {
         _audioSource.PlayOneShot(_fallSound);
         _health -= amount;
         _healthBar.value = _health;
+        _world.UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
+        //floatingHealthBar.value -= _health;
         if (_health < 0) {
             Die();
         }
@@ -140,7 +148,9 @@ public class Player : NetworkBehaviour {
 
     private void Start() {
         GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this);
-
+        floatingHealthBar.maxValue = maxHealth;
+        floatingHealthBar.value = maxHealth;
+        
         if (!IsLocalPlayer)
             return;
         _audioSync = GetComponent<AudioSync>();
@@ -162,8 +172,16 @@ public class Player : NetworkBehaviour {
         _loadMapPopup.action = MapPopup.MapPopupAction.Load;
         _activeBlock = BlockType.Grass;
         _inventory = gameObject.AddComponent<PlayerInventory>();
-        weaponModels.ForEach(w => w.layer = LayerMask.NameToLayer(WeaponLayerName));
-
+        //_floatingHealthBarHUD.gameObject.SetActive(false);
+        floatingHealthBar.gameObject.SetActive(false);
+        foreach (var model in weaponModels) {
+            model.layer = LayerMask.NameToLayer(WeaponLayerName);
+            if (model.transform.name == WeaponType.Shovel.ToString()) {
+                model.transform.GetChild(0).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+                model.transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+            }
+        }
+        
         DeactivateMouse();
         transform.position = new Vector3(0, 1, 0);
 
@@ -182,6 +200,7 @@ public class Player : NetworkBehaviour {
             hitRange = Single.PositiveInfinity;
             isGrounded = true;
             _healthBar.gameObject.SetActive(false);
+            //floatingHealthBar.gameObject.SetActive(false);
             runSpeed = walkSpeed = 8f;
             for (int i = 0; i < _inventory.Size; i++) {
                 _inventory.Items[i] = Int32.MaxValue / 2;
@@ -262,6 +281,14 @@ public class Player : NetworkBehaviour {
 
         ProcessMouseInput();
         PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
+    }
+
+    private void LateUpdate() {
+        if (!IsLocalPlayer)
+            return;
+        foreach (Player player in GameNetworkManager.players.Values) {
+            player.floatingHealthBar.transform.rotation = Quaternion.LookRotation(player.floatingHealthBar.transform.position - transform.position);
+        }
     }
 
     private void SwitchWeapons(WeaponType weapon) {
@@ -349,6 +376,7 @@ public class Player : NetworkBehaviour {
             _rb.position = new Vector3(0, 7, 0);
             _health = maxHealth;
             _healthBar.value = _health;
+            _world.UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, maxHealth);
         }
     }
 
@@ -428,7 +456,7 @@ public class Player : NetworkBehaviour {
 
                     break;
                 case RaycastAction.HighlightBlock:
-                    if (_activeWeapon.WeaponType != WeaponType.Shovel || !hit.collider.CompareTag(WorldTag)) {
+                    if (!hit.collider.CompareTag(WorldTag) || _activeWeapon.WeaponType != WeaponType.Shovel) {
                         // only highlight blocks when in building mode and when targeting blocks
                         _highlightBlock.SetActive(false);
                         break;

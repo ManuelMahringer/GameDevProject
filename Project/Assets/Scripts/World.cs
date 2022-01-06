@@ -40,13 +40,13 @@ public class World : NetworkBehaviour {
 
     [ServerRpc(RequireOwnership = false)]
     public void PlayerWeaponChangeServerRpc(ulong id, WeaponType weapon) {
-        Debug.Log("Server: calling player weapon change for all clients for player with id " + id + " and weapon " + weapon);
+        //Debug.Log("Server: calling player weapon change for all clients for player with id " + id + " and weapon " + weapon);
         UpdatePlayerWeaponClientRpc(id, weapon);
     }
     
     [ClientRpc]
     private void UpdatePlayerWeaponClientRpc(ulong id, WeaponType weapon) {
-        Debug.Log("Updated weapon of player " + id + " on player " + NetworkObject.NetworkObjectId + " to weapon " + weapon.ToString());
+        //Debug.Log("Updated weapon of player " + id + " on player " + NetworkObject.NetworkObjectId + " to weapon " + weapon.ToString());
         Player target = GameNetworkManager.players[id];
         target.weaponModels.ForEach(w => w.SetActive(false));
         foreach (GameObject weaponModel in target.weaponModels) {
@@ -56,6 +56,19 @@ public class World : NetworkBehaviour {
                 weaponModel.SetActive(true);
             }
         }
+    }
+
+    [ServerRpc (RequireOwnership = false)]
+    public void UpdateFloatingHealthBarServerRpc(ulong id, float value) {
+        Debug.Log("Server call update health bar of player " + id + " to the value " + value);
+        FloatingHealthBarUpdateClientRpc(id, value);
+    }
+
+    [ClientRpc]
+    private void FloatingHealthBarUpdateClientRpc(ulong id, float value) {
+        Debug.Log("Client updated health bar of player " + id + " to the value " + value);
+        Player target = GameNetworkManager.players[id];
+        target.floatingHealthBar.value = value;
     }
 
    
