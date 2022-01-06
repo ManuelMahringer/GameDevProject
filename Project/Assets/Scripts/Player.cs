@@ -74,6 +74,7 @@ public class Player : NetworkBehaviour {
     private const float MINVert = -90.0f;
     private const float MAXVert = 90.0f;
 
+    private AudioSync _audioSync;
     private World _world;
     private GameMode _gameMode;
     private Camera _playerCamera;
@@ -142,6 +143,7 @@ public class Player : NetworkBehaviour {
 
         if (!IsLocalPlayer)
             return;
+        _audioSync = GetComponent<AudioSync>();
         _gameMode = ComponentManager.gameMode;
         _world = GameObject.Find("World").GetComponent<World>();
         _rb = GetComponent<Rigidbody>();
@@ -372,10 +374,13 @@ public class Player : NetworkBehaviour {
 
     private void PlayWeaponSound(Weapon activeWeapon) {
         if (Time.time - _tFired > _activeWeapon.Firerate) {
-            if (activeWeapon.WeaponType == WeaponType.Handgun)
-                _audioSource.PlayOneShot(_handgunSound);
+            if (activeWeapon.WeaponType == WeaponType.Handgun) {
+                _audioSync.PlaySound(0);
+                //_audioSource.PlayOneShot(_handgunSound);
+            }
             else if (activeWeapon.WeaponType == WeaponType.AssaultRifle)
-                _audioSource.PlayOneShot(_assaultRifleSound);
+                _audioSync.PlaySound(0);
+                //_audioSource.PlayOneShot(_assaultRifleSound);
         }
     }
 
