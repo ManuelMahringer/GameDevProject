@@ -110,6 +110,8 @@ public class Player : NetworkBehaviour {
     }
 
     private void TakeDamage(float amount) {
+        if (!IsLocalPlayer)
+            return;
         //Debug.Log("Take Damage: " + amount);
         _audioSource.PlayOneShot(_fallSound);
         _health -= amount;
@@ -159,15 +161,12 @@ public class Player : NetworkBehaviour {
         _saveMapPopup.action = MapPopup.MapPopupAction.Save;
         _loadMapPopup = gameObject.AddComponent<MapPopup>();
         _loadMapPopup.action = MapPopup.MapPopupAction.Load;
-        SwitchWeapons("Handgun");
+        SwitchWeapons("AssaultRifle");
         _activeBlock = BlockType.Grass;
         _inventory = gameObject.AddComponent<PlayerInventory>();
         weaponModels.ForEach(w => w.layer = LayerMask.NameToLayer(WeaponLayerName));
 
         _playerCamera = GetComponentInChildren<Camera>();
-        // mouseActive = true;
-        // Cursor.lockState = CursorLockMode.Locked;
-        // Cursor.visible = false;
         DeactivateMouse();
 
         transform.position = new Vector3(0, 7, 0);
@@ -191,10 +190,18 @@ public class Player : NetworkBehaviour {
             isGrounded = true;
             _healthBar.gameObject.SetActive(false);
             runSpeed = walkSpeed = 8f;
+            for (int i = 0; i < _inventory.Size; i++) {
+                _inventory.Items[i] = Int32.MaxValue;
+            }
         }
 
+        _world.gameStarted.OnValueChanged += OnGameStarted;
         // Debug.Log("BEFORE CHUNK SEND");
         // _world.GetInitialChunkDataServerRpc();
+    }
+
+    private void OnGameStarted(bool oldVal, bool newVal) {
+        ActivateMouse();
     }
 
     private void Update() {
@@ -208,18 +215,25 @@ public class Player : NetworkBehaviour {
         jump = Input.GetButton("Jump");
         _respawn = Input.GetKey(KeyCode.R);
 
-        bool run = Input.GetKey(KeyCode.LeftShift);
+        bool deactivateMouse = Input.GetKeyDown(KeyCode.Escape);
+        bool run = mouseActive && Input.GetKey(KeyCode.LeftShift);
         bool destroyBlock = mouseActive && Input.GetMouseButtonDown(0);
         bool buildBlock = mouseActive && Input.GetMouseButtonDown(1);
-        bool saveMap = mouseActive && Input.GetKeyDown(KeyCode.Z);
-        bool loadMap = mouseActive && Input.GetKeyDown(KeyCode.U);
-        bool deactivateMouse = Input.GetKeyDown(KeyCode.Escape);
+        bool saveMap = mouseActive && _gameMode == GameMode.Build && Input.GetKeyDown(KeyCode.Z);
+        bool loadMap = mouseActive && _gameMode == GameMode.Build && Input.GetKeyDown(KeyCode.U);
         bool assaultRifle = mouseActive && Input.GetKeyDown(KeyCode.Alpha1);
         bool handgun = mouseActive && Input.GetKeyDown(KeyCode.Alpha2);
         bool shovel = mouseActive && Input.GetKeyDown(KeyCode.Alpha3);
         bool iterBlocks = mouseActive && Input.mouseScrollDelta.y < 0;
         bool iterBlocksRev = mouseActive && Input.mouseScrollDelta.y > 0;
 
+        if (mouseActive && deactivateMouse) {
+            DeactivateMouse();
+        }
+        else if (!mouseActive && deactivateMouse) {
+            ActivateMouse();
+        }
+        
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
         if (destroyBlock) {
@@ -237,12 +251,6 @@ public class Player : NetworkBehaviour {
             _saveMapPopup.Open(this);
         if (loadMap)
             _loadMapPopup.Open(this);
-        if (mouseActive && deactivateMouse) {
-            DeactivateMouse();
-        }
-        else if (!mouseActive && deactivateMouse) {
-            ActivateMouse();
-        }
 
         if (handgun)
             SwitchWeapons("Handgun");
@@ -254,7 +262,6 @@ public class Player : NetworkBehaviour {
         if (iterBlocks) {
             _activeBlock = (BlockType) (((int) _activeBlock + 1) % _inventory.Size);
         }
-
         if (iterBlocksRev) {
             int nextBlock = ((int) _activeBlock - 1) % _inventory.Size;
             _activeBlock = (BlockType) (nextBlock < 0 ? nextBlock + _inventory.Size : nextBlock); // we have to do this because unity modulo operation is shit
@@ -412,7 +419,7 @@ public class Player : NetworkBehaviour {
                             chunk = hit.transform.gameObject;
                             localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
                             Debug.Log("Shoot Block with " + (byte) _activeWeapon.LerpDamage(hit.distance) + " damage");
-                            chunk.GetComponent<Chunk>().DamageBlock(localCoordinate, (sbyte) _activeWeapon.LerpDamage(hit.distance));
+                            chunk.GetComponent<Chunk>().DamageBlockServerRpc(localCoordinate, (sbyte) _activeWeapon.LerpDamage(hit.distance));
                             //_world.GetComponent<World>().UpdateMeshCollider(chunk);
                         }
                         else if (hit.collider.CompareTag(PlayerTag)) {
@@ -426,8 +433,8 @@ public class Player : NetworkBehaviour {
 
                     break;
                 case RaycastAction.HighlightBlock:
-                    if (_activeWeapon.Name != "Shovel") {
-                        // only highlight blocks when in building mode
+                    if (_activeWeapon.Name != "Shovel" || !hit.collider.CompareTag(WorldTag)) {
+                        // only highlight blocks when in building mode and when targeting blocks
                         _highlightBlock.SetActive(false);
                         break;
                     }
@@ -483,7 +490,8 @@ public class Player : NetworkBehaviour {
     private void OnGUI() {
         if (!IsLocalPlayer)
             return;
-        _inventory.Draw(_activeBlock);
+        if (_gameMode == GameMode.Fight)
+            _inventory.Draw(_activeBlock);
     }
 }
 
@@ -491,10 +499,11 @@ public class PlayerInventory : MonoBehaviour {
     public int[] Items => _items;
     public int Size => _items.Length;
 
+    private Dictionary<int, Texture2D> _blockTextures;
+
     private readonly int[] _items = new int[Enum.GetNames(typeof(BlockType)).Length];
     private readonly GUIStyle _guiStyle = new GUIStyle();
     private readonly GUIStyle _selectedStyle = new GUIStyle();
-    private Dictionary<int, Texture2D> _blockTextures;
 
     private readonly int initX = Screen.width - 100;
     private readonly int initY = Screen.height / 2;

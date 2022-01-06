@@ -57,36 +57,16 @@ public class Chunk : NetworkBehaviour {
             }
         }
     }
-
-    [ClientRpc]
-    public void ReceiveInitialChunkDataClientRpc(Block[] blocks) {
-        Debug.Log("CHUNK BLOCKS RECEIVED");
-        chunkBlocks = ExpandBlocks(chunkSize.x+1, chunkSize.y+1, chunkSize.z+1, blocks);
-        UpdateChunk();
-    }
+    
     
     [ServerRpc(RequireOwnership = false)]
     public void DestroyBlockServerRpc(Vector3 hit) {
         Debug.Log("DESTROY BLOCK PER RPC");
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = true;
-        DestroyBlockSerializedClientRpc(FlattenBlocks());
+        UpdateChunkClientRpc(FlattenBlocks());
     }
 
-    [ClientRpc]
-    private void DestroyBlockSerializedClientRpc(Block[] blocks) {
-        Debug.Log("DESTROY BLOCK SERIALIZED CLIENT RPC");
-        chunkBlocks = ExpandBlocks(chunkSize.x+1, chunkSize.y+1, chunkSize.z+1, blocks);
-        UpdateChunk();
-    }
-    
-    // [ClientRpc]
-    // private void DestroyBlockClientRpc(Vector3 hit) {
-    //     Debug.Log("DESTROY BLOCK PER CLIENT RPC");
-    //     chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = true;
-    //     
-    //     UpdateChunk();
-    //
-    // }
+
 
     public void BuildBlockServer(Vector3 hit, BlockType blockType) {
         if (!IsServer)
@@ -96,7 +76,7 @@ public class Chunk : NetworkBehaviour {
         block.id = (byte) blockType;
         block.Empty = false;
         Debug.Log("Calling the serialized method");
-        BuildBlockSerializedClientRpc(FlattenBlocks());
+        UpdateChunkClientRpc(FlattenBlocks());
         // Chunk Size debug
         // int sendSize = 2000;
         // Block[] sendVec = new Block[sendSize];
@@ -106,28 +86,27 @@ public class Chunk : NetworkBehaviour {
         // }
         // BuildBlockSerializedClientRpc(sendVec);
     }
-
-    [ClientRpc]
-    private void BuildBlockSerializedClientRpc(Block[] blocks) {
-        Debug.Log("BUILD BLOCK SERIALIZED CLIENT RPC");
-        Debug.Log(blocks);
-        chunkBlocks = ExpandBlocks(chunkSize.x+1, chunkSize.y+1, chunkSize.z+1, blocks);
-        UpdateChunk();
-    }
-
-    // [ClientRpc]
-    // private void BuildBlockClientRpc(Vector3 hit) {
-    //     Debug.Log("Client RPC BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
-    //     chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = false;
-    //     UpdateChunk();
-    // }
     
-    public void DamageBlock(Vector3 hit, sbyte damage) {
+    [ServerRpc(RequireOwnership = false)]
+    public void DamageBlockServerRpc(Vector3 hit, sbyte damage) {
         Debug.Log(hit.x + " " + hit.y + " " + hit.z);
         chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].DamageBlock(damage);
         Debug.Log("Damaging");
+        UpdateChunkClientRpc(FlattenBlocks());
+    }
+    
+    [ClientRpc]
+    private void UpdateChunkClientRpc(Block[] blocks) {
+        chunkBlocks = ExpandBlocks(chunkSize.x + 1, chunkSize.y + 1, chunkSize.z + 1, blocks);
         UpdateChunk();
     }
+    
+    // public void DamageBlock(Vector3 hit, sbyte damage) {
+    //     Debug.Log(hit.x + " " + hit.y + " " + hit.z);
+    //     chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].DamageBlock(damage);
+    //     Debug.Log("Damaging");
+    //     UpdateChunk();
+    // }
     
     // Flatten 3D block array to 1D to be able to send it over network
     public Block[] FlattenBlocks() {
@@ -156,13 +135,26 @@ public class Chunk : NetworkBehaviour {
     //     Debug.Log("BUILDING");
     //     UpdateChunk();
     // }
-    
     // public void DestroyBlock(Vector3 hit) {
     //     Debug.Log(hit.x + " " + hit.y + " " + hit.z);
     //     chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].empty = true;
     //     UpdateChunk();
     // }
-    
+    // [ClientRpc]
+    // private void DestroyBlockClientRpc(Vector3 hit) {
+    //     Debug.Log("DESTROY BLOCK PER CLIENT RPC");
+    //     chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = true;
+    //     
+    //     UpdateChunk();
+    //
+    // }
+    // [ClientRpc]
+    // private void BuildBlockClientRpc(Vector3 hit) {
+    //     Debug.Log("Client RPC BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
+    //     chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].Empty = false;
+    //     UpdateChunk();
+    // }
+
     public void Serialize(string mapName, int x, int y) {
         BinaryFormatter bf = new BinaryFormatter();
         string savePath = Application.persistentDataPath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + y + ".chunk";

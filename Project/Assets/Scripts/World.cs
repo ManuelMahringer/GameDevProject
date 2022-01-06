@@ -13,30 +13,32 @@ public class World : NetworkBehaviour {
     public int size;
 
     public string selectedMap;
-    
+
+    public NetworkVariable<bool> gameStarted = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
+
     [SerializeField] public float chunkSize;
 
     private GameObject[,] chunks;
     private float worldSize;
     
-    [ServerRpc (RequireOwnership = false)]
-    public void GetInitialChunkDataServerRpc() {
-        Debug.Log("SERVER: SENDING INITIAL CHUNK DATA");
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                var c = chunks[x, y].GetComponent<Chunk>();
-                StartCoroutine(Test(c));
-            }
-        }
-        // var c = chunks[0,0].GetComponent<Chunk>(); 
-        // c.ReceiveInitialChunkDataClientRpc(c.FlattenBlocks());
-    }
+    // [ServerRpc (RequireOwnership = false)]
+    // public void GetInitialChunkDataServerRpc() {
+    //     Debug.Log("SERVER: SENDING INITIAL CHUNK DATA");
+    //     for (int x = 0; x < size; x++) {
+    //         for (int y = 0; y < size; y++) {
+    //             var c = chunks[x, y].GetComponent<Chunk>();
+    //             StartCoroutine(Test(c));
+    //         }
+    //     }
+    //     // var c = chunks[0,0].GetComponent<Chunk>(); 
+    //     // c.ReceiveInitialChunkDataClientRpc(c.FlattenBlocks());
+    // }
     
     
-    private IEnumerator Test(Chunk c) {
-        yield return new WaitForSeconds(1);
-        c.ReceiveInitialChunkDataClientRpc(c.FlattenBlocks());
-    }
+    // private IEnumerator Test(Chunk c) {
+    //     yield return new WaitForSeconds(1);
+    //     c.ReceiveInitialChunkDataClientRpc(c.FlattenBlocks());
+    // }
     
     [ServerRpc (RequireOwnership = false)]
     public void BuildBlockServerRpc(Vector3 worldCoordinate, BlockType blockType) {
@@ -59,7 +61,12 @@ public class World : NetworkBehaviour {
     public void SetMapClientRpc(string map) {
         selectedMap = map;
     }
-    
+
+    [ServerRpc(RequireOwnership = false)]
+    public void GameStartedServerRpc() {
+        gameStarted.Value = true;
+    }
+
     public void BuildWorld() {
         worldSize = size * chunkSize;
         chunks = new GameObject[size, size];

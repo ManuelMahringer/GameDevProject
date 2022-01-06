@@ -160,6 +160,7 @@ public class Lobby : NetworkBehaviour {
     public void StartGame() {
         //ComponentManager.Map = maps[mapDropdown.value];
         _world.SetMapServerRpc(maps[mapDropdown.value].Name);
+        _world.gameStarted.Value = true;
         _world.GetComponent<World>().BuildWorld();
         CloseLobbyClientRpc();
     }
