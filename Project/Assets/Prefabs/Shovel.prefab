@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5666181888761709760}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Shovel
-  m_TagString: Untagged
+  m_TagString: Weapon
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -43,8 +43,8 @@ GameObject:
   - component: {fileID: 3642491825342636108}
   - component: {fileID: 1990988912830598532}
   - component: {fileID: 1127357221393323220}
-  m_Layer: 0
-  m_Name: Shovel
+  m_Layer: 6
+  m_Name: Head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -124,7 +124,7 @@ GameObject:
   - component: {fileID: 5809391157951869697}
   - component: {fileID: 3953244750542700206}
   - component: {fileID: 2761521127477221572}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Handle
   m_TagString: Untagged
   m_Icon: {fileID: 0}

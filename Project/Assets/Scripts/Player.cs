@@ -62,10 +62,10 @@ public class Player : NetworkBehaviour {
 
     [SerializeField] private LayerMask mask;
 
-    [SerializeField] private List<GameObject> weaponModels;
+    [SerializeField] public List<GameObject> weaponModels;
 
-    private readonly Dictionary<string, Weapon> weapons = new Dictionary<string, Weapon>
-        {{"Handgun", new Handgun()}, {"AssaultRifle", new AssaultRifle()}, {"Shovel", new Shovel()}};
+    private readonly Dictionary<WeaponType, Weapon> weapons = new Dictionary<WeaponType, Weapon>
+        {{WeaponType.Handgun, new Handgun()}, {WeaponType.AssaultRifle, new AssaultRifle()}, {WeaponType.Shovel, new Shovel()}};
 
     private bool IsFalling => !isGrounded && _rb.velocity.y < 0;
 
@@ -80,7 +80,6 @@ public class Player : NetworkBehaviour {
     private Camera _weaponCamera;
     private float _health;
     private Rigidbody _rb;
-    private Camera _camera;
     private Slider _healthBar;
     private AudioSource _audioSource;
     private AudioClip _fallSound;
@@ -139,8 +138,6 @@ public class Player : NetworkBehaviour {
     }
 
     private void Start() {
-        // Set player name with network id
-        // transform.name = "Player " + GetComponent<NetworkObject>().NetworkObjectId;
         GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this);
 
         if (!IsLocalPlayer)
@@ -161,27 +158,21 @@ public class Player : NetworkBehaviour {
         _saveMapPopup.action = MapPopup.MapPopupAction.Save;
         _loadMapPopup = gameObject.AddComponent<MapPopup>();
         _loadMapPopup.action = MapPopup.MapPopupAction.Load;
-        SwitchWeapons("AssaultRifle");
         _activeBlock = BlockType.Grass;
         _inventory = gameObject.AddComponent<PlayerInventory>();
         weaponModels.ForEach(w => w.layer = LayerMask.NameToLayer(WeaponLayerName));
 
-        _playerCamera = GetComponentInChildren<Camera>();
         DeactivateMouse();
+        transform.position = new Vector3(0, 1, 0);
 
-        transform.position = new Vector3(0, 7, 0);
-
-        Debug.Log("before is owner" + IsOwner + IsLocalPlayer);
         if (!IsOwner)
             return;
-        Debug.Log(" after  is owner");
         
         Camera[] cameras = gameObject.GetComponentsInChildren<Camera>();
-        _camera = cameras[0];
-        _camera.enabled = true;
+        _playerCamera = cameras[0];
+        _playerCamera.enabled = true;
         _weaponCamera = cameras[1];
         _weaponCamera.enabled = true;
-        Debug.Log("Camera enabled");
         gameObject.GetComponentInChildren<AudioListener>().enabled = true;
 
         if (_gameMode == GameMode.Build) {
@@ -191,7 +182,7 @@ public class Player : NetworkBehaviour {
             _healthBar.gameObject.SetActive(false);
             runSpeed = walkSpeed = 8f;
             for (int i = 0; i < _inventory.Size; i++) {
-                _inventory.Items[i] = Int32.MaxValue;
+                _inventory.Items[i] = Int32.MaxValue / 2;
             }
         }
 
@@ -202,20 +193,20 @@ public class Player : NetworkBehaviour {
 
     private void OnGameStarted(bool oldVal, bool newVal) {
         ActivateMouse();
+        SwitchWeapons(WeaponType.AssaultRifle);
+        transform.position = new Vector3(0, 6, 0);
     }
-
+    
     private void Update() {
-        //Debug.Log("lcoalplayer?" + IsLocalPlayer);
         if (!IsLocalPlayer)
             return;
 
-        //Debug.Log("Afterlocalplayer");
         _xAxis = Input.GetAxis("Horizontal");
         _zAxis = Input.GetAxis("Vertical");
         jump = Input.GetButton("Jump");
         _respawn = Input.GetKey(KeyCode.R);
 
-        bool deactivateMouse = Input.GetKeyDown(KeyCode.Escape);
+        bool deactivateMouse = _world.gameStarted.Value && Input.GetKeyDown(KeyCode.Escape);
         bool run = mouseActive && Input.GetKey(KeyCode.LeftShift);
         bool destroyBlock = mouseActive && Input.GetMouseButtonDown(0);
         bool buildBlock = mouseActive && Input.GetMouseButtonDown(1);
@@ -237,14 +228,14 @@ public class Player : NetworkBehaviour {
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
         if (destroyBlock) {
-            if (_activeWeapon.Name == "Shovel")
+            if (_activeWeapon.WeaponType == WeaponType.Shovel)
                 PerformRaycastAction(RaycastAction.DestroyBlock, hitRange);
             else
                 PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
         }
 
         if (buildBlock)
-            if (_activeWeapon.Name == "Shovel")
+            if (_activeWeapon.WeaponType == WeaponType.Shovel)
                 PerformRaycastAction(RaycastAction.BuildBlock, hitRange);
 
         if (saveMap)
@@ -253,11 +244,11 @@ public class Player : NetworkBehaviour {
             _loadMapPopup.Open(this);
 
         if (handgun)
-            SwitchWeapons("Handgun");
+            SwitchWeapons(WeaponType.Handgun);
         if (assaultRifle)
-            SwitchWeapons("AssaultRifle");
+            SwitchWeapons(WeaponType.AssaultRifle);
         if (shovel)
-            SwitchWeapons("Shovel");
+            SwitchWeapons(WeaponType.Shovel);
 
         if (iterBlocks) {
             _activeBlock = (BlockType) (((int) _activeBlock + 1) % _inventory.Size);
@@ -271,12 +262,11 @@ public class Player : NetworkBehaviour {
         PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
     }
 
-    private void SwitchWeapons(string weaponName) {
-        _activeWeapon = weapons[weaponName];
-        weaponModels.ForEach(w => w.SetActive(false));
-        weaponModels.SingleOrDefault(w => w.transform.name == weaponName)?.SetActive(true);
+    private void SwitchWeapons(WeaponType weapon) {
+        _activeWeapon = weapons[weapon];
+        _world.PlayerWeaponChangeServerRpc(NetworkObject.NetworkObjectId, weapon);
     }
-
+    
     private void OnDisable() {
         GameNetworkManager.UnregisterPlayer(NetworkObject.NetworkObjectId);
     }
@@ -309,7 +299,7 @@ public class Player : NetworkBehaviour {
     }
 
     private void FixedUpdate() {
-        if (!IsLocalPlayer)
+        if (!IsLocalPlayer || !mouseActive)
             return;
 
         if (_gameMode == GameMode.Build) {
@@ -382,16 +372,16 @@ public class Player : NetworkBehaviour {
 
     private void PlayWeaponSound(Weapon activeWeapon) {
         if (Time.time - _tFired > _activeWeapon.Firerate) {
-            if (activeWeapon.Name == "Handgun")
+            if (activeWeapon.WeaponType == WeaponType.Handgun)
                 _audioSource.PlayOneShot(_handgunSound);
-            else if (activeWeapon.Name == "AssaultRifle")
+            else if (activeWeapon.WeaponType == WeaponType.AssaultRifle)
                 _audioSource.PlayOneShot(_assaultRifleSound);
         }
     }
 
     private void PerformRaycastAction(RaycastAction raycastAction, float range) {
-        Vector3 midPoint = new Vector3(_camera.pixelWidth / 2, _camera.pixelHeight / 2);
-        Ray ray = _camera.ScreenPointToRay(midPoint);
+        Vector3 midPoint = new Vector3(_playerCamera.pixelWidth / 2, _playerCamera.pixelHeight / 2);
+        Ray ray = _playerCamera.ScreenPointToRay(midPoint);
         if (Physics.Raycast(ray, out var hit, range)) {
             switch (raycastAction) {
                 case RaycastAction.DestroyBlock:
@@ -433,7 +423,7 @@ public class Player : NetworkBehaviour {
 
                     break;
                 case RaycastAction.HighlightBlock:
-                    if (_activeWeapon.Name != "Shovel" || !hit.collider.CompareTag(WorldTag)) {
+                    if (_activeWeapon.WeaponType != WeaponType.Shovel || !hit.collider.CompareTag(WorldTag)) {
                         // only highlight blocks when in building mode and when targeting blocks
                         _highlightBlock.SetActive(false);
                         break;

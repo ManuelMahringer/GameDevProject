@@ -4,9 +4,15 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
+public enum WeaponType {
+    Handgun,
+    AssaultRifle,
+    Shovel
+}
+
 
 public abstract class Weapon {
-    public abstract string Name { get; }
+    public abstract WeaponType WeaponType { get; }
     public abstract float Damage { get; }
     public abstract float Range { get; }
     public abstract float Firerate { get; }
@@ -19,21 +25,21 @@ public abstract class Weapon {
 
 
 public class Handgun : Weapon {
-    public override string Name => "Handgun";
+    public override WeaponType WeaponType => WeaponType.Handgun;
     public override float Damage => 30f;
     public override float Range => 5f;
     public override float Firerate => 0.5f;
 }
 
 public class AssaultRifle : Weapon {
-    public override string Name => "AssaultRifle";
+    public override WeaponType WeaponType => WeaponType.Handgun;
     public override float Damage => 50f;
     public override float Range => 30f;
     public override float Firerate => 1f;
 }
 
 public class Shovel : Weapon {
-    public override string Name => "Shovel";
+    public override WeaponType WeaponType => WeaponType.Shovel;
     public override float Damage => 30f;
     public override float Range => 1f;
     public override float Firerate { get; }

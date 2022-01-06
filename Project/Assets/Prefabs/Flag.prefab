@@ -44,7 +44,7 @@ GameObject:
   - component: {fileID: 913014321838174333}
   - component: {fileID: 8964703784477273964}
   m_Layer: 0
-  m_Name: Flag
+  m_Name: Head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

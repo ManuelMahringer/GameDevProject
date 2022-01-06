@@ -6,7 +6,8 @@ using Unity.Netcode;
 
 public class GameNetworkManager : MonoBehaviour {
 
-    private static Dictionary<ulong, Player> _players = new Dictionary<ulong, Player>();
+    public static readonly Dictionary<ulong, Player> players = new Dictionary<ulong, Player>();
+    
 
     private void Start() {
         Debug.Log("HEY ITS THE GAME NETWORK MANAGER" + ComponentManager.mode.ToString());
@@ -26,18 +27,18 @@ public class GameNetworkManager : MonoBehaviour {
     }
     
     public static void RegisterPlayer(ulong netId, Player player) {
-        _players.Add(netId, player);
+        players.Add(netId, player);
         player.transform.name = "Player " + netId;
         Debug.Log("Registered player " + netId);
     }
     
     public static void UnregisterPlayer(ulong netId) {
-        _players.Remove(netId);
+        players.Remove(netId);
         Debug.Log("Unregistered player: " + netId);
     }
 
     public static Player GetPlayerById(ulong netId) {
-        return _players[netId];
+        return players[netId];
     }
     
     void OnGUI()
