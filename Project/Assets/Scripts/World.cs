@@ -25,7 +25,6 @@ public class World : NetworkBehaviour {
     private GameObject[,] _chunks;
     private float _worldSize;
     private Vector3 _flagPos;
-    public bool countdownFinished = false;
 
 
     private void Start() {
@@ -57,6 +56,19 @@ public class World : NetworkBehaviour {
                 weaponModel.SetActive(true);
             }
         }
+    }
+
+    [ServerRpc (RequireOwnership = false)]
+    public void UpdateFloatingHealthBarServerRpc(ulong id, float value) {
+        Debug.Log("Server call update health bar of player " + id + " to the value " + value);
+        FloatingHealthBarUpdateClientRpc(id, value);
+    }
+
+    [ClientRpc]
+    private void FloatingHealthBarUpdateClientRpc(ulong id, float value) {
+        Debug.Log("Client updated health bar of player " + id + " to the value " + value);
+        Player target = GameNetworkManager.players[id];
+        target.floatingHealthBar.value = value;
     }
 
    
