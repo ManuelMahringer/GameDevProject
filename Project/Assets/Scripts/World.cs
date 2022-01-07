@@ -25,6 +25,7 @@ public class World : NetworkBehaviour {
     private GameObject[,] _chunks;
     private float _worldSize;
     private Vector3 _flagPos;
+    public bool countdownFinished = false;
 
 
     private void Start() {
@@ -47,7 +48,7 @@ public class World : NetworkBehaviour {
     [ClientRpc]
     private void UpdatePlayerWeaponClientRpc(ulong id, WeaponType weapon) {
         Debug.Log("Updated weapon of player " + id + " on player " + NetworkObject.NetworkObjectId + " to weapon " + weapon.ToString());
-        Player target = GameNetworkManager.players[id];
+        Player target = GameNetworkManager.players[id]._player;
         target.weaponModels.ForEach(w => w.SetActive(false));
         foreach (GameObject weaponModel in target.weaponModels) {
             if (weaponModel.transform.name == weapon.ToString())

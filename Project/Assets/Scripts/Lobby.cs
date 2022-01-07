@@ -31,7 +31,22 @@ public class Lobby : NetworkBehaviour {
     private Dictionary<ulong, string> _clientNamesRed = new Dictionary<ulong, string>();
     private TMP_Text[] _blueTMPTexts = new TMP_Text[3];
     private TMP_Text[] _redTMPTexts = new TMP_Text[3];
-    private int _registered_count;
+    private TMP_Text _errortext;
+    private Text _nameInputText;
+    private int _registered_count_red;
+    private int _registered_count_blue;
+
+    private GameObject _joinRed;
+    private GameObject _joinBlue;
+    private GameObject _inputField;
+    private GameObject _infoTextName;
+    private GameObject _worldBorders;
+    private void disableControls() {
+        _joinBlue.SetActive(false);
+        _joinRed.SetActive(false);
+        _inputField.SetActive(false);
+        _infoTextName.SetActive(false);
+    }
 
 
     public enum Team {
@@ -41,12 +56,21 @@ public class Lobby : NetworkBehaviour {
     
     void Start() {
         _world = GameObject.Find("World").GetComponent<World>();
+        _errortext = GameObject.Find("Errortext").GetComponent<TMP_Text>();
+        _nameInputText = GameObject.Find("InputText").GetComponent<Text>();
+        _joinRed = GameObject.Find("JoinRedButton");
+        _joinBlue = GameObject.Find("JoinBlueButton");
+        _inputField = GameObject.Find("InputField");
+        _infoTextName = GameObject.Find("Name");
+        _worldBorders = GameObject.Find("WorldBorders/Bottom_Plane");
         
         Debug.Log("is HOst " +IsHost + " server" + IsServer );
         if (!IsHost) {
             GameObject.Find("ButtonStart").SetActive(false);
             mapDropdown.gameObject.SetActive(false);
         }
+        
+        
 
         GameObject.Find("internalClientID").GetComponent<Text>().text = NetworkManager.LocalClientId.ToString();
 
@@ -151,14 +175,30 @@ public class Lobby : NetworkBehaviour {
     
 
     public void SubmitNameBlue() {
-        AddPlayerServerRpc(Team.Blue, NetworkManager.LocalClientId, GameObject.Find("InputText").GetComponent<Text>().text);
+        if (String.IsNullOrEmpty(_nameInputText.text)) {
+            _errortext.text = "Please enter your name before joining a team!";
+            return;
+        }
+        _errortext.text = "";
+        AddPlayerServerRpc(Team.Blue, NetworkManager.LocalClientId, _nameInputText.text);
+        disableControls();
     }
     public void SubmitNameRed() {
-        AddPlayerServerRpc(Team.Red, NetworkManager.LocalClientId, GameObject.Find("InputText").GetComponent<Text>().text);
+        if (String.IsNullOrEmpty(_nameInputText.text)) {
+            _errortext.text = "Please enter your name before joining a team!";
+            return;
+        }
+        _errortext.text = "";
+        AddPlayerServerRpc(Team.Red, NetworkManager.LocalClientId, _nameInputText.text);
+        disableControls();
     }
 
     public void StartGame() {
-        //ComponentManager.Map = maps[mapDropdown.value];
+        /*if (_clientNamesBlue.Count != _clientNamesRed.Count || _players.Value <= 1) {
+            _errortext.text =
+                "Teams are not balanced! \nPlease make sure there is at least 1 player on each team and an equal amount of players on each team.";
+            return;
+        }*/
         _world.SetMapServerRpc(maps[mapDropdown.value].Name);
         _world.gameStarted.Value = true;
         _world.GetComponent<World>().BuildWorld();
@@ -166,7 +206,12 @@ public class Lobby : NetworkBehaviour {
     }
     
     [ClientRpc]
-    public void CloseLobbyClientRpc() {
+    private void CloseLobbyClientRpc() {
+        // make bottom plane visible
+        GameObject.Find("WorldBorders/Bottom_Plane").GetComponent<MeshRenderer>().enabled = true;
+        // disable Lobby overlay
+        GameObject.Find("HUD (Countdown)").GetComponent<Countdown>().enabled = true;
         gameObject.SetActive(false);
+        
     }
 }

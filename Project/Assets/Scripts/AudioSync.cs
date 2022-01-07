@@ -16,19 +16,18 @@ public class AudioSync : NetworkBehaviour {
 
     public void PlaySound(int id) {
         if (id >= 0 && id <= clips.Length) {
-            SendSoundServerRpc(id);
+            SendSoundServerRpc(id, NetworkObjectId);
         }
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void SendSoundServerRpc(int id) {
-        SendSoundClientRpc(id);
+    public void SendSoundServerRpc(int id, ulong netid) {
+        SendSoundClientRpc(id, netid);
     }
 
     [ClientRpc]
-    private void SendSoundClientRpc(int id) {
-        source.PlayOneShot(clips[id]);
+    private void SendSoundClientRpc(int id, ulong netid) {
+        NetworkManager.SpawnManager.SpawnedObjects[netid].GetComponent<AudioSource>().PlayOneShot(clips[id]);
+        Debug.Log("audio source "+ NetworkManager.SpawnManager.SpawnedObjects[netid]);
     }
-
-
 }

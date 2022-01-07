@@ -101,6 +101,7 @@ public class Player : NetworkBehaviour {
     private float _rotX;
     private float _tFired;
     private PlayerInventory _inventory;
+    private bool _countdownFinished;
 
     private enum RaycastAction {
         DestroyBlock,
@@ -139,10 +140,9 @@ public class Player : NetworkBehaviour {
     }
 
     private void Start() {
-        GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this);
-
         if (!IsLocalPlayer)
             return;
+        GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this, Lobby.Team.Blue);
         _audioSync = GetComponent<AudioSync>();
         _gameMode = ComponentManager.gameMode;
         _world = GameObject.Find("World").GetComponent<World>();
@@ -200,7 +200,7 @@ public class Player : NetworkBehaviour {
     }
     
     private void Update() {
-        if (!IsLocalPlayer)
+        if (!IsLocalPlayer || _world.gameStarted.Value == false || !_world.countdownFinished)
             return;
 
         _xAxis = Input.GetAxis("Horizontal");
