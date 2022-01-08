@@ -57,6 +57,8 @@ public class Player : NetworkBehaviour {
     public bool popupActive;
     public bool mouseActive;
 
+    public Lobby.Team team;
+
     private Weapon _activeWeapon;
     private BlockType _activeBlock;
 
@@ -75,11 +77,10 @@ public class Player : NetworkBehaviour {
     private const float MAXVert = 90.0f;
 
     private AudioSync _audioSync;
-        
+
     // [SerializeField]
     // private Slider healthBar;
-    [SerializeField]
-    public Slider floatingHealthBar;
+    [SerializeField] public Slider floatingHealthBar;
 
     private World _world;
     private GameMode _gameMode;
@@ -150,7 +151,7 @@ public class Player : NetworkBehaviour {
         GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this, Lobby.Team.Blue);
         floatingHealthBar.maxValue = maxHealth;
         floatingHealthBar.value = maxHealth;
-        
+
         if (!IsLocalPlayer)
             return;
         floatingHealthBar.maxValue = maxHealth;
@@ -205,7 +206,7 @@ public class Player : NetworkBehaviour {
 
         DeactivateMouse();
         transform.position = new Vector3(0, 1, 0);
-        
+
         _world.gameStarted.OnValueChanged += OnGameStarted;
         // Debug.Log("BEFORE CHUNK SEND");
         // _world.GetInitialChunkDataServerRpc();
@@ -216,8 +217,13 @@ public class Player : NetworkBehaviour {
         SwitchWeapons(WeaponType.AssaultRifle);
         _healthBar.gameObject.SetActive(true);
         transform.position = new Vector3(0, 6, 0);
+
+        if (!IsLocalPlayer)
+            return;
+        
+        _world.UpdatePlayerTeamServerRpc(NetworkObject.NetworkObjectId, team);
     }
-    
+
     private void Update() {
         if (!IsLocalPlayer || !_world.countdownFinished || !_world.gameStarted.Value)
             return;
@@ -245,7 +251,7 @@ public class Player : NetworkBehaviour {
         else if (!mouseActive && deactivateMouse) {
             ActivateMouse();
         }
-        
+
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
         if (destroyBlock) {
@@ -274,6 +280,7 @@ public class Player : NetworkBehaviour {
         if (iterBlocks) {
             _activeBlock = (BlockType) (((int) _activeBlock + 1) % _inventory.Size);
         }
+
         if (iterBlocksRev) {
             int nextBlock = ((int) _activeBlock - 1) % _inventory.Size;
             _activeBlock = (BlockType) (nextBlock < 0 ? nextBlock + _inventory.Size : nextBlock); // we have to do this because unity modulo operation is shit
@@ -282,7 +289,7 @@ public class Player : NetworkBehaviour {
         ProcessMouseInput();
         PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
     }
-    
+
     private void LateUpdate() {
         if (!IsLocalPlayer)
             return;
@@ -295,7 +302,7 @@ public class Player : NetworkBehaviour {
         _activeWeapon = weapons[weapon];
         _world.PlayerWeaponChangeServerRpc(NetworkObject.NetworkObjectId, weapon);
     }
-    
+
     private void OnDisable() {
         GameNetworkManager.UnregisterPlayer(NetworkObject.NetworkObjectId);
     }
@@ -407,7 +414,7 @@ public class Player : NetworkBehaviour {
             }
             else if (activeWeapon.WeaponType == WeaponType.AssaultRifle)
                 _audioSync.PlaySound(1);
-                //_audioSource.PlayOneShot(_assaultRifleSound);
+            //_audioSource.PlayOneShot(_assaultRifleSound);
         }
     }
 
@@ -445,9 +452,10 @@ public class Player : NetworkBehaviour {
                             //_world.GetComponent<World>().UpdateMeshCollider(chunk);
                         }
                         else if (hit.collider.CompareTag(PlayerTag)) {
-                            ulong shotPlayer = hit.collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
+                            NetworkObject shotPlayer = hit.collider.gameObject.GetComponent<NetworkObject>();
                             Debug.Log("Shoot Player " + hit.collider.name + " with " + _activeWeapon.LerpDamage(hit.distance) + " damage");
-                            PlayerShotServerRpc(shotPlayer, _activeWeapon.LerpDamage(hit.distance));
+                            if (shotPlayer.GetComponent<Player>().team != team) // Only damage the player if he is not in your team
+                                PlayerShotServerRpc(shotPlayer.NetworkObjectId, _activeWeapon.LerpDamage(hit.distance));
                         }
 
                         _tFired = Time.time;

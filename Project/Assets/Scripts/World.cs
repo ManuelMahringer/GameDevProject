@@ -62,14 +62,32 @@ public class World : NetworkBehaviour {
     [ServerRpc (RequireOwnership = false)]
     public void UpdateFloatingHealthBarServerRpc(ulong id, float value) {
         Debug.Log("Server call update health bar of player " + id + " to the value " + value);
-        FloatingHealthBarUpdateClientRpc(id, value);
+        UpdateFloatingHealthBarClientRpc(id, value);
     }
 
     [ClientRpc]
-    private void FloatingHealthBarUpdateClientRpc(ulong id, float value) {
+    private void UpdateFloatingHealthBarClientRpc(ulong id, float value) {
         Debug.Log("Client updated health bar of player " + id + " to the value " + value);
         Player target = GameNetworkManager.players[id].player;
         target.floatingHealthBar.value = value;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void UpdatePlayerTeamServerRpc(ulong id, Lobby.Team team) {
+        UpdatePlayerTeamClientRpc(id, team);
+    }
+
+    [ClientRpc]
+    private void UpdatePlayerTeamClientRpc(ulong id, Lobby.Team team) {
+        Player target = GameNetworkManager.players[id].player;
+        target.team = team;
+        MeshRenderer meshRenderer = target.GetComponent<MeshRenderer>();
+        if (team == Lobby.Team.Blue)
+            meshRenderer.material.color = Color.blue;
+        else if (team == Lobby.Team.Red)
+            meshRenderer.material.color = Color.red;
+        else
+            Debug.Log("Error in Player.cs: EarlyUpdate(): Player has assigned no team!");
     }
 
    

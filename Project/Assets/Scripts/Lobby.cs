@@ -178,7 +178,9 @@ public class Lobby : NetworkBehaviour {
             return;
         }
         _errortext.text = "";
-        AddPlayerServerRpc(Team.Blue, NetworkManager.LocalClientId, _nameInputText.text);
+        NetworkObject player = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject(); // NetworkManager.Singleton.LocalClient is null for some reason: https://forum.unity.com/threads/networkmanager-singleton-localclient-for-finding-the-local-player.1196902/
+        AddPlayerServerRpc(Team.Blue, player.NetworkObjectId, _nameInputText.text);
+        player.GetComponent<Player>().team = Team.Blue;
         DisableControls();
     }
     public void SubmitNameRed() {
@@ -187,7 +189,9 @@ public class Lobby : NetworkBehaviour {
             return;
         }
         _errortext.text = "";
-        AddPlayerServerRpc(Team.Red, NetworkManager.LocalClientId, _nameInputText.text);
+        NetworkObject player = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject(); // NetworkManager.Singleton.LocalClient is null for some reason: https://forum.unity.com/threads/networkmanager-singleton-localclient-for-finding-the-local-player.1196902/
+        AddPlayerServerRpc(Team.Red, player.NetworkObjectId, _nameInputText.text);
+        player.GetComponent<Player>().team = Team.Red;
         DisableControls();
     }
 
