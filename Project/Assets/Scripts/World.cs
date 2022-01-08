@@ -25,6 +25,7 @@ public class World : NetworkBehaviour {
     private GameObject[,] _chunks;
     private float _worldSize;
     private Vector3 _flagPos;
+    public bool countdownFinished;
 
 
     private void Start() {
@@ -67,7 +68,7 @@ public class World : NetworkBehaviour {
     [ClientRpc]
     private void FloatingHealthBarUpdateClientRpc(ulong id, float value) {
         Debug.Log("Client updated health bar of player " + id + " to the value " + value);
-        Player target = GameNetworkManager.players[id];
+        Player target = GameNetworkManager.players[id]._player;
         target.floatingHealthBar.value = value;
     }
 

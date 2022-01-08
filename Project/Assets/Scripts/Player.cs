@@ -75,6 +75,12 @@ public class Player : NetworkBehaviour {
     private const float MAXVert = 90.0f;
 
     private AudioSync _audioSync;
+        
+    // [SerializeField]
+    // private Slider healthBar;
+    [SerializeField]
+    public Slider floatingHealthBar;
+
     private World _world;
     private GameMode _gameMode;
     private Camera _playerCamera;
@@ -116,6 +122,8 @@ public class Player : NetworkBehaviour {
         _audioSource.PlayOneShot(_fallSound);
         _health -= amount;
         _healthBar.value = _health;
+        _world.UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
+        //floatingHealthBar.value -= _health;
         if (_health < 0) {
             Die();
         }
@@ -139,10 +147,13 @@ public class Player : NetworkBehaviour {
     }
 
     private void Start() {
-        GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this);
-
+        floatingHealthBar.maxValue = maxHealth;
+        floatingHealthBar.value = maxHealth;
         if (!IsLocalPlayer)
             return;
+        GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this, Lobby.Team.Blue);
+        floatingHealthBar.maxValue = maxHealth;
+        floatingHealthBar.value = maxHealth;
         _audioSync = GetComponent<AudioSync>();
         _gameMode = ComponentManager.gameMode;
         _world = GameObject.Find("World").GetComponent<World>();
@@ -162,7 +173,16 @@ public class Player : NetworkBehaviour {
         _loadMapPopup.action = MapPopup.MapPopupAction.Load;
         _activeBlock = BlockType.Grass;
         _inventory = gameObject.AddComponent<PlayerInventory>();
-        weaponModels.ForEach(w => w.layer = LayerMask.NameToLayer(WeaponLayerName));
+        //_floatingHealthBarHUD.gameObject.SetActive(false);
+        floatingHealthBar.gameObject.SetActive(false);
+        foreach (var model in weaponModels) {
+            model.layer = LayerMask.NameToLayer(WeaponLayerName);
+            if (model.transform.name == WeaponType.Shovel.ToString()) {
+                model.transform.GetChild(0).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+                model.transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+            }
+        }
+
 
         DeactivateMouse();
         transform.position = new Vector3(0, 1, 0);
@@ -200,7 +220,7 @@ public class Player : NetworkBehaviour {
     }
     
     private void Update() {
-        if (!IsLocalPlayer)
+        if (!IsLocalPlayer || !_world.countdownFinished || !_world.gameStarted.Value)
             return;
 
         _xAxis = Input.GetAxis("Horizontal");
@@ -262,6 +282,14 @@ public class Player : NetworkBehaviour {
 
         ProcessMouseInput();
         PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
+    }
+    
+    private void LateUpdate() {
+        if (!IsLocalPlayer)
+            return;
+        foreach (GameNetworkManager.PlayerTeam pt in GameNetworkManager.players.Values) {
+            pt._player.floatingHealthBar.transform.rotation = Quaternion.LookRotation(pt._player.floatingHealthBar.transform.position - transform.position);
+        }
     }
 
     private void SwitchWeapons(WeaponType weapon) {
