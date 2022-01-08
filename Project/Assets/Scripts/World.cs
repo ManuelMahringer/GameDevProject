@@ -48,7 +48,7 @@ public class World : NetworkBehaviour {
     [ClientRpc]
     private void UpdatePlayerWeaponClientRpc(ulong id, WeaponType weapon) {
         Debug.Log("Updated weapon of player " + id + " on player " + NetworkObject.NetworkObjectId + " to weapon " + weapon.ToString());
-        Player target = GameNetworkManager.players[id]._player;
+        Player target = GameNetworkManager.players[id].player;
         target.weaponModels.ForEach(w => w.SetActive(false));
         foreach (GameObject weaponModel in target.weaponModels) {
             if (weaponModel.transform.name == weapon.ToString())
@@ -68,7 +68,7 @@ public class World : NetworkBehaviour {
     [ClientRpc]
     private void FloatingHealthBarUpdateClientRpc(ulong id, float value) {
         Debug.Log("Client updated health bar of player " + id + " to the value " + value);
-        Player target = GameNetworkManager.players[id]._player;
+        Player target = GameNetworkManager.players[id].player;
         target.floatingHealthBar.value = value;
     }
 

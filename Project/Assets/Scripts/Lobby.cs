@@ -41,7 +41,7 @@ public class Lobby : NetworkBehaviour {
     private GameObject _inputField;
     private GameObject _infoTextName;
     private GameObject _worldBorders;
-    private void disableControls() {
+    private void DisableControls() {
         _joinBlue.SetActive(false);
         _joinRed.SetActive(false);
         _inputField.SetActive(false);
@@ -69,8 +69,6 @@ public class Lobby : NetworkBehaviour {
             GameObject.Find("ButtonStart").SetActive(false);
             mapDropdown.gameObject.SetActive(false);
         }
-        
-        
 
         GameObject.Find("internalClientID").GetComponent<Text>().text = NetworkManager.LocalClientId.ToString();
 
@@ -181,7 +179,7 @@ public class Lobby : NetworkBehaviour {
         }
         _errortext.text = "";
         AddPlayerServerRpc(Team.Blue, NetworkManager.LocalClientId, _nameInputText.text);
-        disableControls();
+        DisableControls();
     }
     public void SubmitNameRed() {
         if (String.IsNullOrEmpty(_nameInputText.text)) {
@@ -190,7 +188,7 @@ public class Lobby : NetworkBehaviour {
         }
         _errortext.text = "";
         AddPlayerServerRpc(Team.Red, NetworkManager.LocalClientId, _nameInputText.text);
-        disableControls();
+        DisableControls();
     }
 
     public void StartGame() {
@@ -212,6 +210,5 @@ public class Lobby : NetworkBehaviour {
         // disable Lobby overlay
         GameObject.Find("HUD (Countdown)").GetComponent<Countdown>().enabled = true;
         gameObject.SetActive(false);
-        
     }
 }

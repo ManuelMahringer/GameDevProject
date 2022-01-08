@@ -147,11 +147,12 @@ public class Player : NetworkBehaviour {
     }
 
     private void Start() {
+        GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this, Lobby.Team.Blue);
         floatingHealthBar.maxValue = maxHealth;
         floatingHealthBar.value = maxHealth;
+        
         if (!IsLocalPlayer)
             return;
-        GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this, Lobby.Team.Blue);
         floatingHealthBar.maxValue = maxHealth;
         floatingHealthBar.value = maxHealth;
         _audioSync = GetComponent<AudioSync>();
@@ -166,6 +167,8 @@ public class Player : NetworkBehaviour {
         _health = maxHealth;
         _healthBar.maxValue = _health;
         _healthBar.value = _health;
+        _healthBar.interactable = false;
+        _healthBar.gameObject.SetActive(false);
         _highlightBlock = GameObject.Find("Highlight Slab");
         _saveMapPopup = gameObject.AddComponent<MapPopup>();
         _saveMapPopup.action = MapPopup.MapPopupAction.Save;
@@ -173,7 +176,6 @@ public class Player : NetworkBehaviour {
         _loadMapPopup.action = MapPopup.MapPopupAction.Load;
         _activeBlock = BlockType.Grass;
         _inventory = gameObject.AddComponent<PlayerInventory>();
-        //_floatingHealthBarHUD.gameObject.SetActive(false);
         floatingHealthBar.gameObject.SetActive(false);
         foreach (var model in weaponModels) {
             model.layer = LayerMask.NameToLayer(WeaponLayerName);
@@ -183,13 +185,6 @@ public class Player : NetworkBehaviour {
             }
         }
 
-
-        DeactivateMouse();
-        transform.position = new Vector3(0, 1, 0);
-
-        if (!IsOwner)
-            return;
-        
         Camera[] cameras = gameObject.GetComponentsInChildren<Camera>();
         _playerCamera = cameras[0];
         _playerCamera.enabled = true;
@@ -208,6 +203,9 @@ public class Player : NetworkBehaviour {
             }
         }
 
+        DeactivateMouse();
+        transform.position = new Vector3(0, 1, 0);
+        
         _world.gameStarted.OnValueChanged += OnGameStarted;
         // Debug.Log("BEFORE CHUNK SEND");
         // _world.GetInitialChunkDataServerRpc();
@@ -216,6 +214,7 @@ public class Player : NetworkBehaviour {
     private void OnGameStarted(bool oldVal, bool newVal) {
         ActivateMouse();
         SwitchWeapons(WeaponType.AssaultRifle);
+        _healthBar.gameObject.SetActive(true);
         transform.position = new Vector3(0, 6, 0);
     }
     
@@ -288,7 +287,7 @@ public class Player : NetworkBehaviour {
         if (!IsLocalPlayer)
             return;
         foreach (GameNetworkManager.PlayerTeam pt in GameNetworkManager.players.Values) {
-            pt._player.floatingHealthBar.transform.rotation = Quaternion.LookRotation(pt._player.floatingHealthBar.transform.position - transform.position);
+            pt.player.floatingHealthBar.transform.rotation = Quaternion.LookRotation(pt.player.floatingHealthBar.transform.position - transform.position);
         }
     }
 
@@ -407,7 +406,7 @@ public class Player : NetworkBehaviour {
                 //_audioSource.PlayOneShot(_handgunSound);
             }
             else if (activeWeapon.WeaponType == WeaponType.AssaultRifle)
-                _audioSync.PlaySound(0);
+                _audioSync.PlaySound(1);
                 //_audioSource.PlayOneShot(_assaultRifleSound);
         }
     }

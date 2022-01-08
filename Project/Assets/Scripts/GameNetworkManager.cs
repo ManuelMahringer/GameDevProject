@@ -6,21 +6,18 @@ using Unity.Netcode;
 
 public class GameNetworkManager : MonoBehaviour {
 
-    public struct PlayerTeam
-    {
-        public Player _player;
-        public Lobby.Team _team;
-
-        public PlayerTeam(Player player, Lobby.Team team) {
-            _player = player;
-            _team = team;
-        }
-    }
-    
     public static readonly Dictionary<ulong, PlayerTeam> players = new Dictionary<ulong, PlayerTeam>();
     
-    
-    
+    public struct PlayerTeam
+    {
+        public Player player;
+        public Lobby.Team team;
+
+        public PlayerTeam(Player player, Lobby.Team team) {
+            this.player = player;
+            this.team = team;
+        }
+    }
 
     private void Start() {
         Debug.Log("HEY ITS THE GAME NETWORK MANAGER" + ComponentManager.mode.ToString());
@@ -51,7 +48,7 @@ public class GameNetworkManager : MonoBehaviour {
     }
 
     public static Player GetPlayerById(ulong netId) {
-        return players[netId]._player;
+        return players[netId].player;
     }
     
     void OnGUI()
