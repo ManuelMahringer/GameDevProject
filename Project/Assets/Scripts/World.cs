@@ -21,76 +21,51 @@ public class World : NetworkBehaviour {
     
     [SerializeField]
     private GameObject flag;
+    
+    [SerializeField]
+    private Vector3 initFlagPos = new Vector3(2, 3, 2);
+
+    [SerializeField] public Vector3 baseRedPos;
+    [SerializeField] public Vector3 baseBluePos;
+    
+    [SerializeField] private GameObject baseRed;
+    [SerializeField] private GameObject baseBlue;
 
     private GameObject[,] _chunks;
     private float _worldSize;
-    private Vector3 _flagPos;
     public bool countdownFinished;
 
 
     private void Start() {
-        _flagPos = new Vector3(2, 3, 2);
-        flag.SetActive(false);
         gameStarted.OnValueChanged += OnGameStarted;
     }
 
     private void OnGameStarted(bool oldVal, bool newVal) {
-        flag.transform.position = _flagPos;
+        flag.transform.position = initFlagPos;
+        baseRed.transform.position = baseRedPos;
+        baseBlue.transform.position = baseBluePos;
         flag.SetActive(true);
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void PlayerWeaponChangeServerRpc(ulong id, WeaponType weapon) {
-        Debug.Log("Server: calling player weapon change for all clients for player with id " + id + " and weapon " + weapon);
-        UpdatePlayerWeaponClientRpc(id, weapon);
+    public void OnFlagPickUp(Player player) {
+        Debug.Log("Flag pickup from " + player + " at " + flag.transform.position);
+        flag.SetActive(false);
+        player.PickUpFlag();
+    }
+
+    public void OnFlagCapture(Player player) {
+        Debug.Log("Flag capture from " + player);
+        flag.transform.position = initFlagPos;
+        flag.SetActive(true);
+        player.DropFlag();
+    }
+
+    public void PlaceFlag(Vector3 pos) {
+        Debug.Log("Placing flag at " + pos);
+        flag.transform.position = pos;
+        flag.SetActive(true);
     }
     
-    [ClientRpc]
-    private void UpdatePlayerWeaponClientRpc(ulong id, WeaponType weapon) {
-        Debug.Log("Updated weapon of player " + id + " on player " + NetworkObject.NetworkObjectId + " to weapon " + weapon.ToString());
-        Player target = GameNetworkManager.players[id].player;
-        target.weaponModels.ForEach(w => w.SetActive(false));
-        foreach (GameObject weaponModel in target.weaponModels) {
-            if (weaponModel.transform.name == weapon.ToString())
-                weaponModel.SetActive(true);
-            if (weaponModel.transform.name == "Cube" && weapon == WeaponType.Shovel) {
-                weaponModel.SetActive(true);
-            }
-        }
-    }
-
-    [ServerRpc (RequireOwnership = false)]
-    public void UpdateFloatingHealthBarServerRpc(ulong id, float value) {
-        Debug.Log("Server call update health bar of player " + id + " to the value " + value);
-        UpdateFloatingHealthBarClientRpc(id, value);
-    }
-
-    [ClientRpc]
-    private void UpdateFloatingHealthBarClientRpc(ulong id, float value) {
-        Debug.Log("Client updated health bar of player " + id + " to the value " + value);
-        Player target = GameNetworkManager.players[id].player;
-        target.floatingHealthBar.value = value;
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void UpdatePlayerTeamServerRpc(ulong id, Lobby.Team team) {
-        UpdatePlayerTeamClientRpc(id, team);
-    }
-
-    [ClientRpc]
-    private void UpdatePlayerTeamClientRpc(ulong id, Lobby.Team team) {
-        Player target = GameNetworkManager.players[id].player;
-        target.team = team;
-        MeshRenderer meshRenderer = target.GetComponent<MeshRenderer>();
-        if (team == Lobby.Team.Blue)
-            meshRenderer.material.color = Color.blue;
-        else if (team == Lobby.Team.Red)
-            meshRenderer.material.color = Color.red;
-        else
-            Debug.Log("Error in Player.cs: EarlyUpdate(): Player has assigned no team!");
-    }
-
-   
     [ServerRpc (RequireOwnership = false)]
     public void BuildBlockServerRpc(Vector3 worldCoordinate, BlockType blockType) {
         // Finds the correct chunk to build

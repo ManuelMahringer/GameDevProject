@@ -59,12 +59,16 @@ public class Player : NetworkBehaviour {
 
     public Lobby.Team team;
 
+    private bool _hasFlag;
+    
     private Weapon _activeWeapon;
     private BlockType _activeBlock;
 
     [SerializeField] private LayerMask mask;
 
     [SerializeField] public List<GameObject> weaponModels;
+
+    [SerializeField] private GameObject flag;
 
     private readonly Dictionary<WeaponType, Weapon> weapons = new Dictionary<WeaponType, Weapon>
         {{WeaponType.Handgun, new Handgun()}, {WeaponType.AssaultRifle, new AssaultRifle()}, {WeaponType.Shovel, new Shovel()}};
@@ -108,6 +112,7 @@ public class Player : NetworkBehaviour {
     private float _rotX;
     private float _tFired;
     private PlayerInventory _inventory;
+    private GameObject _flagImage;
 
     private enum RaycastAction {
         DestroyBlock,
@@ -119,24 +124,34 @@ public class Player : NetworkBehaviour {
     private void TakeDamage(float amount) {
         if (!IsLocalPlayer)
             return;
-        //Debug.Log("Take Damage: " + amount);
         _audioSource.PlayOneShot(_fallSound);
         _health -= amount;
         _healthBar.value = _health;
-        _world.UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
-        //floatingHealthBar.value -= _health;
+        UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
         if (_health < 0) {
-            Die();
+            Respawn();
         }
     }
 
-    private void Die() {
-        Debug.Log("PLAYER DIES");
+    private void Respawn() {
+        Vector3 deathPos = _rb.position;
+        
+        _rb.velocity = Vector3.zero;
+        if (team == Lobby.Team.Red)
+            _rb.position = _world.baseRedPos;
+        else if (team == Lobby.Team.Blue)
+            _rb.position = _world.baseBluePos;
+        _health = maxHealth;
+        _healthBar.value = _health;
+        UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
+        
+        DropFlag();
+        _world.PlaceFlag(deathPos);
     }
 
     [ClientRpc]
     private void TakeDamageClientRpc(float amount) {
-        Debug.Log("Player " + this.transform.name + " took " + amount + " damage");
+        Debug.Log("Player " + transform.name + " took " + amount + " damage");
         TakeDamage(amount);
     }
 
@@ -177,6 +192,9 @@ public class Player : NetworkBehaviour {
         _loadMapPopup.action = MapPopup.MapPopupAction.Load;
         _activeBlock = BlockType.Grass;
         _inventory = gameObject.AddComponent<PlayerInventory>();
+        _flagImage = GameObject.Find("FlagImage");
+        _flagImage.SetActive(false);
+        
         floatingHealthBar.gameObject.SetActive(false);
         foreach (var model in weaponModels) {
             model.layer = LayerMask.NameToLayer(WeaponLayerName);
@@ -211,7 +229,7 @@ public class Player : NetworkBehaviour {
         // Debug.Log("BEFORE CHUNK SEND");
         // _world.GetInitialChunkDataServerRpc();
     }
-
+    
     private void OnGameStarted(bool oldVal, bool newVal) {
         ActivateMouse();
         SwitchWeapons(WeaponType.AssaultRifle);
@@ -221,7 +239,27 @@ public class Player : NetworkBehaviour {
         if (!IsLocalPlayer)
             return;
         
-        _world.UpdatePlayerTeamServerRpc(NetworkObject.NetworkObjectId, team);
+        UpdatePlayerTeamServerRpc(NetworkObject.NetworkObjectId, team);
+        if (team == Lobby.Team.Red)
+            transform.position = _world.baseRedPos;
+        else if (team == Lobby.Team.Blue)
+            transform.position = _world.baseBluePos;
+    }
+    
+    public void DeactivateMouse() {
+        mouseActive = false;
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+    }
+
+    public void ActivateMouse() {
+        mouseActive = true;
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+    
+    private void OnDisable() {
+        GameNetworkManager.UnregisterPlayer(NetworkObject.NetworkObjectId);
     }
 
     private void Update() {
@@ -297,43 +335,7 @@ public class Player : NetworkBehaviour {
             pt.player.floatingHealthBar.transform.rotation = Quaternion.LookRotation(pt.player.floatingHealthBar.transform.position - transform.position);
         }
     }
-
-    private void SwitchWeapons(WeaponType weapon) {
-        _activeWeapon = weapons[weapon];
-        _world.PlayerWeaponChangeServerRpc(NetworkObject.NetworkObjectId, weapon);
-    }
-
-    private void OnDisable() {
-        GameNetworkManager.UnregisterPlayer(NetworkObject.NetworkObjectId);
-    }
-
-    public void DeactivateMouse() {
-        mouseActive = false;
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
-    }
-
-    public void ActivateMouse() {
-        mouseActive = true;
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
-    }
-
-    private void ProcessMouseInput() {
-        if (!IsLocalPlayer || !mouseActive) {
-            return;
-        }
-
-        // Rotate camera around x
-        _rotX -= Input.GetAxis("Mouse Y") * SensitivityVer;
-        _rotX = Mathf.Clamp(_rotX, MINVert, MAXVert);
-        _playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0);
-
-        // Rotate player object around y
-        float rotY = Input.GetAxis("Mouse X") * SensitivityHor;
-        transform.Rotate(0, rotY, 0);
-    }
-
+    
     private void FixedUpdate() {
         if (!IsLocalPlayer || !mouseActive)
             return;
@@ -379,11 +381,25 @@ public class Player : NetworkBehaviour {
 
         // TODO: remove
         if (_respawn) {
-            _rb.velocity = Vector3.zero;
-            _rb.position = new Vector3(0, 7, 0);
-            _health = maxHealth;
-            _healthBar.value = _health;
+            Respawn();
         }
+    }
+
+    public void PickUpFlag() {
+        _hasFlag = true;
+        flag.SetActive(true);
+        _flagImage.SetActive(true);
+    }
+
+    public void DropFlag() {
+        _hasFlag = false;
+        flag.SetActive(false);
+        _flagImage.SetActive(false);
+    }
+    
+    private void SwitchWeapons(WeaponType weapon) {
+        _activeWeapon = weapons[weapon];
+        PlayerWeaponChangeServerRpc(NetworkObject.NetworkObjectId, weapon);
     }
 
     private void BuildingModeMovement() {
@@ -391,6 +407,21 @@ public class Player : NetworkBehaviour {
         float yAxis = jump && down || !jump && !down ? 0f : jump ? 1f : -1f;
         _dxz = Vector3.ClampMagnitude(transform.TransformDirection(_xAxis, yAxis, _zAxis), 1f);
         transform.position += _dxz * (currentSpeed * Time.deltaTime);
+    }
+    
+    private void ProcessMouseInput() {
+        if (!IsLocalPlayer || !mouseActive) {
+            return;
+        }
+
+        // Rotate camera around x
+        _rotX -= Input.GetAxis("Mouse Y") * SensitivityVer;
+        _rotX = Mathf.Clamp(_rotX, MINVert, MAXVert);
+        _playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0);
+
+        // Rotate player object around y
+        float rotY = Input.GetAxis("Mouse X") * SensitivityHor;
+        transform.Rotate(0, rotY, 0);
     }
 
     private void CheckAndToggleGrounded() {
@@ -516,12 +547,66 @@ public class Player : NetworkBehaviour {
             }
         }
     }
-
+    
     private void OnGUI() {
         if (!IsLocalPlayer)
             return;
+        
         if (_gameMode == GameMode.Fight)
             _inventory.Draw(_activeBlock);
+    }
+    
+    // -- SERVER / CLIENT SYNCHRONIZATION
+    
+    [ServerRpc(RequireOwnership = false)]
+    private void PlayerWeaponChangeServerRpc(ulong id, WeaponType weapon) {
+        Debug.Log("Server: calling player weapon change for all clients for player with id " + id + " and weapon " + weapon);
+        UpdatePlayerWeaponClientRpc(id, weapon);
+    }
+    
+    [ClientRpc]
+    private void UpdatePlayerWeaponClientRpc(ulong id, WeaponType weapon) {
+        Debug.Log("Updated weapon of player " + id + " on player " + NetworkObject.NetworkObjectId + " to weapon " + weapon.ToString());
+        Player target = GameNetworkManager.players[id].player;
+        target.weaponModels.ForEach(w => w.SetActive(false));
+        foreach (GameObject weaponModel in target.weaponModels) {
+            if (weaponModel.transform.name == weapon.ToString())
+                weaponModel.SetActive(true);
+            if (weaponModel.transform.name == "Cube" && weapon == WeaponType.Shovel) {
+                weaponModel.SetActive(true);
+            }
+        }
+    }
+
+    [ServerRpc (RequireOwnership = false)]
+    private void UpdateFloatingHealthBarServerRpc(ulong id, float value) {
+        Debug.Log("Server call update health bar of player " + id + " to the value " + value);
+        UpdateFloatingHealthBarClientRpc(id, value);
+    }
+
+    [ClientRpc]
+    private void UpdateFloatingHealthBarClientRpc(ulong id, float value) {
+        Debug.Log("Client updated health bar of player " + id + " to the value " + value);
+        Player target = GameNetworkManager.players[id].player;
+        target.floatingHealthBar.value = value;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void UpdatePlayerTeamServerRpc(ulong id, Lobby.Team newTeam) {
+        UpdatePlayerTeamClientRpc(id, newTeam);
+    }
+
+    [ClientRpc]
+    private void UpdatePlayerTeamClientRpc(ulong id, Lobby.Team newTeam) {
+        Player target = GameNetworkManager.players[id].player;
+        target.team = newTeam;
+        MeshRenderer meshRenderer = target.GetComponent<MeshRenderer>();
+        if (newTeam == Lobby.Team.Blue)
+            meshRenderer.material.color = Color.blue;
+        else if (newTeam == Lobby.Team.Red)
+            meshRenderer.material.color = Color.red;
+        else
+            Debug.Log("Error in Player.cs: EarlyUpdate(): Player has assigned no team!");
     }
 }
 
