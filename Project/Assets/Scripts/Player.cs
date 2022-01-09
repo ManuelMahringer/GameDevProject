@@ -120,48 +120,7 @@ public class Player : NetworkBehaviour {
         Shoot,
         HighlightBlock
     }
-
-    private void TakeDamage(float amount) {
-        if (!IsLocalPlayer)
-            return;
-        _audioSource.PlayOneShot(_fallSound);
-        _health -= amount;
-        _healthBar.value = _health;
-        UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
-        if (_health < 0) {
-            Respawn();
-        }
-    }
-
-    private void Respawn() {
-        Vector3 deathPos = _rb.position;
-        
-        _rb.velocity = Vector3.zero;
-        if (team == Lobby.Team.Red)
-            _rb.position = _world.baseRedPos;
-        else if (team == Lobby.Team.Blue)
-            _rb.position = _world.baseBluePos;
-        _health = maxHealth;
-        _healthBar.value = _health;
-        UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
-        
-        DropFlag();
-        _world.PlaceFlag(deathPos);
-    }
-
-    [ClientRpc]
-    private void TakeDamageClientRpc(float amount) {
-        Debug.Log("Player " + transform.name + " took " + amount + " damage");
-        TakeDamage(amount);
-    }
-
-    [ServerRpc]
-    private void PlayerShotServerRpc(ulong id, float damage) {
-        Player shotPlayer = GameNetworkManager.GetPlayerById(id);
-        Debug.Log("Shot Player Game Object " + shotPlayer);
-        shotPlayer.TakeDamageClientRpc(damage);
-    }
-
+    
     private void Start() {
         GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this, Lobby.Team.Blue);
         floatingHealthBar.maxValue = maxHealth;
@@ -385,6 +344,34 @@ public class Player : NetworkBehaviour {
         }
     }
 
+    private void TakeDamage(float amount) {
+        if (!IsLocalPlayer)
+            return;
+        _audioSource.PlayOneShot(_fallSound);
+        _health -= amount;
+        _healthBar.value = _health;
+        UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
+        if (_health < 0) {
+            Respawn();
+        }
+    }
+
+    private void Respawn() {
+        Vector3 deathPos = transform.position;
+        
+        //_rb.velocity = Vector3.zero;
+        if (team == Lobby.Team.Red)
+            transform.position = _world.baseRedPos;
+        else if (team == Lobby.Team.Blue)
+            transform.position = _world.baseBluePos;
+        _health = maxHealth;
+        _healthBar.value = _health;
+        UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
+        
+        _world.PlaceFlag(deathPos);
+        DropFlag();
+    }
+    
     public void PickUpFlag() {
         _hasFlag = true;
         flag.SetActive(true);
@@ -557,6 +544,19 @@ public class Player : NetworkBehaviour {
     }
     
     // -- SERVER / CLIENT SYNCHRONIZATION
+    
+    [ClientRpc]
+    private void TakeDamageClientRpc(float amount) {
+        Debug.Log("Player " + transform.name + " took " + amount + " damage");
+        TakeDamage(amount);
+    }
+
+    [ServerRpc]
+    private void PlayerShotServerRpc(ulong id, float damage) {
+        Player shotPlayer = GameNetworkManager.GetPlayerById(id);
+        Debug.Log("Shot Player Game Object " + shotPlayer);
+        shotPlayer.TakeDamageClientRpc(damage);
+    }
     
     [ServerRpc(RequireOwnership = false)]
     private void PlayerWeaponChangeServerRpc(ulong id, WeaponType weapon) {

@@ -1404,6 +1404,22 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 4097536094924055360, guid: 68325a6e260bb444f82402930cf8e299, type: 3}
   m_PrefabInstance: {fileID: 428489646}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &428489648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428489647}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 1981125896
+  AlwaysReplicateAsRoot: 0
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
 --- !u!1 &432113370
 GameObject:
   m_ObjectHideFlags: 0
@@ -5828,7 +5844,7 @@ MonoBehaviour:
     m_InternalValue: 0
   chunkSize: 13
   flag: {fileID: 428489647}
-  flagPos: {x: 2, y: 3, z: 2}
+  initFlagPos: {x: 2, y: 3, z: 2}
   baseRedPos: {x: -10.5, y: 4.5, z: 0}
   baseBluePos: {x: 10.5, y: 4.5, z: 0}
   baseRed: {fileID: 407983800}
