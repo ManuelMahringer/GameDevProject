@@ -19,8 +19,12 @@ public class World : NetworkBehaviour {
     public NetworkVariable<bool> gameStarted = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
     public NetworkVariable<int> redFlagCnt = new NetworkVariable<int>(NetworkVariableReadPermission.Everyone);
     public NetworkVariable<int> blueFlagCnt = new NetworkVariable<int>(NetworkVariableReadPermission.Everyone);
+    public NetworkVariable<bool> gameEnded = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
 
+    
     [SerializeField] public float chunkSize;
+
+    [SerializeField] public int capturesToWin;
     
     [SerializeField]
     private GameObject flag;
@@ -69,6 +73,8 @@ public class World : NetworkBehaviour {
             redFlagCnt.Value += 1;
         else if (player.team == Lobby.Team.Blue)
             blueFlagCnt.Value += 1;
+        if (blueFlagCnt.Value == capturesToWin || redFlagCnt.Value == capturesToWin)
+            gameEnded.Value = true;
         FlagCaptureClientRpc(playerId);
     }
 

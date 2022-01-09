@@ -114,9 +114,13 @@ public class Player : NetworkBehaviour {
     private float _tFired;
     private PlayerInventory _inventory;
     private GameObject _flagImage;
+    private GameObject _hudIngame;
+    private GameObject _hudGameEnd;
     private TMP_Text _redFlagCntText;
     private TMP_Text _blueFlagCntText;
-
+    private TMP_Text _winningMessage;
+    private Button _exitGameBtn;
+    
     private enum RaycastAction {
         DestroyBlock,
         BuildBlock,
@@ -156,9 +160,14 @@ public class Player : NetworkBehaviour {
         _inventory = gameObject.AddComponent<PlayerInventory>();
         _flagImage = GameObject.Find("FlagImage");
         _flagImage.SetActive(false);
+        _hudIngame = GameObject.Find("HUD (ingame)");
+        _hudGameEnd = GameObject.Find("HUD (game end)");
         _redFlagCntText = GameObject.Find("FlagsRedText").GetComponent<TMP_Text>();
         _blueFlagCntText = GameObject.Find("FlagsBlueText").GetComponent<TMP_Text>();
-        
+        _winningMessage = GameObject.Find("WinningMessage").GetComponent<TMP_Text>();
+        _exitGameBtn = GameObject.Find("ExitGameButton").GetComponent<Button>();
+        _hudGameEnd.SetActive(false);
+
         floatingHealthBar.gameObject.SetActive(false);
         foreach (var model in weaponModels) {
             model.layer = LayerMask.NameToLayer(WeaponLayerName);
@@ -192,6 +201,7 @@ public class Player : NetworkBehaviour {
         _world.gameStarted.OnValueChanged += OnGameStarted;
         _world.redFlagCnt.OnValueChanged += OnRedFlagCntChanged;
         _world.blueFlagCnt.OnValueChanged += OnBlueFlagCntChanged;
+        _world.gameEnded.OnValueChanged += OnGameEnded;
         // Debug.Log("BEFORE CHUNK SEND");
         // _world.GetInitialChunkDataServerRpc();
     }
@@ -210,6 +220,19 @@ public class Player : NetworkBehaviour {
             transform.position = _world.baseRedPos;
         else if (team == Lobby.Team.Blue)
             transform.position = _world.baseBluePos;
+    }
+
+    private void OnGameEnded(bool oldVal, bool newVal) {
+        _hudIngame.SetActive(false);
+        Lobby.Team winning = _world.redFlagCnt.Value == _world.capturesToWin ? Lobby.Team.Red : Lobby.Team.Blue;
+        _winningMessage.color = winning == Lobby.Team.Red ? Color.red : Color.blue;
+        _winningMessage.text = winning.ToString() + " won!";
+        _hudGameEnd.SetActive(true);
+        DeactivateMouse();
+    }
+
+    public void ExitGame() {
+        Application.Quit();
     }
 
     private void OnRedFlagCntChanged(int oldVal, int newVal) {
@@ -391,18 +414,18 @@ public class Player : NetworkBehaviour {
     }
     
     public void PickUpFlag() {
-        if (!IsLocalPlayer)
-            return;
         hasFlag = true;
         flag.SetActive(true);
+        if (!IsLocalPlayer)
+            return;
         _flagImage.SetActive(true);
     }
 
     public void DropFlag() {
-        if (!IsLocalPlayer)
-            return;
         hasFlag = false;
         flag.SetActive(false);
+        if (!IsLocalPlayer)
+            return;
         _flagImage.SetActive(false);
     }
     
