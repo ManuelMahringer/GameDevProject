@@ -62,7 +62,7 @@ public class World : NetworkBehaviour {
     [ClientRpc]
     private void FlagPickUpClientRpc(ulong playerId) {
         flag.SetActive(false);
-        GameNetworkManager.players[playerId].player.PickUpFlag();
+        GameNetworkManager.players[playerId].player.PickUpFlagClientRpc(playerId);
     }
 
     [ServerRpc (RequireOwnership = false)]
@@ -82,9 +82,15 @@ public class World : NetworkBehaviour {
     private void FlagCaptureClientRpc(ulong playerId) {
         flag.transform.position = initFlagPos;
         flag.SetActive(true);
-        GameNetworkManager.players[playerId].player.DropFlag();
+        GameNetworkManager.players[playerId].player.DropFlagClientRpc(playerId);
     }
 
+    [ServerRpc(RequireOwnership = false)]
+    public void DropFlagServerRpc(ulong playerId) {
+        GameNetworkManager.GetPlayerById(playerId).hasFlag = false;
+        GameNetworkManager.GetPlayerById(playerId).DropFlagClientRpc(playerId);
+    }
+    
     [ServerRpc (RequireOwnership = false)]
     public void PlaceFlagServerRpc(Vector3 pos) {
         Debug.Log("Placing flag at " + pos);
@@ -94,7 +100,7 @@ public class World : NetworkBehaviour {
     [ClientRpc]
     private void PlaceFlagClientRpc(Vector3 pos) {
         Debug.Log("Client: Placing flag at (hopefully) death position: " + pos);
-        flag.transform.position = pos;
+        //flag.transform.position = pos;
         flag.SetActive(true);
     }
     

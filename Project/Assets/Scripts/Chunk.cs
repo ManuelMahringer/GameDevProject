@@ -64,8 +64,6 @@ public class Chunk : NetworkBehaviour {
         UpdateChunkClientRpc(FlattenBlocks());
     }
 
-
-
     public void BuildBlockServer(Vector3 hit, BlockType blockType) {
         if (!IsServer)
             Debug.Log("SERVER BUILD BLOCK NOT CALLED BY OWNER - THIS SHOULD NEVER HAPPEN");

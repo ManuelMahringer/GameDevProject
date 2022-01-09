@@ -12,7 +12,9 @@ public class Flag : NetworkBehaviour {
     }
 
     private void OnTriggerEnter(Collider other) {
-        if (other.gameObject.GetComponent<Player>() != null)
+        if (other.gameObject.GetComponent<Player>() != null) {
+            Debug.Log("Flag collision with player " + NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().NetworkObjectId);
             _world.OnFlagPickUpServerRpc(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().NetworkObjectId);
+        }
     }
 }

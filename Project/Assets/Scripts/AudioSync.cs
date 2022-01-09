@@ -44,7 +44,7 @@ public class AudioSync : NetworkBehaviour {
     [ClientRpc]
     private void SendSoundClientRpc(int id, ulong netid) {
         NetworkManager.SpawnManager.SpawnedObjects[netid].GetComponents<AudioSource>()[0].PlayOneShot(clips[id]);
-        Debug.Log("audio source "+ NetworkManager.SpawnManager.SpawnedObjects[netid]);
+        //Debug.Log("audio source "+ NetworkManager.SpawnManager.SpawnedObjects[netid]);
     }
     
     [ClientRpc]

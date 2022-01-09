@@ -329,12 +329,12 @@ public class Player : NetworkBehaviour {
 
         //Debug.Log("HEHEHEHEHEHEHE" + !_dxz.Equals(Vector3.zero) + isGrounded + walking);
         if (IsWalking && !_audioSourceWalking.isPlaying) {
-            Debug.Log("Start playing audio");
+            //Debug.Log("Start playing audio");
             _audioSync.StartSoundLoop();
             //_audioSourceWalking.Play();
         }
         else if (!IsWalking) {
-            Debug.Log("Stop sound!!!");
+            //Debug.Log("Stop sound!!!");
             _audioSync.StopSoundLoop();
             //_audioSourceWalking.Stop();
         }
@@ -417,11 +417,15 @@ public class Player : NetworkBehaviour {
     }
 
     private void Respawn() {
+        if (!IsLocalPlayer)
+            return;
+        
         Vector3 deathPos = transform.position;
         Debug.Log("Death position of player " + NetworkObject.NetworkObjectId + ": " + deathPos);
         
-        DropFlag();
-        
+        _world.DropFlagServerRpc(NetworkObject.NetworkObjectId);
+        _world.PlaceFlagServerRpc(deathPos);
+
         _health = maxHealth;
         _healthBar.value = _health;
         UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
@@ -432,23 +436,25 @@ public class Player : NetworkBehaviour {
         else if (team == Lobby.Team.Blue)
             transform.position = _world.baseBluePos;
 
-        _world.PlaceFlagServerRpc(deathPos);
     }
     
-    public void PickUpFlag() {
-        hasFlag = true;
-        flag.SetActive(true);
-        if (!IsLocalPlayer)
-            return;
-        _flagImage.SetActive(true);
+    [ClientRpc]
+    public void PickUpFlagClientRpc(ulong id) {
+        Debug.Log("Called Pick Up Flag at player " + NetworkObject.NetworkObjectId);
+        Player target = GameNetworkManager.players[id].player;
+        target.hasFlag = true;
+        target.flag.SetActive(true);
+        if (target.IsLocalPlayer)
+            target._flagImage.SetActive(true);
     }
-
-    public void DropFlag() {
-        hasFlag = false;
-        flag.SetActive(false);
-        if (!IsLocalPlayer)
-            return;
-        _flagImage.SetActive(false);
+    
+    [ClientRpc]
+    public void DropFlagClientRpc(ulong id) {
+        Player target = GameNetworkManager.players[id].player;
+        target.hasFlag = false;
+        target.flag.SetActive(false);
+        if (target.IsLocalPlayer)
+            target._flagImage.SetActive(false);
     }
     
     private void SwitchWeapons(WeaponType weapon) {
