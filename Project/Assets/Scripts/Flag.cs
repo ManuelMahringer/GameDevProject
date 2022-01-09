@@ -12,6 +12,7 @@ public class Flag : NetworkBehaviour {
     }
 
     private void OnTriggerEnter(Collider other) {
-        _world.OnFlagPickUp(other.gameObject.GetComponent<Player>());
+        if (other.gameObject.GetComponent<Player>() != null)
+            _world.OnFlagPickUpServerRpc(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().NetworkObjectId);
     }
 }

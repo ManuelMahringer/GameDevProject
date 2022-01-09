@@ -59,7 +59,7 @@ public class Player : NetworkBehaviour {
 
     public Lobby.Team team;
 
-    private bool _hasFlag;
+    public bool hasFlag;
     
     private Weapon _activeWeapon;
     private BlockType _activeBlock;
@@ -358,28 +358,35 @@ public class Player : NetworkBehaviour {
 
     private void Respawn() {
         Vector3 deathPos = transform.position;
+        Debug.Log("Death position of player " + NetworkObject.NetworkObjectId + ": " + deathPos);
         
+        DropFlag();
+        
+        _health = maxHealth;
+        _healthBar.value = _health;
+        UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
+
         //_rb.velocity = Vector3.zero;
         if (team == Lobby.Team.Red)
             transform.position = _world.baseRedPos;
         else if (team == Lobby.Team.Blue)
             transform.position = _world.baseBluePos;
-        _health = maxHealth;
-        _healthBar.value = _health;
-        UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
-        
-        _world.PlaceFlag(deathPos);
-        DropFlag();
+
+        _world.PlaceFlagServerRpc(deathPos);
     }
     
     public void PickUpFlag() {
-        _hasFlag = true;
+        if (!IsLocalPlayer)
+            return;
+        hasFlag = true;
         flag.SetActive(true);
         _flagImage.SetActive(true);
     }
 
     public void DropFlag() {
-        _hasFlag = false;
+        if (!IsLocalPlayer)
+            return;
+        hasFlag = false;
         flag.SetActive(false);
         _flagImage.SetActive(false);
     }

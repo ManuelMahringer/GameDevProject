@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 public class BlueBase : MonoBehaviour {
@@ -11,6 +12,7 @@ public class BlueBase : MonoBehaviour {
     }
 
     private void OnTriggerEnter(Collider other) {
-        _world.OnFlagCapture(other.gameObject.GetComponent<Player>());        
+        if (other.gameObject.GetComponent<Player>() != null && other.gameObject.GetComponent<Player>().hasFlag)
+            _world.OnFlagCaptureServerRpc(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().NetworkObjectId);        
     }
 }

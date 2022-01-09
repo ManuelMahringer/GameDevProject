@@ -46,22 +46,41 @@ public class World : NetworkBehaviour {
         baseBlue.transform.position = baseBluePos;
         flag.SetActive(true);
     }
-
-    public void OnFlagPickUp(Player player) {
-        Debug.Log("Flag pickup from " + player + " at " + flag.transform.position);
-        flag.SetActive(false);
-        player.PickUpFlag();
+    
+    [ServerRpc (RequireOwnership = false)]
+    public void OnFlagPickUpServerRpc(ulong playerId) {
+        Debug.Log("Flag pickup from " + playerId + " at " + flag.transform.position);
+        FlagPickUpClientRpc(playerId);
     }
 
-    public void OnFlagCapture(Player player) {
-        Debug.Log("Flag capture from " + player);
+    [ClientRpc]
+    private void FlagPickUpClientRpc(ulong playerId) {
+        flag.SetActive(false);
+        GameNetworkManager.players[playerId].player.PickUpFlag();
+    }
+
+    [ServerRpc (RequireOwnership = false)]
+    public void OnFlagCaptureServerRpc(ulong playerId) {
+        Debug.Log("Flag capture from " + playerId);
+        FlagCaptureClientRpc(playerId);
+    }
+
+    [ClientRpc]
+    private void FlagCaptureClientRpc(ulong playerId) {
         flag.transform.position = initFlagPos;
         flag.SetActive(true);
-        player.DropFlag();
+        GameNetworkManager.players[playerId].player.DropFlag();
     }
 
-    public void PlaceFlag(Vector3 pos) {
+    [ServerRpc (RequireOwnership = false)]
+    public void PlaceFlagServerRpc(Vector3 pos) {
         Debug.Log("Placing flag at " + pos);
+        PlaceFlagClientRpc(pos);
+    }
+
+    [ClientRpc]
+    private void PlaceFlagClientRpc(Vector3 pos) {
+        Debug.Log("Client: Placing flag at (hopefully) death position: " + pos);
         flag.transform.position = pos;
         flag.SetActive(true);
     }
