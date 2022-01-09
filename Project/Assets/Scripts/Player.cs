@@ -497,12 +497,16 @@ public class Player : NetworkBehaviour {
                     break;
                 case RaycastAction.BuildBlock:
                     if (_inventory.Items[(byte) _activeBlock] > 0) {
+                        // Check if built block would intersect with player
+                        Vector3 buildPos = hit.point - (ray.direction / 10000.0f);
+                        buildPos = new Vector3(Mathf.FloorToInt(buildPos.x) + 0.5f, Mathf.FloorToInt(buildPos.y), Mathf.FloorToInt(buildPos.z) + 0.5f);
+                        if (Physics.CheckBox(buildPos, new Vector3(0.45f, 0.45f, 0.45f), Quaternion.identity, ~LayerMask.NameToLayer("Player")))
+                            break;
                         _inventory.Remove(_activeBlock);
                         _world.BuildBlockServerRpc(hit.point - (ray.direction / 10000.0f), _activeBlock);
                         Debug.Log("Inventory at place " + (byte) _activeBlock % _inventory.Size + " with " +
                                   _inventory.Items[(byte) _activeBlock] + " blocks");
                     }
-
                     break;
                 case RaycastAction.Shoot:
                     if (Time.time - _tFired > _activeWeapon.Firerate) {

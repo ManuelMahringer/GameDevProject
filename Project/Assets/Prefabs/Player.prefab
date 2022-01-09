@@ -552,7 +552,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 191
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -626,7 +626,7 @@ GameObject:
   - component: {fileID: 6568169588386428645}
   - component: {fileID: -177398978835070315}
   - component: {fileID: 218434943565797306}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -864,6 +864,7 @@ MonoBehaviour:
   popupActive: 0
   mouseActive: 0
   team: 0
+  hasFlag: 0
   mask:
     serializedVersion: 2
     m_Bits: 4294967295
