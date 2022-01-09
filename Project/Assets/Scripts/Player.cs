@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
@@ -113,6 +114,8 @@ public class Player : NetworkBehaviour {
     private float _tFired;
     private PlayerInventory _inventory;
     private GameObject _flagImage;
+    private TMP_Text _redFlagCntText;
+    private TMP_Text _blueFlagCntText;
 
     private enum RaycastAction {
         DestroyBlock,
@@ -153,6 +156,8 @@ public class Player : NetworkBehaviour {
         _inventory = gameObject.AddComponent<PlayerInventory>();
         _flagImage = GameObject.Find("FlagImage");
         _flagImage.SetActive(false);
+        _redFlagCntText = GameObject.Find("FlagsRedText").GetComponent<TMP_Text>();
+        _blueFlagCntText = GameObject.Find("FlagsBlueText").GetComponent<TMP_Text>();
         
         floatingHealthBar.gameObject.SetActive(false);
         foreach (var model in weaponModels) {
@@ -185,6 +190,8 @@ public class Player : NetworkBehaviour {
         transform.position = new Vector3(0, 1, 0);
 
         _world.gameStarted.OnValueChanged += OnGameStarted;
+        _world.redFlagCnt.OnValueChanged += OnRedFlagCntChanged;
+        _world.blueFlagCnt.OnValueChanged += OnBlueFlagCntChanged;
         // Debug.Log("BEFORE CHUNK SEND");
         // _world.GetInitialChunkDataServerRpc();
     }
@@ -203,6 +210,14 @@ public class Player : NetworkBehaviour {
             transform.position = _world.baseRedPos;
         else if (team == Lobby.Team.Blue)
             transform.position = _world.baseBluePos;
+    }
+
+    private void OnRedFlagCntChanged(int oldVal, int newVal) {
+        _redFlagCntText.text = newVal.ToString();
+    }
+    
+    private void OnBlueFlagCntChanged(int oldVal, int newVal) {
+        _blueFlagCntText.text = newVal.ToString();
     }
     
     public void DeactivateMouse() {

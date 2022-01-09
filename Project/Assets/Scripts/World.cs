@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Unity.Netcode;
@@ -16,6 +17,8 @@ public class World : NetworkBehaviour {
 
     public string selectedMap;
     public NetworkVariable<bool> gameStarted = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
+    public NetworkVariable<int> redFlagCnt = new NetworkVariable<int>(NetworkVariableReadPermission.Everyone);
+    public NetworkVariable<int> blueFlagCnt = new NetworkVariable<int>(NetworkVariableReadPermission.Everyone);
 
     [SerializeField] public float chunkSize;
     
@@ -35,7 +38,6 @@ public class World : NetworkBehaviour {
     private float _worldSize;
     public bool countdownFinished;
 
-
     private void Start() {
         gameStarted.OnValueChanged += OnGameStarted;
     }
@@ -46,7 +48,7 @@ public class World : NetworkBehaviour {
         baseBlue.transform.position = baseBluePos;
         flag.SetActive(true);
     }
-    
+
     [ServerRpc (RequireOwnership = false)]
     public void OnFlagPickUpServerRpc(ulong playerId) {
         Debug.Log("Flag pickup from " + playerId + " at " + flag.transform.position);
@@ -62,6 +64,11 @@ public class World : NetworkBehaviour {
     [ServerRpc (RequireOwnership = false)]
     public void OnFlagCaptureServerRpc(ulong playerId) {
         Debug.Log("Flag capture from " + playerId);
+        Player player = GameNetworkManager.players[playerId].player;
+        if (player.team == Lobby.Team.Red)
+            redFlagCnt.Value += 1;
+        else if (player.team == Lobby.Team.Blue)
+            blueFlagCnt.Value += 1;
         FlagCaptureClientRpc(playerId);
     }
 
