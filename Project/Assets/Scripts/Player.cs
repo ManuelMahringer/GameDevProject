@@ -75,6 +75,7 @@ public class Player : NetworkBehaviour {
         {{WeaponType.Handgun, new Handgun()}, {WeaponType.AssaultRifle, new AssaultRifle()}, {WeaponType.Shovel, new Shovel()}};
 
     private bool IsFalling => !isGrounded && _rb.velocity.y < 0;
+    private bool IsWalking => !_dxz.Equals(Vector3.zero) && isGrounded;
 
     private const float SensitivityHor = 5.0f;
     private const float SensitivityVer = 5.0f;
@@ -94,7 +95,11 @@ public class Player : NetworkBehaviour {
     private float _health;
     private Rigidbody _rb;
     private Slider _healthBar;
+    
+    [SerializeField] 
     private AudioSource _audioSource;
+    [SerializeField] 
+    private AudioSource _audioSourceWalking;
     private AudioClip _fallSound;
     private AudioClip _handgunSound;
     private AudioClip _assaultRifleSound;
@@ -141,7 +146,7 @@ public class Player : NetworkBehaviour {
         _gameMode = ComponentManager.gameMode;
         _world = GameObject.Find("World").GetComponent<World>();
         _rb = GetComponent<Rigidbody>();
-        _audioSource = GetComponent<AudioSource>();
+        //_audioSource = GetComponent<AudioSource>();
         _fallSound = Resources.Load("Sounds/hurt_fall") as AudioClip;
         _handgunSound = Resources.Load("Sounds/handgun") as AudioClip;
         _assaultRifleSound = Resources.Load("Sounds/assault_rifle") as AudioClip;
@@ -321,6 +326,19 @@ public class Player : NetworkBehaviour {
             _activeBlock = (BlockType) (nextBlock < 0 ? nextBlock + _inventory.Size : nextBlock); // we have to do this because unity modulo operation is shit
         }
 
+
+        //Debug.Log("HEHEHEHEHEHEHE" + !_dxz.Equals(Vector3.zero) + isGrounded + walking);
+        if (IsWalking && !_audioSourceWalking.isPlaying) {
+            Debug.Log("Start playing audio");
+            _audioSync.StartSoundLoop();
+            //_audioSourceWalking.Play();
+        }
+        else if (!IsWalking) {
+            Debug.Log("Stop sound!!!");
+            _audioSync.StopSoundLoop();
+            //_audioSourceWalking.Stop();
+        }
+
         ProcessMouseInput();
         PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
     }
@@ -354,6 +372,10 @@ public class Player : NetworkBehaviour {
             if (fallDistance > fallDmgDistThreshold) {
                 float fallDamage = (fallDistance - fallDmgDistThreshold) * fallDmgMultiplier;
                 TakeDamage(fallDamage);
+                _audioSync.PlaySound(3); 
+            }
+            else {
+                _audioSync.PlaySound(2); 
             }
 
             //Debug.Log("Fall Distance: " + (_startOfFall - transform.position.y));
@@ -385,7 +407,7 @@ public class Player : NetworkBehaviour {
     private void TakeDamage(float amount) {
         if (!IsLocalPlayer)
             return;
-        _audioSource.PlayOneShot(_fallSound);
+        //_audioSource.PlayOneShot(_fallSound);
         _health -= amount;
         _healthBar.value = _health;
         UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);

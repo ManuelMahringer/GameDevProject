@@ -398,5 +398,4 @@ public class Chunk : NetworkBehaviour {
         chunkMesh.uv = chunkUV.ToArray();
         chunkMesh.RecalculateNormals();
     }
-    
 }
