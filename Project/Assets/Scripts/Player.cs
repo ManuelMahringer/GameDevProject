@@ -72,6 +72,14 @@ public class Player : NetworkBehaviour {
 
     [SerializeField] public GameObject flag;
 
+    // private Animation assaultRifleAnimation = ;
+
+    // private Animation handgunAnimation;
+
+    //  private Animation shovelAnimation;
+
+    //  private Animation placeBlockAnimation;
+
     private readonly Dictionary<WeaponType, Weapon> weapons = new Dictionary<WeaponType, Weapon>
         {{WeaponType.Handgun, new Handgun()}, {WeaponType.AssaultRifle, new AssaultRifle()}, {WeaponType.Shovel, new Shovel()}};
 
@@ -330,10 +338,12 @@ public class Player : NetworkBehaviour {
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
         if (destroyBlock) {
-            if (_activeWeapon.WeaponType == WeaponType.Shovel)
+            if (_activeWeapon.WeaponType == WeaponType.Shovel){
                 PerformRaycastAction(RaycastAction.DestroyBlock, hitRangeDestroy);
-            else
+            }
+            else{
                 PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
+            }
         }
 
         if (buildBlock)
@@ -551,6 +561,18 @@ public class Player : NetworkBehaviour {
         }
     }
 
+    private void PlayAnimation(Weapon activeWeapon, bool placeBlock = false) {
+        foreach (GameObject gameObject in weaponModels){
+            if(placeBlock){
+                if (gameObject.transform.name == "Cube") 
+                    gameObject.GetComponent<Animation>().Play();
+            }
+            else if(gameObject.transform.name == activeWeapon.WeaponType.ToString()){
+                gameObject.GetComponent<Animation>().Play();
+            }
+        }
+    }
+
     private void PerformRaycastAction(RaycastAction raycastAction, float range) {
         Vector3 midPoint = new Vector3(_playerCamera.pixelWidth / 2, _playerCamera.pixelHeight / 2);
         Ray ray = _playerCamera.ScreenPointToRay(midPoint);
@@ -563,6 +585,7 @@ public class Player : NetworkBehaviour {
                     byte destBlockId = chunk.GetComponent<Chunk>()
                         .chunkBlocks[Mathf.FloorToInt(localCoordinate.x), Mathf.FloorToInt(localCoordinate.y), Mathf.FloorToInt(localCoordinate.z)].id;
                     _inventory.Add((BlockType) destBlockId);
+                    PlayAnimation(_activeWeapon);
                     Debug.Log("Inventory at place " + destBlockId % _inventory.Size + " with " + _inventory.Items[destBlockId % _inventory.Size] + " blocks");
                     break;
                 case RaycastAction.BuildBlock:
@@ -574,6 +597,7 @@ public class Player : NetworkBehaviour {
                             break;
                         _inventory.Remove(_activeBlock);
                         _world.BuildBlockServerRpc(hit.point - (ray.direction / 10000.0f), _activeBlock);
+                        PlayAnimation(_activeWeapon, true);
                         Debug.Log("Inventory at place " + (byte) _activeBlock % _inventory.Size + " with " +
                                   _inventory.Items[(byte) _activeBlock] + " blocks");
                     }
@@ -581,6 +605,7 @@ public class Player : NetworkBehaviour {
                 case RaycastAction.Shoot:
                     if (Time.time - _tFired > _activeWeapon.Firerate) {
                         PlayWeaponSound(_activeWeapon);
+                        PlayAnimation(_activeWeapon);
                         if (hit.collider.CompareTag(WorldTag)) {
                             chunk = hit.transform.gameObject;
                             localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
@@ -646,6 +671,7 @@ public class Player : NetworkBehaviour {
                 case RaycastAction.Shoot:
                     if (Time.time - _tFired > _activeWeapon.Firerate) {
                         PlayWeaponSound(_activeWeapon);
+                        PlayAnimation(_activeWeapon);
                         _tFired = Time.time;
                     }
 
