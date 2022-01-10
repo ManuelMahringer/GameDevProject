@@ -14,6 +14,9 @@ public class Flag : NetworkBehaviour {
     private void OnTriggerEnter(Collider other) {
         if (other.gameObject.GetComponent<Player>() == null || _world.respawnDirtyFlagState.Value)
             return;
+
+        if (!other.gameObject.GetComponent<Player>().IsLocalPlayer)
+            return;
         
         Debug.Log("Flag collision with player " + NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().NetworkObjectId);
         _world.OnFlagPickUpServerRpc(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().NetworkObjectId);

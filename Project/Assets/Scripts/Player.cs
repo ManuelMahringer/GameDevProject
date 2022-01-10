@@ -126,7 +126,7 @@ public class Player : NetworkBehaviour {
     private TMP_Text _blueFlagCntText;
     private TMP_Text _winningMessage;
     private Button _exitGameBtn;
-    
+
     private enum RaycastAction {
         DestroyBlock,
         BuildBlock,
@@ -203,6 +203,7 @@ public class Player : NetworkBehaviour {
         _world.blueFlagCnt.OnValueChanged += OnBlueFlagCntChanged;
         _world.gameEnded.OnValueChanged += OnGameEnded;
         _world.flagHolderId.OnValueChanged += OnNewFlagHolder;
+        _world.respawnDirtyFlagState.OnValueChanged = OnDirtyFlagStateSet;
         // Debug.Log("BEFORE CHUNK SEND");
         // _world.GetInitialChunkDataServerRpc();
     }
@@ -302,7 +303,7 @@ public class Player : NetworkBehaviour {
         _xAxis = Input.GetAxis("Horizontal");
         _zAxis = Input.GetAxis("Vertical");
         jump = Input.GetButton("Jump");
-        _respawn = Input.GetKey(KeyCode.R);
+        //_respawn = Input.GetKey(KeyCode.R);
 
         bool deactivateMouse = _world.gameStarted.Value && Input.GetKeyDown(KeyCode.Escape);
         bool run = mouseActive && Input.GetKey(KeyCode.LeftShift);
@@ -431,11 +432,11 @@ public class Player : NetworkBehaviour {
             _rb.AddForce(jumpForce * _rb.mass * Time.deltaTime * Vector3.up, appliedForceMode);
             isGrounded = false;
         }
-
-        // TODO: remove
-        if (_respawn) {
-            Respawn();
-        }
+        //
+        // // TODO: remove
+        // if (_respawn) {
+        //     Respawn();
+        // }
     }
 
     private void TakeDamage(float amount) {
@@ -453,11 +454,34 @@ public class Player : NetworkBehaviour {
     private void Respawn() {
         if (!IsLocalPlayer)
             return;
+        
+        if (_world.flagHolderId.Value == NetworkObjectId) {
+            _respawn = true;
+            _world.SetDirtyFlagStateServerRpc();
+            return;
+        }
+        
+        // "Normal" Respawn
+        // Reset health
+        _health = maxHealth;
+        _healthBar.value = _health;
+        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health);
+        
+        // Reset player position
+        _rb.velocity = Vector3.zero;
 
-        Vector3 deathPos = transform.position;
-        // Drop flag if flag holder
-        if (_world.flagHolderId.Value == NetworkObjectId)
-            _world.DropFlagServerRpc(NetworkObjectId, transform.position);
+        if (team == Lobby.Team.Red)
+            transform.position = _world.baseRedPos;
+        else if (team == Lobby.Team.Blue)
+            transform.position = _world.baseBluePos;
+    }
+
+    private void OnDirtyFlagStateSet(bool oldVal, bool newVal) {
+        if (!newVal || !_respawn)
+            return;
+        _respawn = false;
+        
+        _world.DropFlagServerRpc(NetworkObjectId, transform.position);
         
         // Reset health
         _health = maxHealth;
@@ -465,17 +489,14 @@ public class Player : NetworkBehaviour {
         UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health);
         
         // Reset player position
-        Debug.Log("Client: resetting player position of player " + NetworkObjectId);
         _rb.velocity = Vector3.zero;
+
         if (team == Lobby.Team.Red)
             transform.position = _world.baseRedPos;
         else if (team == Lobby.Team.Blue)
             transform.position = _world.baseBluePos;
         
-        // Reset dirty state if flag holder
-        if (_world.flagHolderId.Value == NetworkObjectId) {
-            _world.ResetDirtyFlagStateServerRpc(deathPos);
-        }
+        _world.PlayerResetCallbackServerRpc(NetworkObjectId);
     }
 
     private void SwitchWeapons(WeaponType weapon) {

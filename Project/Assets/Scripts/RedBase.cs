@@ -15,6 +15,8 @@ public class RedBase : MonoBehaviour {
         if (other.gameObject.GetComponent<Player>() == null || _world.respawnDirtyFlagState.Value)
             return;
         Player player = other.gameObject.GetComponent<Player>();
+        if (!player.IsLocalPlayer)
+            return;
         if (_world.flagHolderId.Value == player.NetworkObjectId && player.team == Lobby.Team.Red)
             _world.OnFlagCaptureServerRpc(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().NetworkObjectId);
     }

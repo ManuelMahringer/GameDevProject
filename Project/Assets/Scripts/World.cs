@@ -22,8 +22,8 @@ public class World : NetworkBehaviour {
     public NetworkVariable<bool> gameEnded = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
     public NetworkVariable<ulong> flagHolderId = new NetworkVariable<ulong>(NetworkVariableReadPermission.Everyone);
     public NetworkVariable<bool> respawnDirtyFlagState = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
-    
-    
+    public NetworkVariable<ulong> transformBasePlayer = new NetworkVariable<ulong>(NetworkVariableReadPermission.Everyone);
+
     [SerializeField] public float chunkSize;
 
     [SerializeField] public int capturesToWin;
@@ -46,6 +46,7 @@ public class World : NetworkBehaviour {
 
     private void Start() {
         gameStarted.OnValueChanged += OnGameStarted;
+        transformBasePlayer.OnValueChanged += OnPlayerInBase;
     }
 
     private void OnGameStarted(bool oldVal, bool newVal) {
@@ -59,7 +60,6 @@ public class World : NetworkBehaviour {
     public void OnFlagPickUpServerRpc(ulong playerId) {
         if (respawnDirtyFlagState.Value)
             return;
-        flag.SetActive(false);
         Debug.Log("Server: Flag pickup from " + playerId + " at " + flag.transform.position);
         flagHolderId.Value = playerId;
         FlagPickupClientRpc(playerId);
@@ -77,8 +77,6 @@ public class World : NetworkBehaviour {
     public void OnFlagCaptureServerRpc(ulong playerId) {
         if (respawnDirtyFlagState.Value)
             return;
-        flag.transform.position = initFlagPos;
-        flag.SetActive(true);
         Player flagHolder = GameNetworkManager.GetPlayerById(playerId);
         Debug.Log("Server: Flag capture from " + playerId + ", team " + flagHolder.team);
         flagHolderId.Value = ulong.MaxValue;
@@ -96,38 +94,37 @@ public class World : NetworkBehaviour {
 
     [ServerRpc(RequireOwnership = false)]
     public void DropFlagServerRpc(ulong playerId, Vector3 deathPos) {
-        Debug.Log("Server: Setting dirty state");
-        respawnDirtyFlagState.Value = true;
-        
         DropFlagClientRpc(playerId, deathPos);
     }
-    
+
     [ClientRpc]
     private void DropFlagClientRpc(ulong playerId, Vector3 deathPos) {
-        // flag.transform.position = deathPos;
-        // flag.SetActive(true);
+        flag.transform.position = deathPos;
+        flag.SetActive(true);
         Player flagHolder = GameNetworkManager.GetPlayerById(playerId);
         flagHolder.flag.SetActive(false);
     }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void ResetDirtyFlagStateServerRpc(Vector3 deathPos) {
-        Debug.Log("Resetting dirty flag state");
-        flagHolderId.Value = ulong.MaxValue;
-        respawnDirtyFlagState.Value = false;
-        
-        flag.transform.position = deathPos;
-        flag.SetActive(true);
-        ResetDirtyFlagStateClientRpc(deathPos);
-    }
-
-    [ClientRpc]
-    private void ResetDirtyFlagStateClientRpc(Vector3 deathPos) {
-        Debug.Log("Client: Placing flag at death position: " + deathPos);
-        flag.transform.position = deathPos;
-        flag.SetActive(true);
+    
+    [ServerRpc (RequireOwnership = false)]
+    public void SetDirtyFlagStateServerRpc() {
+        Debug.Log("Server: Setting dirty state");
+        respawnDirtyFlagState.Value = true;
     }
     
+    [ServerRpc (RequireOwnership = false)]
+    public void PlayerResetCallbackServerRpc(ulong playerId) {
+        Debug.Log("Server: transfrom base position callback from player " + playerId);
+        transformBasePlayer.Value = playerId;
+    }
+    
+    private void OnPlayerInBase(ulong oldVal, ulong newVal) {
+        if (newVal == flagHolderId.Value) {
+            Debug.Log("Resetting dirty flag state");
+            flagHolderId.Value = ulong.MaxValue;
+            respawnDirtyFlagState.Value = false;
+        }
+    }
+
     private void UpdateCaptureCounts(Lobby.Team team) {
         if (team == Lobby.Team.Red)
             redFlagCnt.Value += 1;
