@@ -62,7 +62,7 @@ public class GameNetworkManager : MonoBehaviour {
         {
             //StatusLabels();
 
-            RebuildWorld();
+            //RebuildWorld();
         }
 
         GUILayout.EndArea();
