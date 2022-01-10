@@ -682,8 +682,8 @@ public class Player : NetworkBehaviour {
         if (!IsLocalPlayer)
             return;
         
-        if (_gameMode == GameMode.Fight)
-            _inventory.Draw(_activeBlock);
+        // if (_gameMode == GameMode.Fight)
+        //     _inventory.Draw(_activeBlock);
     }
     
     // -- SERVER / CLIENT SYNCHRONIZATION
