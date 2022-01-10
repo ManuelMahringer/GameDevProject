@@ -6304,6 +6304,8 @@ MonoBehaviour:
   chunkPrefab: {fileID: 9031596313245055636, guid: 0a1fbae335bb4854a98513097cc18eda, type: 3}
   worldMaterial: {fileID: 0}
   size: 16
+  enableGenerate: 0
+  enableGameModeSelection: 0
   selectedMap: 
   gameStarted:
     m_InternalValue: 0
@@ -6317,12 +6319,14 @@ MonoBehaviour:
     m_InternalValue: 0
   respawnDirtyFlagState:
     m_InternalValue: 0
+  transformBasePlayer:
+    m_InternalValue: 0
   chunkSize: 13
   capturesToWin: 5
   flag: {fileID: 428489647}
   initFlagPos: {x: 2, y: 3, z: 2}
-  baseRedPos: {x: -10.5, y: 4.5, z: 0}
-  baseBluePos: {x: 10.5, y: 4.5, z: 0}
+  baseRedPos: {x: -60.5, y: 4.5, z: 0}
+  baseBluePos: {x: 60.5, y: 4.5, z: 0}
   baseRed: {fileID: 407983800}
   baseBlue: {fileID: 2053621328}
   countdownFinished: 0
@@ -7009,6 +7013,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 9167042926799908354, guid: e8863dbda93f681489f2c000e7bbdce8, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9167042927893488992, guid: e8863dbda93f681489f2c000e7bbdce8, type: 3}
       propertyPath: m_Name
       value: WorldBorders
