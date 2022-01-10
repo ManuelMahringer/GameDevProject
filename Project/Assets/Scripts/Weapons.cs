@@ -32,7 +32,7 @@ public class Handgun : Weapon {
 }
 
 public class AssaultRifle : Weapon {
-    public override WeaponType WeaponType => WeaponType.Handgun;
+    public override WeaponType WeaponType => WeaponType.AssaultRifle;
     public override float Damage => 50f;
     public override float Range => 30f;
     public override float Firerate => 1f;
