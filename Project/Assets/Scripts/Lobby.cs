@@ -84,11 +84,13 @@ public class Lobby : NetworkBehaviour {
         string[] mapNames = mapPaths.Select(path => path.Split(Path.DirectorySeparatorChar).Last()).ToArray();
 
         maps = mapPaths.Zip(mapNames, (mapPath, mapName) => new Map {Path = mapPath, Name = mapName}).ToList();
+
         maps.Add(new Map {Name = "Generate", Path = ""}); // dummy option to still be able to generate the random map TODO: remove
         
         mapDropdown.ClearOptions();
         mapDropdown.AddOptions(mapNames.ToList());
-        mapDropdown.AddOptions(new List<string> { "Generate" }); // dummy option to still be able to generate the random map TODO: remove
+        if (_world.enableGenerate)
+            mapDropdown.AddOptions(new List<string> { "Generate" }); // dummy option to still be able to generate the random map TODO: remove
     }
     
     

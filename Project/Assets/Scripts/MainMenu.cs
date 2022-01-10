@@ -10,13 +10,18 @@ using System.Linq;
 using Unity.Netcode;
 
 public class MainMenu : MonoBehaviour {
+    [SerializeField] private bool enableGameModeDropdown;
+
     [SerializeField]
     private TMP_Dropdown mapDropdown;
     [SerializeField]
     private TMP_Dropdown gameModeDropdown;
     private List<Map> maps;
-    
+    [SerializeField]
+    private GameObject gameModeDropdownGameObject;
+
     private void Start() {
+
         string[] mapPaths = Directory.GetDirectories(Application.persistentDataPath);
         string[] mapNames = mapPaths.Select(path => path.Split(Path.DirectorySeparatorChar).Last()).ToArray();
         maps = mapPaths.Zip(mapNames, (mapPath, mapName) => new Map {Path = mapPath, Name = mapName}).ToList();
@@ -28,15 +33,17 @@ public class MainMenu : MonoBehaviour {
         
         gameModeDropdown.ClearOptions();
         gameModeDropdown.AddOptions(((GameMode[])Enum.GetValues(typeof(GameMode))).Select(gm => gm.ToString()).ToList());
-        
-        //Debug.Log(NetworkManager.Singleton.ConnectedClients);
+
+        if (!enableGameModeDropdown)
+            gameModeDropdownGameObject.SetActive(false);
     }
 
     public void PlayGame() {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
-        //ComponentManager.Map = maps[mapDropdown.value];
-        ComponentManager.gameMode = (GameMode)gameModeDropdown.value;
-        //Debug.Log(ComponentManager.Map.Name);
+        if (enableGameModeDropdown)
+            ComponentManager.gameMode = (GameMode)gameModeDropdown.value;
+        else
+            ComponentManager.gameMode = GameMode.Fight;
     }
     
     public void QuitGame() {

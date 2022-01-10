@@ -61,12 +61,10 @@ public class Player : NetworkBehaviour {
 
     public Lobby.Team team;
 
-    public bool hasFlag;
     
     private Weapon _activeWeapon;
     private BlockType _activeBlock;
 
-    [SerializeField] private LayerMask mask;
 
     [SerializeField] public List<GameObject> weaponModels;
 

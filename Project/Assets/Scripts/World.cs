@@ -15,6 +15,9 @@ public class World : NetworkBehaviour {
     public PhysicMaterial worldMaterial;
     public int size;
 
+    public bool enableGenerate;
+    public bool enableGameModeSelection;
+    
     public string selectedMap;
     public NetworkVariable<bool> gameStarted = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
     public NetworkVariable<int> redFlagCnt = new NetworkVariable<int>(NetworkVariableReadPermission.Everyone);
