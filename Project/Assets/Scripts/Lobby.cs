@@ -201,7 +201,7 @@ public class Lobby : NetworkBehaviour {
         if (_clientNamesBlue.Count != _clientNamesRed.Count || _players.Value <= 1) {
             _errortext.text =
                 "Teams are not balanced! \nPlease make sure there is at least 1 player on each team and an equal amount of players on each team.";
-            return;
+            //return;
         }
         _world.SetMapServerRpc(maps[mapDropdown.value].Name);
         _world.gameStarted.Value = true;
