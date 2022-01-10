@@ -69,7 +69,7 @@ public class Player : NetworkBehaviour {
 
     [SerializeField] public List<GameObject> weaponModels;
 
-    [SerializeField] private GameObject flag;
+    [SerializeField] public GameObject flag;
 
     private readonly Dictionary<WeaponType, Weapon> weapons = new Dictionary<WeaponType, Weapon>
         {{WeaponType.Handgun, new Handgun()}, {WeaponType.AssaultRifle, new AssaultRifle()}, {WeaponType.Shovel, new Shovel()}};
@@ -207,6 +207,7 @@ public class Player : NetworkBehaviour {
         _world.redFlagCnt.OnValueChanged += OnRedFlagCntChanged;
         _world.blueFlagCnt.OnValueChanged += OnBlueFlagCntChanged;
         _world.gameEnded.OnValueChanged += OnGameEnded;
+        _world.flagHolderId.OnValueChanged += OnNewFlagHolder;
         // Debug.Log("BEFORE CHUNK SEND");
         // _world.GetInitialChunkDataServerRpc();
     }
@@ -234,6 +235,17 @@ public class Player : NetworkBehaviour {
         _winningMessage.text = winning.ToString() + " won!";
         _hudGameEnd.SetActive(true);
         DeactivateMouse();
+    }
+
+    private void OnNewFlagHolder(ulong oldId, ulong newId) {
+        if (IsLocalPlayer && NetworkObject.NetworkObjectId == newId) {
+            Debug.Log("Local Player " + NetworkObject.NetworkObjectId + ": UI flag activated");
+            _flagImage.SetActive(true);
+        }
+        else {
+            Debug.Log("Local Player " + NetworkObject.NetworkObjectId + ": UI flag deactivated");
+            _flagImage.SetActive(false);
+        }
     }
 
     public void ExitGame() {
@@ -285,6 +297,9 @@ public class Player : NetworkBehaviour {
         bool iterBlocks = mouseActive && Input.mouseScrollDelta.y < 0;
         bool iterBlocksRev = mouseActive && Input.mouseScrollDelta.y > 0;
 
+        if (Input.GetKeyDown(KeyCode.L))
+            Debug.Log("This player network object id: " + NetworkObjectId);
+        
         if (mouseActive && deactivateMouse) {
             DeactivateMouse();
         }
@@ -419,44 +434,31 @@ public class Player : NetworkBehaviour {
     private void Respawn() {
         if (!IsLocalPlayer)
             return;
-        
-        Vector3 deathPos = transform.position;
-        Debug.Log("Death position of player " + NetworkObject.NetworkObjectId + ": " + deathPos);
-        
-        _world.DropFlagServerRpc(NetworkObject.NetworkObjectId);
-        _world.PlaceFlagServerRpc(deathPos);
 
+        Vector3 deathPos = transform.position;
+        // Drop flag if flag holder
+        if (_world.flagHolderId.Value == NetworkObjectId)
+            _world.DropFlagServerRpc(NetworkObjectId, transform.position);
+        
+        // Reset health
         _health = maxHealth;
         _healthBar.value = _health;
-        UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
-
-        //_rb.velocity = Vector3.zero;
+        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health);
+        
+        // Reset player position
+        Debug.Log("Client: resetting player position of player " + NetworkObjectId);
+        _rb.velocity = Vector3.zero;
         if (team == Lobby.Team.Red)
             transform.position = _world.baseRedPos;
         else if (team == Lobby.Team.Blue)
             transform.position = _world.baseBluePos;
+        
+        // Reset dirty state if flag holder
+        if (_world.flagHolderId.Value == NetworkObjectId) {
+            _world.ResetDirtyFlagStateServerRpc(deathPos);
+        }
+    }
 
-    }
-    
-    [ClientRpc]
-    public void PickUpFlagClientRpc(ulong id) {
-        Debug.Log("Called Pick Up Flag at player " + NetworkObject.NetworkObjectId);
-        Player target = GameNetworkManager.players[id].player;
-        target.hasFlag = true;
-        target.flag.SetActive(true);
-        if (target.IsLocalPlayer)
-            target._flagImage.SetActive(true);
-    }
-    
-    [ClientRpc]
-    public void DropFlagClientRpc(ulong id) {
-        Player target = GameNetworkManager.players[id].player;
-        target.hasFlag = false;
-        target.flag.SetActive(false);
-        if (target.IsLocalPlayer)
-            target._flagImage.SetActive(false);
-    }
-    
     private void SwitchWeapons(WeaponType weapon) {
         _activeWeapon = weapons[weapon];
         PlayerWeaponChangeServerRpc(NetworkObject.NetworkObjectId, weapon);
@@ -631,13 +633,13 @@ public class Player : NetworkBehaviour {
     [ServerRpc]
     private void PlayerShotServerRpc(ulong id, float damage) {
         Player shotPlayer = GameNetworkManager.GetPlayerById(id);
-        Debug.Log("Shot Player Game Object " + shotPlayer);
+        // Debug.Log("Shot Player Game Object " + shotPlayer);
         shotPlayer.TakeDamageClientRpc(damage);
     }
     
     [ServerRpc(RequireOwnership = false)]
     private void PlayerWeaponChangeServerRpc(ulong id, WeaponType weapon) {
-        Debug.Log("Server: calling player weapon change for all clients for player with id " + id + " and weapon " + weapon);
+        // Debug.Log("Server: calling player weapon change for all clients for player with id " + id + " and weapon " + weapon);
         UpdatePlayerWeaponClientRpc(id, weapon);
     }
     
@@ -657,13 +659,13 @@ public class Player : NetworkBehaviour {
 
     [ServerRpc (RequireOwnership = false)]
     private void UpdateFloatingHealthBarServerRpc(ulong id, float value) {
-        Debug.Log("Server call update health bar of player " + id + " to the value " + value);
+        //Debug.Log("Server call update health bar of player " + id + " to the value " + value);
         UpdateFloatingHealthBarClientRpc(id, value);
     }
 
     [ClientRpc]
     private void UpdateFloatingHealthBarClientRpc(ulong id, float value) {
-        Debug.Log("Client updated health bar of player " + id + " to the value " + value);
+        //Debug.Log("Client updated health bar of player " + id + " to the value " + value);
         Player target = GameNetworkManager.players[id].player;
         target.floatingHealthBar.value = value;
     }

@@ -12,10 +12,10 @@ public class RedBase : MonoBehaviour {
     }
 
     private void OnTriggerEnter(Collider other) {
-        if (other.gameObject.GetComponent<Player>() == null)
+        if (other.gameObject.GetComponent<Player>() == null || _world.respawnDirtyFlagState.Value)
             return;
         Player player = other.gameObject.GetComponent<Player>();
-        if (player.hasFlag && player.team == Lobby.Team.Red)
+        if (_world.flagHolderId.Value == player.NetworkObjectId && player.team == Lobby.Team.Red)
             _world.OnFlagCaptureServerRpc(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().NetworkObjectId);
     }
 }
