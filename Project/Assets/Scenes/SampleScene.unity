@@ -480,10 +480,6 @@ PrefabInstance:
       propertyPath: GlobalObjectIdHash
       value: 173608524
       objectReference: {fileID: 0}
-    - target: {fileID: 6568169588386428647, guid: 9d0a2c77fe8b6d24784984b8c2cbd529, type: 3}
-      propertyPath: healthBar
-      value: 
-      objectReference: {fileID: 497941270}
     - target: {fileID: 6568169588386428654, guid: 9d0a2c77fe8b6d24784984b8c2cbd529, type: 3}
       propertyPath: m_Name
       value: Player
@@ -6638,6 +6634,8 @@ MonoBehaviour:
   gameEnded:
     m_InternalValue: 0
   flagHolderId:
+    m_InternalValue: 0
+  respawnDirtyFlagState:
     m_InternalValue: 0
   chunkSize: 13
   capturesToWin: 5

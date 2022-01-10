@@ -43,7 +43,8 @@ public class Player : NetworkBehaviour {
 
     public ForceMode appliedForceMode = ForceMode.Force;
 
-    [Header("Build/Destroy Settings")] public float hitRange = 5f;
+    [Header("Build/Destroy Settings")] public float hitRangeBuild = 2.5f;
+    public float hitRangeDestroy = 2.5f;
 
     [Header("Ground Tag Specification")] public String groundTag = "";
 
@@ -174,13 +175,7 @@ public class Player : NetworkBehaviour {
         _hudGameEnd.SetActive(false);
 
         floatingHealthBar.gameObject.SetActive(false);
-        foreach (var model in weaponModels) {
-            model.layer = LayerMask.NameToLayer(WeaponLayerName);
-            if (model.transform.name == WeaponType.Shovel.ToString()) {
-                model.transform.GetChild(0).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
-                model.transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
-            }
-        }
+        InitWeaponModels();
 
         Camera[] cameras = gameObject.GetComponentsInChildren<Camera>();
         _playerCamera = cameras[0];
@@ -191,7 +186,7 @@ public class Player : NetworkBehaviour {
 
         if (_gameMode == GameMode.Build) {
             _rb.isKinematic = true;
-            hitRange = Single.PositiveInfinity;
+            hitRangeBuild = Single.PositiveInfinity;
             isGrounded = true;
             _healthBar.gameObject.SetActive(false);
             runSpeed = walkSpeed = 8f;
@@ -271,6 +266,30 @@ public class Player : NetworkBehaviour {
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
     }
+
+    private void InitWeaponModels() {
+        foreach (var model in weaponModels) {
+            model.layer = LayerMask.NameToLayer(WeaponLayerName);
+            if (model.transform.name == WeaponType.Shovel.ToString()) {
+                model.transform.GetChild(0).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+                model.transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+            }
+            
+            if (model.transform.name == WeaponType.AssaultRifle.ToString()) {
+                model.transform.GetChild(0).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+                model.transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+                model.transform.GetChild(2).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+                model.transform.GetChild(3).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+            }
+
+            if (model.transform.name == WeaponType.Handgun.ToString()) {
+                model.transform.GetChild(0).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+                model.transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+                model.transform.GetChild(2).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+                model.transform.GetChild(3).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
+            }
+        }
+    }
     
     private void OnDisable() {
         GameNetworkManager.UnregisterPlayer(NetworkObject.NetworkObjectId);
@@ -311,14 +330,14 @@ public class Player : NetworkBehaviour {
             currentSpeed = run ? runSpeed : walkSpeed;
         if (destroyBlock) {
             if (_activeWeapon.WeaponType == WeaponType.Shovel)
-                PerformRaycastAction(RaycastAction.DestroyBlock, hitRange);
+                PerformRaycastAction(RaycastAction.DestroyBlock, hitRangeDestroy);
             else
                 PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
         }
 
         if (buildBlock)
             if (_activeWeapon.WeaponType == WeaponType.Shovel)
-                PerformRaycastAction(RaycastAction.BuildBlock, hitRange);
+                PerformRaycastAction(RaycastAction.BuildBlock, hitRangeBuild);
 
         if (saveMap)
             _saveMapPopup.Open(this);
@@ -355,7 +374,7 @@ public class Player : NetworkBehaviour {
         }
 
         ProcessMouseInput();
-        PerformRaycastAction(RaycastAction.HighlightBlock, hitRange);
+        PerformRaycastAction(RaycastAction.HighlightBlock, hitRangeBuild);
     }
 
     private void LateUpdate() {
