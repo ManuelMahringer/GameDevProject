@@ -842,7 +842,8 @@ MonoBehaviour:
   runSpeed: 5
   jumpForce: 12000
   appliedForceMode: 0
-  hitRange: 5
+  hitRangeBuild: 2.5
+  hitRangeDestroy: 2.5
   groundTag: 
   jump: 0
   isGrounded: 0

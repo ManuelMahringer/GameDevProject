@@ -725,14 +725,14 @@ public class PlayerInventory : MonoBehaviour {
 
     public void Start() {
         _blockTextures = new Dictionary<int, Texture2D> {
-            {0, Resources.Load<Texture2D>("BlockImages/grass")},
-            {1, Resources.Load<Texture2D>("BlockImages/earth")},
-            {2, Resources.Load<Texture2D>("BlockImages/iron")},
-            {3, Resources.Load<Texture2D>("BlockImages/stone")}
+            {0, Resources.Load<Texture2D>("BlockImages/earth")},
+            {1, Resources.Load<Texture2D>("BlockImages/wood")},
+            {2, Resources.Load<Texture2D>("BlockImages/stone")},
+            {3, Resources.Load<Texture2D>("BlockImages/iron")}
         };
         _guiStyle.fontSize = 30;
         _guiStyle.fontStyle = FontStyle.Bold;
-        _guiStyle.normal.textColor = Color.black;
+        _guiStyle.normal.textColor = Color.white;
 
         _selectedStyle.border = new RectOffset(borderSize, borderSize, borderSize, borderSize);
         _selectedStyle.normal.background = Resources.Load<Texture2D>("BlockImages/border");
