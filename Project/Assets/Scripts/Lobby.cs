@@ -80,7 +80,7 @@ public class Lobby : NetworkBehaviour {
         _redTMPTexts[1] = GameObject.Find("Player4").GetComponentInChildren<TMP_Text>();
         _redTMPTexts[2] = GameObject.Find("Player5").GetComponentInChildren<TMP_Text>();
         
-        string[] mapPaths = Directory.GetDirectories(Application.persistentDataPath);
+        string[] mapPaths = Directory.GetDirectories(System.IO.Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Maps");
         string[] mapNames = mapPaths.Select(path => path.Split(Path.DirectorySeparatorChar).Last()).ToArray();
 
         maps = mapPaths.Zip(mapNames, (mapPath, mapName) => new Map {Path = mapPath, Name = mapName}).ToList();

@@ -153,9 +153,10 @@ public class Chunk : NetworkBehaviour {
 
     public void Serialize(string mapName, int x, int y) {
         BinaryFormatter bf = new BinaryFormatter();
-        string savePath = Application.persistentDataPath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + y + ".chunk";
+        string basePath = System.IO.Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Maps";
+        string savePath = basePath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + y + ".chunk";
 
-        Directory.CreateDirectory(Application.persistentDataPath + Path.DirectorySeparatorChar + mapName);
+        Directory.CreateDirectory(basePath + Path.DirectorySeparatorChar + mapName);
 
         using var fileStream = File.Create(savePath);
         bf.Serialize(fileStream, chunkBlocks);
@@ -165,7 +166,8 @@ public class Chunk : NetworkBehaviour {
     }
 
     public void Load(string mapName, int x, int y) {
-        string loadPath = Application.persistentDataPath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + y + ".chunk";
+        string basePath = System.IO.Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Maps";
+        string loadPath = basePath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + y + ".chunk";
 
         if (File.Exists(loadPath)) {
             BinaryFormatter bf = new BinaryFormatter();
