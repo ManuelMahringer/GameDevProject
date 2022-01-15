@@ -50,6 +50,7 @@ public class World : NetworkBehaviour {
     private void Start() {
         gameStarted.OnValueChanged += OnGameStarted;
         transformBasePlayer.OnValueChanged += OnPlayerInBase;
+        countdownFinished = false;
     }
 
     private void OnGameStarted(bool oldVal, bool newVal) {

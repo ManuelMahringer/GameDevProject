@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -9,13 +10,23 @@ public class Countdown : MonoBehaviour {
     [SerializeField] private float startingTime; 
     [SerializeField] private TMP_Text countdownNumbers;
     [SerializeField] private World world;
-    void Start() {
+    [SerializeField] private TMP_Text countdownText;
+    public bool countdownFinished;
+
+
+    
+    public void StartCountdown(String message) {
+        countdownFinished = false;
+        countdownText.text = message;
         GetComponent<Canvas>().enabled = true;
         currentTime = startingTime;
     }
 
     // Update is called once per frame
     void Update() {
+        if (countdownFinished) {
+            return;
+        }
         currentTime -= 1 * Time.deltaTime;
         countdownNumbers.text = currentTime.ToString("0");
 
@@ -26,6 +37,7 @@ public class Countdown : MonoBehaviour {
 
     void StopCountdown() {
         world.countdownFinished = true;
-        gameObject.SetActive(false);
+        countdownFinished = true;
+        GetComponent<Canvas>().enabled = false;
     }
 }

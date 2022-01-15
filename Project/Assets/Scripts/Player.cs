@@ -61,6 +61,8 @@ public class Player : NetworkBehaviour {
 
     public Lobby.Team team;
 
+
+
     
     private Weapon _activeWeapon;
     private BlockType _activeBlock;
@@ -128,10 +130,12 @@ public class Player : NetworkBehaviour {
     private GameObject _flagImage;
     private GameObject _hudIngame;
     private GameObject _hudGameEnd;
+    private Countdown _countdown;
     private TMP_Text _redFlagCntText;
     private TMP_Text _blueFlagCntText;
     private TMP_Text _winningMessage;
     private Button _exitGameBtn;
+
 
     private enum RaycastAction {
         DestroyBlock,
@@ -174,10 +178,12 @@ public class Player : NetworkBehaviour {
         _flagImage.SetActive(false);
         _hudIngame = GameObject.Find("HUD (ingame)");
         _hudGameEnd = GameObject.Find("HUD (game end)");
+        _countdown = GameObject.Find("HUD (Countdown)").GetComponent<Countdown>();
         _redFlagCntText = GameObject.Find("FlagsRedText").GetComponent<TMP_Text>();
         _blueFlagCntText = GameObject.Find("FlagsBlueText").GetComponent<TMP_Text>();
         _winningMessage = GameObject.Find("WinningMessage").GetComponent<TMP_Text>();
         _exitGameBtn = GameObject.Find("ExitGameButton").GetComponent<Button>();
+
         _hudGameEnd.SetActive(false);
 
         floatingHealthBar.gameObject.SetActive(false);
@@ -303,7 +309,9 @@ public class Player : NetworkBehaviour {
     }
 
     private void Update() {
-        if (!IsLocalPlayer || !_world.countdownFinished || !_world.gameStarted.Value)
+        Debug.Log(!IsLocalPlayer + " " + !_world.countdownFinished + " " + !_world.gameStarted.Value + " " +
+                  !_countdown);
+        if (!IsLocalPlayer || !_world.countdownFinished || !_world.gameStarted.Value || !_countdown.countdownFinished)
             return;
 
         _xAxis = Input.GetAxis("Horizontal");
@@ -482,6 +490,10 @@ public class Player : NetworkBehaviour {
             transform.position = _world.baseRedPos;
         else if (team == Lobby.Team.Blue)
             transform.position = _world.baseBluePos;
+        
+        Debug.Log("NOW SETTINGS THE SHIT");
+        _world.countdownFinished = false;
+        _countdown.GetComponent<Countdown>().StartCountdown("Respawning in ...");
     }
 
     private void OnDirtyFlagStateSet(bool oldVal, bool newVal) {

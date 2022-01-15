@@ -214,7 +214,7 @@ public class Lobby : NetworkBehaviour {
         // make bottom plane visible
         GameObject.Find("WorldBorders/Bottom_Plane").GetComponent<MeshRenderer>().enabled = true;
         // disable Lobby overlay
-        GameObject.Find("HUD (Countdown)").GetComponent<Countdown>().enabled = true;
+        GameObject.Find("HUD (Countdown)").GetComponent<Countdown>().StartCountdown("Game starting in ...");
         gameObject.SetActive(false);
     }
 }
