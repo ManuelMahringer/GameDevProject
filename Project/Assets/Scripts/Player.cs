@@ -257,10 +257,6 @@ public class Player : NetworkBehaviour {
         }
     }
 
-    public void ExitGame() {
-        Application.Quit();
-    }
-
     private void OnRedFlagCntChanged(int oldVal, int newVal) {
         _redFlagCntText.text = newVal.ToString();
     }
@@ -599,6 +595,8 @@ public class Player : NetworkBehaviour {
                     Debug.Log("Inventory at place " + destBlockId % _inventory.Size + " with " + _inventory.Items[destBlockId % _inventory.Size] + " blocks");
                     break;
                 case RaycastAction.BuildBlock:
+                    if (hit.point.y >= _world.height * _world.chunkSize) // Block is at max world height
+                        break;
                     if (_inventory.Items[(byte) _activeBlock] > 0) {
                         // Check if built block would intersect with player
                         Vector3 buildPos = hit.point - (ray.direction / 10000.0f);

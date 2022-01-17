@@ -4865,6 +4865,7 @@ MonoBehaviour:
   countdownNumbers: {fileID: 1573203202}
   world: {fileID: 1745154812}
   countdownText: {fileID: 1987147194}
+  countdownFinished: 0
 --- !u!1 &1270731032
 GameObject:
   m_ObjectHideFlags: 0
@@ -6366,6 +6367,7 @@ MonoBehaviour:
   chunkPrefab: {fileID: 9031596313245055636, guid: 0a1fbae335bb4854a98513097cc18eda, type: 3}
   worldMaterial: {fileID: 0}
   size: 8
+  height: 1
   enableGenerate: 0
   enableGameModeSelection: 0
   selectedMap: 

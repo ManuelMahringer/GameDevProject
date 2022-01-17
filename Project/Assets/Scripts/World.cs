@@ -14,6 +14,7 @@ public class World : NetworkBehaviour {
     [SerializeField] private GameObject chunkPrefab;
     public PhysicMaterial worldMaterial;
     public int size;
+    public int height;
 
     public bool enableGenerate;
     public bool enableGameModeSelection;
