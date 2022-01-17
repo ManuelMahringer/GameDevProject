@@ -842,8 +842,8 @@ MonoBehaviour:
   runSpeed: 5
   jumpForce: 12000
   appliedForceMode: 0
-  hitRangeBuild: 2.5
-  hitRangeDestroy: 2.5
+  hitRangeBuild: 3.5
+  hitRangeDestroy: 3.5
   groundTag: 
   jump: 0
   isGrounded: 0
@@ -851,10 +851,6 @@ MonoBehaviour:
   popupActive: 0
   mouseActive: 0
   team: 0
-  hasFlag: 0
-  mask:
-    serializedVersion: 2
-    m_Bits: 4294967295
   weaponModels:
   - {fileID: 1239264663508546941}
   - {fileID: 3706476736094964199}
