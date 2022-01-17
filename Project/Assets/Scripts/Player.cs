@@ -234,6 +234,7 @@ public class Player : NetworkBehaviour {
             transform.position = _world.baseRedPos;
         else if (team == Lobby.Team.Blue)
             transform.position = _world.baseBluePos;
+        _inventory.active = true;
     }
 
     private void OnGameEnded(bool oldVal, bool newVal) {
@@ -767,6 +768,7 @@ public class Player : NetworkBehaviour {
 public class PlayerInventory : MonoBehaviour {
     public int[] Items => _items;
     public int Size => _items.Length;
+    public bool active = false;
 
     private Dictionary<int, Texture2D> _blockTextures;
 
@@ -803,6 +805,8 @@ public class PlayerInventory : MonoBehaviour {
     }
 
     public void Draw(BlockType activeBlock) {
+        if (!active)
+            return;
         int dy = 0;
         for (int blockType = 0; blockType < _items.Length; blockType++) {
             if (blockType == (int) activeBlock) {
