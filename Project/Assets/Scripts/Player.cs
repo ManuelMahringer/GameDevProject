@@ -309,8 +309,8 @@ public class Player : NetworkBehaviour {
     }
 
     private void Update() {
-        Debug.Log(!IsLocalPlayer + " " + !_world.countdownFinished + " " + !_world.gameStarted.Value + " " +
-                  !_countdown);
+        //Debug.Log(!IsLocalPlayer + " " + !_world.countdownFinished + " " + !_world.gameStarted.Value + " " +
+        //          !_countdown);
         if (!IsLocalPlayer || !_world.countdownFinished || !_world.gameStarted.Value || !_countdown.countdownFinished)
             return;
 
@@ -377,8 +377,6 @@ public class Player : NetworkBehaviour {
             _activeBlock = (BlockType) (nextBlock < 0 ? nextBlock + _inventory.Size : nextBlock); // we have to do this because unity modulo operation is shit
         }
 
-
-        //Debug.Log("HEHEHEHEHEHEHE" + !_dxz.Equals(Vector3.zero) + isGrounded + walking);
         if (IsWalking && !_audioSourceWalking.isPlaying) {
             //Debug.Log("Start playing audio");
             _audioSync.StartSoundLoop();
@@ -436,8 +434,9 @@ public class Player : NetworkBehaviour {
         _wasFalling = IsFalling;
 
         // Move
+        _dxz = Vector3.ClampMagnitude(transform.TransformDirection(_xAxis, 0f, _zAxis), 1f);
         if (isGrounded) {
-            _dxz = Vector3.ClampMagnitude(transform.TransformDirection(_xAxis, 0f, _zAxis), 1f);
+            // _dxz = Vector3.ClampMagnitude(transform.TransformDirection(_xAxis, 0f, _zAxis), 1f);
             _rb.velocity = Vector3.zero; // artificial friction when grounded
         }
 
