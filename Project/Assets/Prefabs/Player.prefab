@@ -1062,6 +1062,10 @@ PrefabInstance:
       value: Cube
       objectReference: {fileID: 0}
     - target: {fileID: 5598544518929535192, guid: 2b68da4539f47154096b8152097f1ec4, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5598544518929535192, guid: 2b68da4539f47154096b8152097f1ec4, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
@@ -1187,7 +1191,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2295737357494966973, guid: 3688edb5c24e71a4ca43306acdf25884, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2295737357494966973, guid: 3688edb5c24e71a4ca43306acdf25884, type: 3}
       propertyPath: m_IsActive
