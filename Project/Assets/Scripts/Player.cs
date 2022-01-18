@@ -309,8 +309,6 @@ public class Player : NetworkBehaviour {
     }
 
     private void Update() {
-        Debug.Log(!IsLocalPlayer + " " + !_world.countdownFinished + " " + !_world.gameStarted.Value + " " +
-                  !_countdown);
         if (!IsLocalPlayer || !_world.countdownFinished || !_world.gameStarted.Value || !_countdown.countdownFinished)
             return;
 
@@ -483,6 +481,10 @@ public class Player : NetworkBehaviour {
         _healthBar.value = _health;
         UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health);
         
+        // Initiate respawn countdown
+        _world.countdownFinished = false;
+        _countdown.GetComponent<Countdown>().StartLocalCountdown("Respawning in ...");
+        
         // Reset player position
         _rb.velocity = Vector3.zero;
 
@@ -490,10 +492,6 @@ public class Player : NetworkBehaviour {
             transform.position = _world.baseRedPos;
         else if (team == Lobby.Team.Blue)
             transform.position = _world.baseBluePos;
-        
-        Debug.Log("NOW SETTINGS THE SHIT");
-        _world.countdownFinished = false;
-        _countdown.GetComponent<Countdown>().StartCountdown("Respawning in ...");
     }
 
     private void OnDirtyFlagStateSet(bool oldVal, bool newVal) {
