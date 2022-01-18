@@ -171,7 +171,7 @@ public class Chunk : NetworkBehaviour {
 
         if (File.Exists(loadPath)) {
             BinaryFormatter bf = new BinaryFormatter();
-            using var fileStream = File.Open(loadPath, FileMode.Open);
+            using var fileStream = File.Open(loadPath, FileMode.Open, FileAccess.Read, FileShare.Read);
             var updatedBlocks = (Block[,,]) bf.Deserialize(fileStream);
 
             //Debug.Log("Deserialized");
