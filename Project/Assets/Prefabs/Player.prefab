@@ -842,8 +842,8 @@ MonoBehaviour:
   runSpeed: 5
   jumpForce: 12000
   appliedForceMode: 0
-  hitRangeBuild: 2.5
-  hitRangeDestroy: 2.5
+  hitRangeBuild: 3.5
+  hitRangeDestroy: 3.5
   groundTag: 
   jump: 0
   isGrounded: 0
@@ -851,16 +851,17 @@ MonoBehaviour:
   popupActive: 0
   mouseActive: 0
   team: 0
-  hasFlag: 0
-  mask:
-    serializedVersion: 2
-    m_Bits: 4294967295
   weaponModels:
   - {fileID: 1239264663508546941}
   - {fileID: 3706476736094964199}
   - {fileID: 3713560296444030983}
   - {fileID: 5598544518239330240}
+  playerCube: {fileID: 5598544518239330240}
   flag: {fileID: 7324124068434381467}
+  earthMat: {fileID: 2100000, guid: a9cf749a0f867354b8bbb8b82a8f4518, type: 2}
+  woodMat: {fileID: 2100000, guid: 14153d415877c8d41953c566d9d5dbba, type: 2}
+  stoneMat: {fileID: 2100000, guid: 0e7e41a054c196345a60399b44716568, type: 2}
+  ironMat: {fileID: 2100000, guid: 2c7bf5aea97bec34781a8b27ef6d97b5, type: 2}
   floatingHealthBar: {fileID: 575969829}
   _audioSource: {fileID: 6568169588386428653}
   _audioSourceWalking: {fileID: 8782500899300415878}
@@ -1061,9 +1062,33 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4603993323116511789, guid: 2b68da4539f47154096b8152097f1ec4, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4603993323116511789, guid: 2b68da4539f47154096b8152097f1ec4, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: a9cf749a0f867354b8bbb8b82a8f4518, type: 2}
+    - target: {fileID: 4603993323116511789, guid: 2b68da4539f47154096b8152097f1ec4, type: 3}
+      propertyPath: m_Materials.Array.data[1]
+      value: 
+      objectReference: {fileID: 2100000, guid: 14153d415877c8d41953c566d9d5dbba, type: 2}
+    - target: {fileID: 4603993323116511789, guid: 2b68da4539f47154096b8152097f1ec4, type: 3}
+      propertyPath: m_Materials.Array.data[2]
+      value: 
+      objectReference: {fileID: 2100000, guid: 0e7e41a054c196345a60399b44716568, type: 2}
+    - target: {fileID: 4603993323116511789, guid: 2b68da4539f47154096b8152097f1ec4, type: 3}
+      propertyPath: m_Materials.Array.data[3]
+      value: 
+      objectReference: {fileID: 2100000, guid: 2c7bf5aea97bec34781a8b27ef6d97b5, type: 2}
     - target: {fileID: 5598544518929535192, guid: 2b68da4539f47154096b8152097f1ec4, type: 3}
       propertyPath: m_Name
       value: Cube
+      objectReference: {fileID: 0}
+    - target: {fileID: 5598544518929535192, guid: 2b68da4539f47154096b8152097f1ec4, type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5598544518929535192, guid: 2b68da4539f47154096b8152097f1ec4, type: 3}
       propertyPath: m_IsActive
@@ -1191,7 +1216,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2295737357494966973, guid: 3688edb5c24e71a4ca43306acdf25884, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2295737357494966973, guid: 3688edb5c24e71a4ca43306acdf25884, type: 3}
       propertyPath: m_IsActive

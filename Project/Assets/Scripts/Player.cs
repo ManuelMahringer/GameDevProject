@@ -61,16 +61,29 @@ public class Player : NetworkBehaviour {
 
     public Lobby.Team team;
 
-
-
-    
     private Weapon _activeWeapon;
     private BlockType _activeBlock;
 
 
     [SerializeField] public List<GameObject> weaponModels;
 
+    [SerializeField]
+    private GameObject playerCube;
+
     [SerializeField] public GameObject flag;
+
+    [SerializeField]
+    private Material earthMat;
+
+    [SerializeField]
+    private Material woodMat;
+
+    [SerializeField]
+    private Material stoneMat;
+
+    [SerializeField]
+    private Material ironMat;
+    
 
     // private Animation assaultRifleAnimation = ;
 
@@ -135,6 +148,7 @@ public class Player : NetworkBehaviour {
     private TMP_Text _blueFlagCntText;
     private TMP_Text _winningMessage;
     private Button _exitGameBtn;
+    private Dictionary<int, Material> _blockMaterials;
 
 
     private enum RaycastAction {
@@ -148,6 +162,12 @@ public class Player : NetworkBehaviour {
         GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this, Lobby.Team.Blue);
         floatingHealthBar.maxValue = maxHealth;
         floatingHealthBar.value = maxHealth;
+        _blockMaterials = new Dictionary<int, Material> {
+            {0, earthMat},
+            {1, woodMat},
+            {2, stoneMat},
+            {3, ironMat}
+        };
 
         if (!IsLocalPlayer)
             return;
@@ -195,6 +215,8 @@ public class Player : NetworkBehaviour {
         _weaponCamera = cameras[1];
         _weaponCamera.enabled = true;
         gameObject.GetComponentInChildren<AudioListener>().enabled = true;
+    
+        playerCube.SetActive(false);
 
         if (_gameMode == GameMode.Build) {
             _rb.isKinematic = true;
@@ -216,8 +238,7 @@ public class Player : NetworkBehaviour {
         _world.gameEnded.OnValueChanged += OnGameEnded;
         _world.flagHolderId.OnValueChanged += OnNewFlagHolder;
         _world.respawnDirtyFlagState.OnValueChanged = OnDirtyFlagStateSet;
-        // Debug.Log("BEFORE CHUNK SEND");
-        // _world.GetInitialChunkDataServerRpc();
+        _world.hostQuit.OnValueChanged = OnHostQuit;
     }
     
     private void OnGameStarted(bool oldVal, bool newVal) {
@@ -234,6 +255,7 @@ public class Player : NetworkBehaviour {
             transform.position = _world.baseRedPos;
         else if (team == Lobby.Team.Blue)
             transform.position = _world.baseBluePos;
+        _inventory.active = true;
     }
 
     private void OnGameEnded(bool oldVal, bool newVal) {
@@ -245,6 +267,21 @@ public class Player : NetworkBehaviour {
         DeactivateMouse();
     }
 
+    private void OnHostQuit(bool oldVal, bool newVal) {
+        if (!IsLocalPlayer)
+            return;
+        if (newVal) {
+            Application.Quit();
+        }
+    }
+    
+    private void OnApplicationQuit() {
+        if (IsHost) {
+            Debug.Log("Setting application quit");
+            _world.hostQuit.Value = true;
+        }
+    }
+
     private void OnNewFlagHolder(ulong oldId, ulong newId) {
         if (IsLocalPlayer && NetworkObject.NetworkObjectId == newId) {
             Debug.Log("Local Player " + NetworkObject.NetworkObjectId + ": UI flag activated");
@@ -254,10 +291,6 @@ public class Player : NetworkBehaviour {
             Debug.Log("Local Player " + NetworkObject.NetworkObjectId + ": UI flag deactivated");
             _flagImage.SetActive(false);
         }
-    }
-
-    public void ExitGame() {
-        Application.Quit();
     }
 
     private void OnRedFlagCntChanged(int oldVal, int newVal) {
@@ -368,15 +401,17 @@ public class Player : NetworkBehaviour {
 
         if (iterBlocks) {
             _activeBlock = (BlockType) (((int) _activeBlock + 1) % _inventory.Size);
+            if (_activeWeapon.WeaponType == WeaponType.Shovel)
+                UpdatePlayerCubeServerRpc(NetworkObjectId, _inventory.Items[(int) _activeBlock] > 0, _activeBlock);
         }
 
         if (iterBlocksRev) {
             int nextBlock = ((int) _activeBlock - 1) % _inventory.Size;
             _activeBlock = (BlockType) (nextBlock < 0 ? nextBlock + _inventory.Size : nextBlock); // we have to do this because unity modulo operation is shit
+            if (_activeWeapon.WeaponType == WeaponType.Shovel)
+                UpdatePlayerCubeServerRpc(NetworkObjectId, _inventory.Items[(int) _activeBlock] > 0, _activeBlock);
         }
 
-
-        //Debug.Log("HEHEHEHEHEHEHE" + !_dxz.Equals(Vector3.zero) + isGrounded + walking);
         if (IsWalking && !_audioSourceWalking.isPlaying) {
             //Debug.Log("Start playing audio");
             _audioSync.StartSoundLoop();
@@ -434,8 +469,9 @@ public class Player : NetworkBehaviour {
         _wasFalling = IsFalling;
 
         // Move
+        _dxz = Vector3.ClampMagnitude(transform.TransformDirection(_xAxis, 0f, _zAxis), 1f);
         if (isGrounded) {
-            _dxz = Vector3.ClampMagnitude(transform.TransformDirection(_xAxis, 0f, _zAxis), 1f);
+            // _dxz = Vector3.ClampMagnitude(transform.TransformDirection(_xAxis, 0f, _zAxis), 1f);
             _rb.velocity = Vector3.zero; // artificial friction when grounded
         }
 
@@ -549,7 +585,7 @@ public class Player : NetworkBehaviour {
             if (string.IsNullOrEmpty(groundTag) || String.Compare(_hit.collider.tag, groundTag, StringComparison.Ordinal) == 0)
                 _groundLocation = _hit.point;
             float distanceFromPlayerToGround = Vector3.Distance(transform.position, _groundLocation);
-            isGrounded = !(distanceFromPlayerToGround > 0.9f + 0.0001f);
+            isGrounded = distanceFromPlayerToGround <= 0.9f + 0.00001f;
         }
         else {
             isGrounded = false;
@@ -595,8 +631,12 @@ public class Player : NetworkBehaviour {
                     _inventory.Add((BlockType) destBlockId);
                     PlayAnimation(_activeWeapon);
                     Debug.Log("Inventory at place " + destBlockId % _inventory.Size + " with " + _inventory.Items[destBlockId % _inventory.Size] + " blocks");
+                    if (destBlockId == (int) _activeBlock)
+                        UpdatePlayerCubeServerRpc(NetworkObjectId, true, _activeBlock);
                     break;
                 case RaycastAction.BuildBlock:
+                    if (hit.point.y >= _world.height * _world.chunkSize) // Block is at max world height
+                        break;
                     if (_inventory.Items[(byte) _activeBlock] > 0) {
                         // Check if built block would intersect with player
                         Vector3 buildPos = hit.point - (ray.direction / 10000.0f);
@@ -608,6 +648,9 @@ public class Player : NetworkBehaviour {
                         PlayAnimation(_activeWeapon, true);
                         Debug.Log("Inventory at place " + (byte) _activeBlock % _inventory.Size + " with " +
                                   _inventory.Items[(byte) _activeBlock] + " blocks");
+                        if (_inventory.Items[(int) _activeBlock] == 0) {
+                            UpdatePlayerCubeServerRpc(NetworkObjectId, false, _activeBlock);
+                        }
                     }
                     break;
                 case RaycastAction.Shoot:
@@ -726,9 +769,25 @@ public class Player : NetworkBehaviour {
             if (weaponModel.transform.name == weapon.ToString())
                 weaponModel.SetActive(true);
             if (weaponModel.transform.name == "Cube" && weapon == WeaponType.Shovel) {
-                weaponModel.SetActive(true);
+                UpdatePlayerCubeServerRpc(id, target._inventory.Items[(int) _activeBlock] > 0, target._activeBlock);
             }
         }
+    }
+    
+    [ServerRpc (RequireOwnership = false)]
+    private void UpdatePlayerCubeServerRpc(ulong id, bool active, BlockType type) {
+        UpdatePlayerCubeClientRpc(id, active, type);
+    }
+
+    [ClientRpc]
+    private void UpdatePlayerCubeClientRpc(ulong id, bool active, BlockType type) {
+        Player target = GameNetworkManager.players[id].player;
+        if (active) {
+            target.playerCube.SetActive(true);
+            Debug.Log("Setting cube material of player " + target + " to block " + type);
+            target.playerCube.GetComponent<MeshRenderer>().material = _blockMaterials[(int) type];
+        } else 
+            target.playerCube.SetActive(false);
     }
 
     [ServerRpc (RequireOwnership = false)]
@@ -766,6 +825,7 @@ public class Player : NetworkBehaviour {
 public class PlayerInventory : MonoBehaviour {
     public int[] Items => _items;
     public int Size => _items.Length;
+    public bool active = false;
 
     private Dictionary<int, Texture2D> _blockTextures;
 
@@ -802,6 +862,8 @@ public class PlayerInventory : MonoBehaviour {
     }
 
     public void Draw(BlockType activeBlock) {
+        if (!active)
+            return;
         int dy = 0;
         for (int blockType = 0; blockType < _items.Length; blockType++) {
             if (blockType == (int) activeBlock) {

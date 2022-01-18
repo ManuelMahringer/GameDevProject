@@ -14,6 +14,7 @@ public class World : NetworkBehaviour {
     [SerializeField] private GameObject chunkPrefab;
     public PhysicMaterial worldMaterial;
     public int size;
+    public int height;
 
     public bool enableGenerate;
     public bool enableGameModeSelection;
@@ -26,6 +27,7 @@ public class World : NetworkBehaviour {
     public NetworkVariable<ulong> flagHolderId = new NetworkVariable<ulong>(NetworkVariableReadPermission.Everyone);
     public NetworkVariable<bool> respawnDirtyFlagState = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
     public NetworkVariable<ulong> transformBasePlayer = new NetworkVariable<ulong>(NetworkVariableReadPermission.Everyone);
+    public NetworkVariable<bool> hostQuit = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
 
     [SerializeField] public float chunkSize;
 
