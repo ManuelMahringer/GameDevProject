@@ -587,7 +587,7 @@ public class Player : NetworkBehaviour {
             if (string.IsNullOrEmpty(groundTag) || String.Compare(_hit.collider.tag, groundTag, StringComparison.Ordinal) == 0)
                 _groundLocation = _hit.point;
             float distanceFromPlayerToGround = Vector3.Distance(transform.position, _groundLocation);
-            isGrounded = distanceFromPlayerToGround <= 0.9f + 0.1f;
+            isGrounded = distanceFromPlayerToGround <= 0.9f + 0.00001f;
         }
         else {
             isGrounded = false;
