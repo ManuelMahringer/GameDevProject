@@ -51,7 +51,7 @@ public class Chunk : NetworkBehaviour {
             else {
                 // he host was für eine map junge
                 Debug.Log("Selected World in Chunk " + _world.selectedMap);
-                Load(_world.selectedMap, (int) pos.x, (int) pos.z);
+                Load(_world.selectedMap, (int) pos.x, (int) pos.y, (int) pos.z);
             }
         }
     }
@@ -151,10 +151,10 @@ public class Chunk : NetworkBehaviour {
     //     UpdateChunk();
     // }
 
-    public void Serialize(string mapName, int x, int y) {
+    public void Serialize(string mapName, int x, int y, int z) {
         BinaryFormatter bf = new BinaryFormatter();
         string basePath = System.IO.Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Maps";
-        string savePath = basePath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + y + ".chunk";
+        string savePath = basePath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + "__"+ y + "_" + z +".chunk";
 
         Directory.CreateDirectory(basePath + Path.DirectorySeparatorChar + mapName);
 
@@ -165,9 +165,9 @@ public class Chunk : NetworkBehaviour {
         //Debug.Log("Serialized");
     }
 
-    public void Load(string mapName, int x, int y) {
+    public void Load(string mapName, int x, int y, int z) {
         string basePath = System.IO.Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Maps";
-        string loadPath = basePath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + y + ".chunk";
+        string loadPath = basePath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + "__"+ y + "_" + z +".chunk";
 
         if (File.Exists(loadPath)) {
             BinaryFormatter bf = new BinaryFormatter();
@@ -191,12 +191,11 @@ public class Chunk : NetworkBehaviour {
             for (int z = 0; z <= chunkSize.z; z++) {
                 for (int y = 0; y <= chunkSize.y; y++) {
                     chunkBlocks[x, y, z] = new Block(true, 0);
-
-                    if (y <= chunkHeights[x, z]) {
+                    //if (y <= chunkHeights[x, z]) {
                         chunkBlocks[x, y, z] = new Block(false, (byte) Random.Range(0, 4));
                         //chunkBlocks[x, y, z].id = (byte) Random.Range(0, 4);
                         //Debug.Log("Creating Block with id" + chunkBlocks[x, y, z].id);
-                    }
+                    //}
                 }
             }
         }

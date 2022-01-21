@@ -45,7 +45,7 @@ public class World : NetworkBehaviour {
     [SerializeField] private GameObject baseRed;
     [SerializeField] private GameObject baseBlue;
 
-    private GameObject[,] _chunks;
+    private GameObject[,,] _chunks;
     private float _worldSize;
     public bool countdownFinished;
 
@@ -146,8 +146,9 @@ public class World : NetworkBehaviour {
         // Finds the correct chunk to build
         Debug.Log("BuildBlockServerRPC");
         int chunkX = Mathf.Abs(Mathf.FloorToInt((_worldSize / 2 + worldCoordinate.x) / chunkSize));
+        int chunkY = Mathf.Abs(Mathf.FloorToInt((_worldSize / 2 + worldCoordinate.y) / chunkSize));
         int chunkZ = Mathf.Abs(Mathf.FloorToInt((_worldSize / 2 + worldCoordinate.z) / chunkSize));
-        GameObject chunk = _chunks[chunkX, chunkZ];
+        GameObject chunk = _chunks[chunkX, chunkY, chunkZ];
         Vector3 localCoordinate = worldCoordinate - chunk.transform.position;
         chunk.GetComponent<Chunk>().BuildBlockServer(localCoordinate, blockType);
     }
@@ -165,14 +166,20 @@ public class World : NetworkBehaviour {
 
     public void BuildWorld() {
         _worldSize = size * chunkSize;
-        _chunks = new GameObject[size, size];
+        _chunks = new GameObject[size, height, size];
         // Instantiate chunks
         for (int x = 0; x < size; x++) {
-            for (int z = 0; z < size; z++) {
-                Debug.Log("instantiate now");
-                Debug.Log("Selected World " + selectedMap);
-                _chunks[x, z] = Instantiate(chunkPrefab, new Vector3(-_worldSize / 2 + chunkSize * x, 1, -_worldSize / 2 + chunkSize * z), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
-                _chunks[x, z].GetComponent<NetworkObject>().Spawn();
+            for (int y = 0; y < height; y++) {
+                for (int z = 0; z < size; z++) {
+                    Debug.Log("instantiate now");
+                    Debug.Log("Selected World " + selectedMap);
+                    _chunks[x, y, z] = Instantiate(chunkPrefab,
+                        new Vector3(-_worldSize / 2 + chunkSize * x, -_worldSize / 2 + chunkSize * y,
+                            -_worldSize / 2 + chunkSize * z),
+                        Quaternion
+                            .identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
+                    _chunks[x,y, z].GetComponent<NetworkObject>().Spawn();
+                }
             }
         }
     }
@@ -184,14 +191,21 @@ public class World : NetworkBehaviour {
         _worldSize = size * chunkSize;
         // Instantiate chunks
         for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                Debug.Log("instantiate now");
-                _chunks[x, y].GetComponent<NetworkObject>().Despawn();
-                _chunks[x, y] = Instantiate(chunkPrefab, new Vector3(-_worldSize / 2 + chunkSize * x, 1, -_worldSize / 2 + chunkSize * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
-                if (selectedMap != "Generate") { // dummy option to still be able to generate the random map TODO: remove
-                    _chunks[x, y].GetComponent<Chunk>().Load(selectedMap, x, y);
+            for (int y = 0; y < height; y++) {
+                for (int z = 0; z < size; z++) {
+                    Debug.Log("instantiate now");
+                    _chunks[x, y, z].GetComponent<NetworkObject>().Despawn();
+                    _chunks[x, y,z ] = Instantiate(chunkPrefab,
+                        new Vector3(-_worldSize / 2 + chunkSize * x, 1, -_worldSize / 2 + chunkSize * y),
+                        Quaternion
+                            .identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
+                    if (selectedMap != "Generate") {
+                        // dummy option to still be able to generate the random map TODO: remove
+                        _chunks[x, y, z].GetComponent<Chunk>().Load(selectedMap, x, y, z);
+                    }
+
+                    _chunks[x, y, z].GetComponent<NetworkObject>().Spawn();
                 }
-                _chunks[x, y].GetComponent<NetworkObject>().Spawn();
             }
         }
     }
@@ -199,8 +213,10 @@ public class World : NetworkBehaviour {
 
     public void SerializeChunks(string mapName) {
         for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                _chunks[x,y].GetComponent<Chunk>().Serialize(mapName, x,y);
+            for (int y = 0; y < height; y++) {
+                for (int z = 0; z < size; z++) {
+                    _chunks[x, y, z].GetComponent<Chunk>().Serialize(mapName, x, y, z);
+                }
             }
         }
     }
@@ -208,14 +224,16 @@ public class World : NetworkBehaviour {
     public void LoadChunks(string mapName) {
         Debug.Log(_chunks);
         for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                _chunks[x,y].GetComponent<Chunk>().Load(mapName, x,y);
+            for (int y = 0; y < height; y++) {
+                for (int z = 0; z < size; z++) {
+                    _chunks[x, y, z].GetComponent<Chunk>().Load(mapName, x, y, z);
+                }
             }
         }
     }
     
     private void AddMeshCollider(int x, int z) {
-        MeshCollider mc = _chunks[x, z].AddComponent<MeshCollider>();
+        MeshCollider mc = _chunks[x, z, z].AddComponent<MeshCollider>();
         mc.material = worldMaterial;
     }
 
