@@ -37,23 +37,23 @@ public class World : NetworkBehaviour {
     
     public bool enableGenerate;
 
-    [NonSerialized]
+    [HideInInspector]
     public string selectedMap;
-    [NonSerialized]
+    [HideInInspector]
     public readonly NetworkVariable<bool> gameStarted = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
-    [NonSerialized]
+    [HideInInspector]
     public readonly NetworkVariable<int> redFlagCnt = new NetworkVariable<int>(NetworkVariableReadPermission.Everyone);
-    [NonSerialized]
+    [HideInInspector]
     public readonly NetworkVariable<int> blueFlagCnt = new NetworkVariable<int>(NetworkVariableReadPermission.Everyone);
-    [NonSerialized]
+    [HideInInspector]
     public readonly NetworkVariable<bool> gameEnded = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
-    [NonSerialized]
+    [HideInInspector]
     public readonly NetworkVariable<ulong> flagHolderId = new NetworkVariable<ulong>(NetworkVariableReadPermission.Everyone);
-    [NonSerialized]
+    [HideInInspector]
     public readonly NetworkVariable<bool> respawnDirtyFlagState = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
-    [NonSerialized]
+    [HideInInspector]
     public readonly NetworkVariable<ulong> transformBasePlayer = new NetworkVariable<ulong>(NetworkVariableReadPermission.Everyone);
-    [NonSerialized]
+    [HideInInspector]
     public readonly NetworkVariable<bool> hostQuit = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
     
     private GameObject[,,] _chunks;
@@ -90,38 +90,43 @@ public class World : NetworkBehaviour {
         if (blueFlagCnt.Value == capturesToWin || redFlagCnt.Value == capturesToWin)
             gameEnded.Value = true;
     }
-    
-    //
-    // public void BuildWorld() {
-    //     _worldSize = size * chunkSize;
-    //     _chunks = new GameObject[size, size];
-    //     // Instantiate chunks
-    //     for (int x = 0; x < size; x++) {
-    //         for (int z = 0; z < size; z++) {
-    //             Debug.Log("instantiate now");
-    //             Debug.Log("Selected World " + selectedMap);
-    //             _chunks[x, z] = Instantiate(chunkPrefab, new Vector3(-_worldSize / 2 + chunkSize * x, 1, -_worldSize / 2 + chunkSize * z), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
-    //             _chunks[x, z].GetComponent<NetworkObject>().Spawn();
-    //         }
-    //     }
-    // }
-    //
-    // public void SerializeChunks(string mapName) {
-    //     for (int x = 0; x < size; x++) {
-    //         for (int y = 0; y < size; y++) {
-    //             _chunks[x,y].GetComponent<Chunk>().Serialize(mapName, x,y);
-    //         }
-    //     }
-    // }
-    //
-    // public void LoadChunks(string mapName) {
-    //     Debug.Log(_chunks);
-    //     for (int x = 0; x < size; x++) {
-    //         for (int y = 0; y < size; y++) {
-    //             _chunks[x,y].GetComponent<Chunk>().Load(mapName, x,y);
-    //         }
-    //     }
-    // }
+
+    public void BuildWorld() {
+        _worldSize = size * chunkSize;
+        _chunks = new GameObject[size, height, size];
+        // Instantiate chunks
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < height; y++) {
+                for (int z = 0; z < size; z++) {
+                    Debug.Log("instantiate now");
+                    Debug.Log("Selected World " + selectedMap);
+                    _chunks[x, y, z] = Instantiate(chunkPrefab, new Vector3(-_worldSize / 2 + chunkSize * x, -height * chunkSize / 2 + chunkSize * y, -_worldSize / 2 + chunkSize * z), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
+                    _chunks[x,y, z].GetComponent<NetworkObject>().Spawn();
+                }
+            }
+        }
+    }
+
+    public void SerializeChunks(string mapName) {
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < height; y++) {
+                for (int z = 0; z < size; z++) {
+                    _chunks[x, y, z].GetComponent<Chunk>().Serialize(mapName, x, y, z);
+                }
+            }
+        }
+    }
+
+    public void LoadChunks(string mapName) {
+        Debug.Log(_chunks);
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < height; y++) {
+                for (int z = 0; z < size; z++) {
+                    _chunks[x, y, z].GetComponent<Chunk>().Load(mapName, x, y, z);
+                }
+            }
+        }
+    }
     
     // RPC Calls
     [ServerRpc (RequireOwnership = false)]
@@ -215,85 +220,18 @@ public class World : NetworkBehaviour {
     private void SetMapClientRpc(string map) {
         selectedMap = map;
     }
-
-    public void BuildWorld() {
-        _worldSize = size * chunkSize;
-        _chunks = new GameObject[size, height, size];
-        // Instantiate chunks
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < height; y++) {
-                for (int z = 0; z < size; z++) {
-                    Debug.Log("instantiate now");
-                    Debug.Log("Selected World " + selectedMap);
-                    _chunks[x, y, z] = Instantiate(chunkPrefab,
-                        new Vector3(-_worldSize / 2 + chunkSize * x, -height * chunkSize / 2 + chunkSize * y,
-                            -_worldSize / 2 + chunkSize * z),
-                        Quaternion
-                            .identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
-                    _chunks[x,y, z].GetComponent<NetworkObject>().Spawn();
-                }
-            }
-        }
-    }
-
-    public void ReBuildWorld() {
-        if (!IsOwner) {
-            return;
-        }
-        _worldSize = size * chunkSize;
-        // Instantiate chunks
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < height; y++) {
-                for (int z = 0; z < size; z++) {
-                    Debug.Log("instantiate now");
-                    _chunks[x, y, z].GetComponent<NetworkObject>().Despawn();
-                    _chunks[x, y,z ] = Instantiate(chunkPrefab,
-                        new Vector3(-_worldSize / 2 + chunkSize * x, 1, -_worldSize / 2 + chunkSize * y),
-                        Quaternion
-                            .identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
-                    if (selectedMap != "Generate") {
-                        // dummy option to still be able to generate the random map TODO: remove
-                        _chunks[x, y, z].GetComponent<Chunk>().Load(selectedMap, x, y, z);
-                    }
-
-                    _chunks[x, y, z].GetComponent<NetworkObject>().Spawn();
-                }
-            }
-        }
-    }
     
-
-    public void SerializeChunks(string mapName) {
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < height; y++) {
-                for (int z = 0; z < size; z++) {
-                    _chunks[x, y, z].GetComponent<Chunk>().Serialize(mapName, x, y, z);
-                }
-            }
-        }
-    }
-
-    public void LoadChunks(string mapName) {
-        Debug.Log(_chunks);
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < height; y++) {
-                for (int z = 0; z < size; z++) {
-                    _chunks[x, y, z].GetComponent<Chunk>().Load(mapName, x, y, z);
-                }
-            }
-        }
-    }
-    
-    private void AddMeshCollider(int x, int z) {
-        MeshCollider mc = _chunks[x, z, z].AddComponent<MeshCollider>();
-        mc.material = worldMaterial;
-    }
-
-    public void UpdateMeshCollider(GameObject chunk) {
-        Destroy(chunk.GetComponent<MeshCollider>());
-        MeshCollider mc = chunk.AddComponent<MeshCollider>();
-        mc.material = worldMaterial;
-    }
+    //
+    // private void AddMeshCollider(int x, int z) {
+    //     MeshCollider mc = _chunks[x, z, z].AddComponent<MeshCollider>();
+    //     mc.material = worldMaterial;
+    // }
+    //
+    // public void UpdateMeshCollider(GameObject chunk) {
+    //     Destroy(chunk.GetComponent<MeshCollider>());
+    //     MeshCollider mc = chunk.AddComponent<MeshCollider>();
+    //     mc.material = worldMaterial;
+    // }
     
     // [ServerRpc (RequireOwnership = false)]
     // public void GetInitialChunkDataServerRpc() {
