@@ -10,6 +10,7 @@ using UnityEngine.UI;
 using UnityEngine.Serialization;
 using UnityEngine.Networking;
 using Unity.Netcode;
+using Unity.Netcode.Samples;
 using UnityEditor;
 using UnityEngine.Networking.Types;
 
@@ -253,8 +254,7 @@ public class Player : NetworkBehaviour {
         }
 
         DeactivateMouse();
-        transform.position = new Vector3(0, 1, 0);
-
+        
         _world.gameStarted.OnValueChanged += OnGameStarted;
         _world.redFlagCnt.OnValueChanged += OnRedFlagCntChanged;
         _world.blueFlagCnt.OnValueChanged += OnBlueFlagCntChanged;
@@ -285,7 +285,8 @@ public class Player : NetworkBehaviour {
             transform.position = new Vector3(5, 4.5f, 0);
             transform.rotation = Quaternion.Euler(0, -90, 0);
         }
-        
+
+        _rb.constraints = RigidbodyConstraints.FreezeAll;
         _rb.velocity = Vector3.zero;
         _inventory.active = true;
     }
@@ -407,6 +408,7 @@ public class Player : NetworkBehaviour {
         if (!InCountdown && _wasInCountdown) {
             UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health);
             UpdatePlayerTagServerRpc(NetworkObjectId, playerName);
+            _rb.constraints = RigidbodyConstraints.FreezeRotation;
         }
         _wasInCountdown = InCountdown;
         
@@ -554,10 +556,7 @@ public class Player : NetworkBehaviour {
 
         // "Normal" Respawn
         // Reset health
-        _health = maxHealth;
-        _healthBar.value = _health;
-        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health, 50f);
-        UpdatePlayerTagServerRpc(NetworkObjectId, playerName, 50f);
+        ResetHealthBar();
 
         // Initiate respawn countdown
         _world.countdownFinished = false;
@@ -575,19 +574,22 @@ public class Player : NetworkBehaviour {
         _world.DropFlagServerRpc(NetworkObjectId, transform.position);
 
         // Reset health
-        _health = maxHealth;
-        _healthBar.value = _health;
-        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health, 50f);
-        UpdatePlayerTagServerRpc(NetworkObjectId, playerName, 50f);
+        ResetHealthBar();
 
         // Reset player position and lookAt
         ResetPosition();
 
         _world.PlayerResetCallbackServerRpc(NetworkObjectId);
     }
+
+    private void ResetHealthBar() {
+        _health = maxHealth;
+        _healthBar.value = _health;
+        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health, 50f);
+        UpdatePlayerTagServerRpc(NetworkObjectId, playerName, 50f);
+    }
     
     private void ResetPosition() {
-        _rb.velocity = Vector3.zero;
         _rotX = 0;
         _playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0);
         if (team == Lobby.Team.Red) {
@@ -597,9 +599,12 @@ public class Player : NetworkBehaviour {
         }
         else if (team == Lobby.Team.Blue) {
             // transform.position = _world.baseBluePos;
-            transform.rotation = quaternion.Euler(0, -90, 0);
+            transform.rotation = Quaternion.Euler(0, -90, 0);
             transform.position = new Vector3(5, 4.5f, 0);
         }
+
+        _rb.constraints = RigidbodyConstraints.FreezeAll;
+        _rb.velocity = Vector3.zero;
     }
 
     private void SwitchWeapons(WeaponType weapon) {
