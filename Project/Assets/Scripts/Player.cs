@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
 using UnityEngine.Networking;
 using Unity.Netcode;
+using Unity.Netcode.Samples;
 using UnityEditor;
 using UnityEngine.Networking.Types;
 
@@ -30,47 +32,60 @@ public class Player : NetworkBehaviour {
     private static readonly string PlayerTag = "Player";
     private static readonly string WeaponLayerName = "Weapon";
 
-    [Header("Health & Damage")] public float maxHealth = 100f;
+    [Header("Health & Damage")]
+    public float maxHealth = 100f;
 
     public float fallDmgDistThreshold = 2.5f;
     public float fallDmgMultiplier = 15f;
 
-    [Header("Walk / Run Settings")] public float walkSpeed = 3.5f;
+    [Header("Walk / Run Settings")]
+    public float walkSpeed = 3.5f;
 
     public float runSpeed = 5f;
 
-    [Header("Jump Settings")] public float jumpForce = 12_000f;
+    [Header("Jump Settings")]
+    public float jumpForce = 12_000f;
 
     public ForceMode appliedForceMode = ForceMode.Force;
 
-    [Header("Build/Destroy Settings")] public float hitRangeBuild = 2.5f;
+    [Header("Build/Destroy Settings")]
+    public float hitRangeBuild = 2.5f;
+
     public float hitRangeDestroy = 2.5f;
 
-    [Header("Ground Tag Specification")] public String groundTag = "";
+    [Header("Ground Tag Specification")]
+    public String groundTag = "";
 
-    [Header("Jumping State")] [SerializeField]
+    [Header("Jumping State")]
+    [SerializeField]
     private bool jump;
 
-    [SerializeField] private bool isGrounded;
+    [SerializeField]
+    private bool isGrounded;
 
-    [Header("Current Player Speed")] [SerializeField]
+    [Header("Current Player Speed")]
+    [SerializeField]
     private float currentSpeed;
 
     public bool popupActive;
     public bool mouseActive;
+    public bool active;
 
     public Lobby.Team team;
+    public String playerName;
 
     private Weapon _activeWeapon;
     private BlockType _activeBlock;
 
 
-    [SerializeField] public List<GameObject> weaponModels;
+    [SerializeField]
+    public List<GameObject> weaponModels;
 
     [SerializeField]
     private GameObject playerCube;
 
-    [SerializeField] public GameObject flag;
+    [SerializeField]
+    public GameObject flag;
 
     [SerializeField]
     private Material earthMat;
@@ -83,7 +98,7 @@ public class Player : NetworkBehaviour {
 
     [SerializeField]
     private Material ironMat;
-    
+
 
     // private Animation assaultRifleAnimation = ;
 
@@ -98,6 +113,7 @@ public class Player : NetworkBehaviour {
 
     private bool IsFalling => !isGrounded && _rb.velocity.y < 0;
     private bool IsWalking => !_dxz.Equals(Vector3.zero) && isGrounded;
+    private bool InCountdown => !_world.countdownFinished || !_countdown.countdownFinished;
 
     private const float SensitivityHor = 5.0f;
     private const float SensitivityVer = 5.0f;
@@ -108,8 +124,12 @@ public class Player : NetworkBehaviour {
 
     // [SerializeField]
     // private Slider healthBar;
-    [SerializeField] public Slider floatingHealthBar;
+    [SerializeField]
+    public Slider floatingHealthBar;
 
+    [SerializeField]
+    private TMP_Text playerTag; 
+    
     private World _world;
     private GameMode _gameMode;
     private Camera _playerCamera;
@@ -117,11 +137,14 @@ public class Player : NetworkBehaviour {
     private float _health;
     private Rigidbody _rb;
     private Slider _healthBar;
-    
-    [SerializeField] 
+
+    [SerializeField]
     private AudioSource _audioSource;
-    [SerializeField] 
+
+    [SerializeField]
     private AudioSource _audioSourceWalking;
+
+    private bool _wasInCountdown = false;
     private AudioClip _fallSound;
     private AudioClip _handgunSound;
     private AudioClip _assaultRifleSound;
@@ -157,7 +180,7 @@ public class Player : NetworkBehaviour {
         Shoot,
         HighlightBlock
     }
-    
+
     private void Start() {
         GameNetworkManager.RegisterPlayer(NetworkObject.NetworkObjectId, this, Lobby.Team.Blue);
         floatingHealthBar.maxValue = maxHealth;
@@ -177,7 +200,6 @@ public class Player : NetworkBehaviour {
         _gameMode = ComponentManager.gameMode;
         _world = GameObject.Find("World").GetComponent<World>();
         _rb = GetComponent<Rigidbody>();
-        //_audioSource = GetComponent<AudioSource>();
         _fallSound = Resources.Load("Sounds/hurt_fall") as AudioClip;
         _handgunSound = Resources.Load("Sounds/handgun") as AudioClip;
         _assaultRifleSound = Resources.Load("Sounds/assault_rifle") as AudioClip;
@@ -188,6 +210,7 @@ public class Player : NetworkBehaviour {
         _healthBar.interactable = false;
         _healthBar.gameObject.SetActive(false);
         _highlightBlock = GameObject.Find("Highlight Slab");
+        _highlightBlock.SetActive(false);
         _saveMapPopup = gameObject.AddComponent<MapPopup>();
         _saveMapPopup.action = MapPopup.MapPopupAction.Save;
         _loadMapPopup = gameObject.AddComponent<MapPopup>();
@@ -204,6 +227,7 @@ public class Player : NetworkBehaviour {
         _winningMessage = GameObject.Find("WinningMessage").GetComponent<TMP_Text>();
         _exitGameBtn = GameObject.Find("ExitGameButton").GetComponent<Button>();
 
+        _hudIngame.SetActive(false);
         _hudGameEnd.SetActive(false);
 
         floatingHealthBar.gameObject.SetActive(false);
@@ -215,7 +239,7 @@ public class Player : NetworkBehaviour {
         _weaponCamera = cameras[1];
         _weaponCamera.enabled = true;
         gameObject.GetComponentInChildren<AudioListener>().enabled = true;
-    
+
         playerCube.SetActive(false);
 
         if (_gameMode == GameMode.Build) {
@@ -230,8 +254,7 @@ public class Player : NetworkBehaviour {
         }
 
         DeactivateMouse();
-        transform.position = new Vector3(0, 1, 0);
-
+        
         _world.gameStarted.OnValueChanged += OnGameStarted;
         _world.redFlagCnt.OnValueChanged += OnRedFlagCntChanged;
         _world.blueFlagCnt.OnValueChanged += OnBlueFlagCntChanged;
@@ -240,21 +263,31 @@ public class Player : NetworkBehaviour {
         _world.respawnDirtyFlagState.OnValueChanged = OnDirtyFlagStateSet;
         _world.hostQuit.OnValueChanged = OnHostQuit;
     }
-    
+
     private void OnGameStarted(bool oldVal, bool newVal) {
         ActivateMouse();
         SwitchWeapons(WeaponType.AssaultRifle);
         _healthBar.gameObject.SetActive(true);
-        transform.position = new Vector3(0, 6, 0);
-
+        
         if (!IsLocalPlayer)
             return;
-        
-        UpdatePlayerTeamServerRpc(NetworkObject.NetworkObjectId, team);
-        if (team == Lobby.Team.Red)
-            transform.position = _world.baseRedPos;
-        else if (team == Lobby.Team.Blue)
-            transform.position = _world.baseBluePos;
+
+        _hudIngame.SetActive(true);
+        UpdatePlayerTeamServerRpc(NetworkObjectId, team);
+        UpdatePlayerTagServerRpc(NetworkObjectId, playerName);
+        if (team == Lobby.Team.Red) {
+            //transform.position = _world.baseRedPos;
+            transform.position = new Vector3(-5, 4.5f, 0);
+            transform.rotation = Quaternion.Euler(0, 90, 0);
+        }
+        else if (team == Lobby.Team.Blue) {
+            // transform.position = _world.baseBluePos;
+            transform.position = new Vector3(5, 4.5f, 0);
+            transform.rotation = Quaternion.Euler(0, -90, 0);
+        }
+
+        _rb.constraints = RigidbodyConstraints.FreezeAll;
+        _rb.velocity = Vector3.zero;
         _inventory.active = true;
     }
 
@@ -274,7 +307,7 @@ public class Player : NetworkBehaviour {
             Application.Quit();
         }
     }
-    
+
     private void OnApplicationQuit() {
         if (IsHost) {
             Debug.Log("Setting application quit");
@@ -296,11 +329,11 @@ public class Player : NetworkBehaviour {
     private void OnRedFlagCntChanged(int oldVal, int newVal) {
         _redFlagCntText.text = newVal.ToString();
     }
-    
+
     private void OnBlueFlagCntChanged(int oldVal, int newVal) {
         _blueFlagCntText.text = newVal.ToString();
     }
-    
+
     public void DeactivateMouse() {
         mouseActive = false;
         Cursor.visible = true;
@@ -320,7 +353,7 @@ public class Player : NetworkBehaviour {
                 model.transform.GetChild(0).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
                 model.transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
             }
-            
+
             if (model.transform.name == WeaponType.AssaultRifle.ToString()) {
                 model.transform.GetChild(0).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
                 model.transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer(WeaponLayerName);
@@ -336,13 +369,13 @@ public class Player : NetworkBehaviour {
             }
         }
     }
-    
+
     private void OnDisable() {
         GameNetworkManager.UnregisterPlayer(NetworkObject.NetworkObjectId);
     }
 
     private void Update() {
-        if (!IsLocalPlayer || !_world.countdownFinished || !_world.gameStarted.Value || !_countdown.countdownFinished)
+        if (!IsLocalPlayer)
             return;
 
         _xAxis = Input.GetAxis("Horizontal");
@@ -364,7 +397,7 @@ public class Player : NetworkBehaviour {
 
         if (Input.GetKeyDown(KeyCode.L))
             Debug.Log("This player network object id: " + NetworkObjectId);
-        
+
         if (mouseActive && deactivateMouse) {
             DeactivateMouse();
         }
@@ -372,20 +405,30 @@ public class Player : NetworkBehaviour {
             ActivateMouse();
         }
 
+        if (!InCountdown && _wasInCountdown) {
+            UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health);
+            UpdatePlayerTagServerRpc(NetworkObjectId, playerName);
+            _rb.constraints = RigidbodyConstraints.FreezeRotation;
+        }
+        _wasInCountdown = InCountdown;
+        
+        if (InCountdown)
+            return;
+        
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
         if (destroyBlock) {
-            if (_activeWeapon.WeaponType == WeaponType.Shovel){
-                PerformRaycastAction(RaycastAction.DestroyBlock, hitRangeDestroy);
+            if (_activeWeapon.WeaponType == WeaponType.Shovel) {
+                PerformRaycastAction(RaycastAction.DestroyBlock, _activeWeapon.Range);
             }
-            else{
+            else {
                 PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
             }
         }
 
         if (buildBlock)
             if (_activeWeapon.WeaponType == WeaponType.Shovel)
-                PerformRaycastAction(RaycastAction.BuildBlock, hitRangeBuild);
+                PerformRaycastAction(RaycastAction.BuildBlock, _activeWeapon.Range);
 
         if (saveMap)
             _saveMapPopup.Open(this);
@@ -434,9 +477,9 @@ public class Player : NetworkBehaviour {
             pt.player.floatingHealthBar.transform.rotation = Quaternion.LookRotation(pt.player.floatingHealthBar.transform.position - transform.position);
         }
     }
-    
+
     private void FixedUpdate() {
-        if (!IsLocalPlayer || !mouseActive)
+        if (!IsLocalPlayer || !mouseActive || InCountdown)
             return;
 
         if (_gameMode == GameMode.Build) {
@@ -456,10 +499,10 @@ public class Player : NetworkBehaviour {
             if (fallDistance > fallDmgDistThreshold) {
                 float fallDamage = (fallDistance - fallDmgDistThreshold) * fallDmgMultiplier;
                 TakeDamage(fallDamage);
-                _audioSync.PlaySound(3); 
+                _audioSync.PlaySound(3);
             }
             else {
-                _audioSync.PlaySound(2); 
+                _audioSync.PlaySound(2);
             }
 
             //Debug.Log("Fall Distance: " + (_startOfFall - transform.position.y));
@@ -490,13 +533,13 @@ public class Player : NetworkBehaviour {
     }
 
     private void TakeDamage(float amount) {
-        if (!IsLocalPlayer)
+        if (!IsLocalPlayer || InCountdown)
             return;
         //_audioSource.PlayOneShot(_fallSound);
         _health -= amount;
         _healthBar.value = _health;
         UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
-        if (_health < 0) {
+        if (_health <= 0) {
             Respawn();
         }
     }
@@ -504,53 +547,64 @@ public class Player : NetworkBehaviour {
     private void Respawn() {
         if (!IsLocalPlayer)
             return;
-        
+
         if (_world.flagHolderId.Value == NetworkObjectId) {
             _respawn = true;
             _world.SetDirtyFlagStateServerRpc();
             return;
         }
-        
+
         // "Normal" Respawn
         // Reset health
-        _health = maxHealth;
-        _healthBar.value = _health;
-        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health);
-        
+        ResetHealthBar();
+
         // Initiate respawn countdown
         _world.countdownFinished = false;
         _countdown.GetComponent<Countdown>().StartLocalCountdown("Respawning in ...");
-        
-        // Reset player position
-        _rb.velocity = Vector3.zero;
 
-        if (team == Lobby.Team.Red)
-            transform.position = _world.baseRedPos;
-        else if (team == Lobby.Team.Blue)
-            transform.position = _world.baseBluePos;
+        // Reset player position and lookAt
+        ResetPosition();
     }
 
     private void OnDirtyFlagStateSet(bool oldVal, bool newVal) {
         if (!newVal || !_respawn)
             return;
         _respawn = false;
-        
+
         _world.DropFlagServerRpc(NetworkObjectId, transform.position);
-        
+
         // Reset health
+        ResetHealthBar();
+
+        // Reset player position and lookAt
+        ResetPosition();
+
+        _world.PlayerResetCallbackServerRpc(NetworkObjectId);
+    }
+
+    private void ResetHealthBar() {
         _health = maxHealth;
         _healthBar.value = _health;
-        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health);
-        
-        // Reset player position
-        _rb.velocity = Vector3.zero;
+        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health, 50f);
+        UpdatePlayerTagServerRpc(NetworkObjectId, playerName, 50f);
+    }
+    
+    private void ResetPosition() {
+        _rotX = 0;
+        _playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0);
+        if (team == Lobby.Team.Red) {
+            //transform.position = _world.baseRedPos;
+            transform.rotation = Quaternion.Euler(0, 90, 0);
+            transform.position = new Vector3(-5, 4.5f, 0);
+        }
+        else if (team == Lobby.Team.Blue) {
+            // transform.position = _world.baseBluePos;
+            transform.rotation = Quaternion.Euler(0, -90, 0);
+            transform.position = new Vector3(5, 4.5f, 0);
+        }
 
-        if (team == Lobby.Team.Red)
-            transform.position = _world.baseRedPos;
-        else if (team == Lobby.Team.Blue)
-            transform.position = _world.baseBluePos;
-        
-        _world.PlayerResetCallbackServerRpc(NetworkObjectId);
+        _rb.constraints = RigidbodyConstraints.FreezeAll;
+        _rb.velocity = Vector3.zero;
     }
 
     private void SwitchWeapons(WeaponType weapon) {
@@ -564,7 +618,7 @@ public class Player : NetworkBehaviour {
         _dxz = Vector3.ClampMagnitude(transform.TransformDirection(_xAxis, yAxis, _zAxis), 1f);
         transform.position += _dxz * (currentSpeed * Time.deltaTime);
     }
-    
+
     private void ProcessMouseInput() {
         if (!IsLocalPlayer || !mouseActive) {
             return;
@@ -606,12 +660,12 @@ public class Player : NetworkBehaviour {
     }
 
     private void PlayAnimation(Weapon activeWeapon, bool placeBlock = false) {
-        foreach (GameObject gameObject in weaponModels){
-            if(placeBlock){
-                if (gameObject.transform.name == "Cube") 
+        foreach (GameObject gameObject in weaponModels) {
+            if (placeBlock) {
+                if (gameObject.transform.name == "Cube")
                     gameObject.GetComponent<Animation>().Play();
             }
-            else if(gameObject.transform.name == activeWeapon.WeaponType.ToString()){
+            else if (gameObject.transform.name == activeWeapon.WeaponType.ToString()) {
                 gameObject.GetComponent<Animation>().Play();
             }
         }
@@ -623,6 +677,12 @@ public class Player : NetworkBehaviour {
         if (Physics.Raycast(ray, out var hit, range)) {
             switch (raycastAction) {
                 case RaycastAction.DestroyBlock:
+                    // Melee hit
+                    if (hit.collider.CompareTag(PlayerTag)) {
+                        PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
+                        break;
+                    }
+
                     GameObject chunk = hit.transform.gameObject;
                     Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
                     chunk.GetComponent<Chunk>().DestroyBlockServerRpc(localCoordinate);
@@ -652,6 +712,7 @@ public class Player : NetworkBehaviour {
                             UpdatePlayerCubeServerRpc(NetworkObjectId, false, _activeBlock);
                         }
                     }
+
                     break;
                 case RaycastAction.Shoot:
                     if (Time.time - _tFired > _activeWeapon.Firerate) {
@@ -666,9 +727,10 @@ public class Player : NetworkBehaviour {
                         }
                         else if (hit.collider.CompareTag(PlayerTag)) {
                             NetworkObject shotPlayer = hit.collider.gameObject.GetComponent<NetworkObject>();
-                            Debug.Log("Shoot Player " + hit.collider.name + " with " + _activeWeapon.LerpDamage(hit.distance) + " damage");
+                            float damage = _activeWeapon.WeaponType == WeaponType.Shovel ? _activeWeapon.Damage : _activeWeapon.LerpDamage(hit.distance);
+                            Debug.Log("Shoot Player " + hit.collider.name + " with " + damage + " damage");
                             if (shotPlayer.GetComponent<Player>().team != team) // Only damage the player if he is not in your team
-                                PlayerShotServerRpc(shotPlayer.NetworkObjectId, _activeWeapon.LerpDamage(hit.distance));
+                                PlayerShotServerRpc(shotPlayer.NetworkObjectId, damage);
                         }
 
                         _tFired = Time.time;
@@ -730,17 +792,17 @@ public class Player : NetworkBehaviour {
             }
         }
     }
-    
+
     private void OnGUI() {
         if (!IsLocalPlayer)
             return;
-        
+
         if (_gameMode == GameMode.Fight)
             _inventory.Draw(_activeBlock);
     }
-    
+
     // -- SERVER / CLIENT SYNCHRONIZATION
-    
+
     [ClientRpc]
     private void TakeDamageClientRpc(float amount) {
         Debug.Log("Player " + transform.name + " took " + amount + " damage");
@@ -753,13 +815,13 @@ public class Player : NetworkBehaviour {
         // Debug.Log("Shot Player Game Object " + shotPlayer);
         shotPlayer.TakeDamageClientRpc(damage);
     }
-    
+
     [ServerRpc(RequireOwnership = false)]
     private void PlayerWeaponChangeServerRpc(ulong id, WeaponType weapon) {
         // Debug.Log("Server: calling player weapon change for all clients for player with id " + id + " and weapon " + weapon);
         UpdatePlayerWeaponClientRpc(id, weapon);
     }
-    
+
     [ClientRpc]
     private void UpdatePlayerWeaponClientRpc(ulong id, WeaponType weapon) {
         Debug.Log("Updated weapon of player " + id + " on player " + NetworkObject.NetworkObjectId + " to weapon " + weapon.ToString());
@@ -773,8 +835,8 @@ public class Player : NetworkBehaviour {
             }
         }
     }
-    
-    [ServerRpc (RequireOwnership = false)]
+
+    [ServerRpc(RequireOwnership = false)]
     private void UpdatePlayerCubeServerRpc(ulong id, bool active, BlockType type) {
         UpdatePlayerCubeClientRpc(id, active, type);
     }
@@ -783,24 +845,31 @@ public class Player : NetworkBehaviour {
     private void UpdatePlayerCubeClientRpc(ulong id, bool active, BlockType type) {
         Player target = GameNetworkManager.players[id].player;
         if (active) {
+            // Reset the block position if it may be stuck in animation
+            target.playerCube.transform.localPosition = Vector3.zero;
+            target.playerCube.transform.localEulerAngles = Vector3.zero;
             target.playerCube.SetActive(true);
-            Debug.Log("Setting cube material of player " + target + " to block " + type);
+            //Debug.Log("Setting cube material of player " + target + " to block " + type);
             target.playerCube.GetComponent<MeshRenderer>().material = _blockMaterials[(int) type];
-        } else 
+        }
+        else {
             target.playerCube.SetActive(false);
+        }
     }
 
-    [ServerRpc (RequireOwnership = false)]
-    private void UpdateFloatingHealthBarServerRpc(ulong id, float value) {
+    [ServerRpc(RequireOwnership = false)]
+    private void UpdateFloatingHealthBarServerRpc(ulong id, float value, float alpha = 180f) {
         //Debug.Log("Server call update health bar of player " + id + " to the value " + value);
-        UpdateFloatingHealthBarClientRpc(id, value);
+        UpdateFloatingHealthBarClientRpc(id, value, alpha);
     }
 
     [ClientRpc]
-    private void UpdateFloatingHealthBarClientRpc(ulong id, float value) {
+    private void UpdateFloatingHealthBarClientRpc(ulong id, float value, float alpha) {
         //Debug.Log("Client updated health bar of player " + id + " to the value " + value);
         Player target = GameNetworkManager.players[id].player;
         target.floatingHealthBar.value = value;
+        Image fill = target.floatingHealthBar.GetComponentsInChildren<Image>()[1];
+        fill.color = new Color(fill.color.r, fill.color.g, fill.color.b, alpha/255);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -813,12 +882,26 @@ public class Player : NetworkBehaviour {
         Player target = GameNetworkManager.players[id].player;
         target.team = newTeam;
         MeshRenderer meshRenderer = target.GetComponent<MeshRenderer>();
-        if (newTeam == Lobby.Team.Blue)
+        if (newTeam == Lobby.Team.Blue) {
             meshRenderer.material.color = Color.blue;
-        else if (newTeam == Lobby.Team.Red)
+        }
+        else if (newTeam == Lobby.Team.Red) {
             meshRenderer.material.color = Color.red;
+        }
         else
             Debug.Log("Error in Player.cs: EarlyUpdate(): Player has assigned no team!");
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void UpdatePlayerTagServerRpc(ulong id, string t, float alpha = 255f) {
+        UpdatePlayerTagClientRpc(id, t, alpha);
+    }
+
+    [ClientRpc]
+    private void UpdatePlayerTagClientRpc(ulong id, string t, float alpha) {
+        Player target = GameNetworkManager.GetPlayerById(id);
+        target.playerTag.text = t;
+        target.playerTag.color = new Color(target.playerTag.color.r, target.playerTag.color.b, target.playerTag.color.g, alpha/255);
     }
 }
 
