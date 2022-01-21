@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
@@ -67,6 +68,7 @@ public class Player : NetworkBehaviour {
 
     public bool popupActive;
     public bool mouseActive;
+    public bool active;
 
     public Lobby.Team team;
 
@@ -109,6 +111,7 @@ public class Player : NetworkBehaviour {
 
     private bool IsFalling => !isGrounded && _rb.velocity.y < 0;
     private bool IsWalking => !_dxz.Equals(Vector3.zero) && isGrounded;
+    private bool InCountdown => !_world.countdownFinished || !_countdown.countdownFinished;
 
     private const float SensitivityHor = 5.0f;
     private const float SensitivityVer = 5.0f;
@@ -201,6 +204,7 @@ public class Player : NetworkBehaviour {
         _healthBar.interactable = false;
         _healthBar.gameObject.SetActive(false);
         _highlightBlock = GameObject.Find("Highlight Slab");
+        _highlightBlock.SetActive(false);
         _saveMapPopup = gameObject.AddComponent<MapPopup>();
         _saveMapPopup.action = MapPopup.MapPopupAction.Save;
         _loadMapPopup = gameObject.AddComponent<MapPopup>();
@@ -273,6 +277,8 @@ public class Player : NetworkBehaviour {
             transform.position = new Vector3(5, 4.5f, 0);
             transform.rotation = Quaternion.Euler(0, -90, 0);
         }
+        
+        _rb.velocity = Vector3.zero;
         _inventory.active = true;
     }
 
@@ -360,7 +366,7 @@ public class Player : NetworkBehaviour {
     }
 
     private void Update() {
-        if (!IsLocalPlayer || !_world.countdownFinished || !_world.gameStarted.Value || !_countdown.countdownFinished)
+        if (!IsLocalPlayer)
             return;
 
         _xAxis = Input.GetAxis("Horizontal");
@@ -389,6 +395,9 @@ public class Player : NetworkBehaviour {
         else if (!mouseActive && deactivateMouse) {
             ActivateMouse();
         }
+
+        if (InCountdown)
+            return;
 
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
@@ -454,7 +463,7 @@ public class Player : NetworkBehaviour {
     }
 
     private void FixedUpdate() {
-        if (!IsLocalPlayer || !mouseActive)
+        if (!IsLocalPlayer || !mouseActive || InCountdown)
             return;
 
         if (_gameMode == GameMode.Build) {
@@ -508,13 +517,13 @@ public class Player : NetworkBehaviour {
     }
 
     private void TakeDamage(float amount) {
-        if (!IsLocalPlayer)
+        if (!IsLocalPlayer || InCountdown)
             return;
         //_audioSource.PlayOneShot(_fallSound);
         _health -= amount;
         _healthBar.value = _health;
         UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
-        if (_health < 0) {
+        if (_health <= 0) {
             Respawn();
         }
     }
@@ -539,16 +548,8 @@ public class Player : NetworkBehaviour {
         _world.countdownFinished = false;
         _countdown.GetComponent<Countdown>().StartLocalCountdown("Respawning in ...");
 
-        // Reset player position
-        _rb.velocity = Vector3.zero;
-
-        if (team == Lobby.Team.Red)
-            //transform.position = _world.baseRedPos;
-            transform.position = new Vector3(-5, 4.5f, 0);
-        else if (team == Lobby.Team.Blue)
-            // transform.position = _world.baseBluePos;
-            transform.position = new Vector3(5, 4.5f, 0);
-
+        // Reset player position and lookAt
+        ResetPosition();
     }
 
     private void OnDirtyFlagStateSet(bool oldVal, bool newVal) {
@@ -563,15 +564,26 @@ public class Player : NetworkBehaviour {
         _healthBar.value = _health;
         UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health);
 
-        // Reset player position
-        _rb.velocity = Vector3.zero;
-
-        if (team == Lobby.Team.Red)
-            transform.position = _world.baseRedPos;
-        else if (team == Lobby.Team.Blue)
-            transform.position = _world.baseBluePos;
+        // Reset player position and lookAt
+        ResetPosition();
 
         _world.PlayerResetCallbackServerRpc(NetworkObjectId);
+    }
+
+    private void ResetPosition() {
+        _rb.velocity = Vector3.zero;
+        _rotX = 0;
+        _playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0);
+        if (team == Lobby.Team.Red) {
+            //transform.position = _world.baseRedPos;
+            transform.rotation = Quaternion.Euler(0, 90, 0);
+            transform.position = new Vector3(-5, 4.5f, 0);
+        }
+        else if (team == Lobby.Team.Blue) {
+            // transform.position = _world.baseBluePos;
+            transform.rotation = quaternion.Euler(0, -90, 0);
+            transform.position = new Vector3(5, 4.5f, 0);
+        }
     }
 
     private void SwitchWeapons(WeaponType weapon) {
@@ -649,6 +661,7 @@ public class Player : NetworkBehaviour {
                         PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
                         break;
                     }
+
                     GameObject chunk = hit.transform.gameObject;
                     Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
                     chunk.GetComponent<Chunk>().DestroyBlockServerRpc(localCoordinate);
