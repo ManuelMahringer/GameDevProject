@@ -4864,8 +4864,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   networkTime:
     m_InternalValue: 0
-  gameStartTime: 15
-  respawnTime: 10
+  gameStartTime: 5
+  respawnTime: 5
   countdownNumbers: {fileID: 1573203202}
   world: {fileID: 1745154812}
   countdownText: {fileID: 1987147194}
