@@ -191,7 +191,6 @@ public class Player : NetworkBehaviour {
         _gameMode = ComponentManager.gameMode;
         _world = GameObject.Find("World").GetComponent<World>();
         _rb = GetComponent<Rigidbody>();
-        //_audioSource = GetComponent<AudioSource>();
         _fallSound = Resources.Load("Sounds/hurt_fall") as AudioClip;
         _handgunSound = Resources.Load("Sounds/handgun") as AudioClip;
         _assaultRifleSound = Resources.Load("Sounds/assault_rifle") as AudioClip;
@@ -259,16 +258,21 @@ public class Player : NetworkBehaviour {
         ActivateMouse();
         SwitchWeapons(WeaponType.AssaultRifle);
         _healthBar.gameObject.SetActive(true);
-        transform.position = new Vector3(0, 6, 0);
 
         if (!IsLocalPlayer)
             return;
 
         UpdatePlayerTeamServerRpc(NetworkObject.NetworkObjectId, team);
-        if (team == Lobby.Team.Red)
-            transform.position = _world.baseRedPos;
-        else if (team == Lobby.Team.Blue)
-            transform.position = _world.baseBluePos;
+        if (team == Lobby.Team.Red) {
+            //transform.position = _world.baseRedPos;
+            transform.position = new Vector3(-5, 4.5f, 0);
+            transform.rotation = Quaternion.Euler(0, 90, 0);
+        }
+        else if (team == Lobby.Team.Blue) {
+            // transform.position = _world.baseBluePos;
+            transform.position = new Vector3(5, 4.5f, 0);
+            transform.rotation = Quaternion.Euler(0, -90, 0);
+        }
         _inventory.active = true;
     }
 
@@ -390,7 +394,7 @@ public class Player : NetworkBehaviour {
             currentSpeed = run ? runSpeed : walkSpeed;
         if (destroyBlock) {
             if (_activeWeapon.WeaponType == WeaponType.Shovel) {
-                PerformRaycastAction(RaycastAction.DestroyBlock, hitRangeDestroy);
+                PerformRaycastAction(RaycastAction.DestroyBlock, _activeWeapon.Range);
             }
             else {
                 PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
@@ -399,7 +403,7 @@ public class Player : NetworkBehaviour {
 
         if (buildBlock)
             if (_activeWeapon.WeaponType == WeaponType.Shovel)
-                PerformRaycastAction(RaycastAction.BuildBlock, hitRangeBuild);
+                PerformRaycastAction(RaycastAction.BuildBlock, _activeWeapon.Range);
 
         if (saveMap)
             _saveMapPopup.Open(this);
@@ -539,9 +543,12 @@ public class Player : NetworkBehaviour {
         _rb.velocity = Vector3.zero;
 
         if (team == Lobby.Team.Red)
-            transform.position = _world.baseRedPos;
+            //transform.position = _world.baseRedPos;
+            transform.position = new Vector3(-5, 4.5f, 0);
         else if (team == Lobby.Team.Blue)
-            transform.position = _world.baseBluePos;
+            // transform.position = _world.baseBluePos;
+            transform.position = new Vector3(5, 4.5f, 0);
+
     }
 
     private void OnDirtyFlagStateSet(bool oldVal, bool newVal) {
@@ -637,6 +644,11 @@ public class Player : NetworkBehaviour {
         if (Physics.Raycast(ray, out var hit, range)) {
             switch (raycastAction) {
                 case RaycastAction.DestroyBlock:
+                    // Melee hit
+                    if (hit.collider.CompareTag(PlayerTag)) {
+                        PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
+                        break;
+                    }
                     GameObject chunk = hit.transform.gameObject;
                     Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
                     chunk.GetComponent<Chunk>().DestroyBlockServerRpc(localCoordinate);
@@ -681,9 +693,10 @@ public class Player : NetworkBehaviour {
                         }
                         else if (hit.collider.CompareTag(PlayerTag)) {
                             NetworkObject shotPlayer = hit.collider.gameObject.GetComponent<NetworkObject>();
-                            Debug.Log("Shoot Player " + hit.collider.name + " with " + _activeWeapon.LerpDamage(hit.distance) + " damage");
+                            float damage = _activeWeapon.WeaponType == WeaponType.Shovel ? _activeWeapon.Damage : _activeWeapon.LerpDamage(hit.distance);
+                            Debug.Log("Shoot Player " + hit.collider.name + " with " + damage + " damage");
                             if (shotPlayer.GetComponent<Player>().team != team) // Only damage the player if he is not in your team
-                                PlayerShotServerRpc(shotPlayer.NetworkObjectId, _activeWeapon.LerpDamage(hit.distance));
+                                PlayerShotServerRpc(shotPlayer.NetworkObjectId, damage);
                         }
 
                         _tFired = Time.time;

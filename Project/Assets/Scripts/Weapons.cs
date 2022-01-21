@@ -40,7 +40,7 @@ public class AssaultRifle : Weapon {
 
 public class Shovel : Weapon {
     public override WeaponType WeaponType => WeaponType.Shovel;
-    public override float Damage => 30f;
-    public override float Range => 1f;
-    public override float Firerate { get; }
+    public override float Damage => 25f;
+    public override float Range => 3.5f;
+    public override float Firerate => 0.7f;
 }
