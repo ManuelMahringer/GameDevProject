@@ -525,11 +525,6 @@ public class Player : NetworkBehaviour {
             _rb.AddForce(jumpForce * _rb.mass * Time.deltaTime * Vector3.up, appliedForceMode);
             isGrounded = false;
         }
-        //
-        // // TODO: remove
-        // if (_respawn) {
-        //     Respawn();
-        // }
     }
 
     private void TakeDamage(float amount) {
@@ -554,42 +549,32 @@ public class Player : NetworkBehaviour {
             return;
         }
 
-        // "Normal" Respawn
-        // Reset health
-        ResetHealthBar();
-
-        // Initiate respawn countdown
-        _world.countdownFinished = false;
-        _countdown.GetComponent<Countdown>().StartLocalCountdown("Respawning in ...");
-
-        // Reset player position and lookAt
-        ResetPosition();
+        ResetOnSpawn();
     }
 
     private void OnDirtyFlagStateSet(bool oldVal, bool newVal) {
         if (!newVal || !_respawn)
             return;
         _respawn = false;
-
         _world.DropFlagServerRpc(NetworkObjectId, transform.position);
-
-        // Reset health
-        ResetHealthBar();
-
-        // Reset player position and lookAt
-        ResetPosition();
-
+        
+        ResetOnSpawn();
+        
         _world.PlayerResetCallbackServerRpc(NetworkObjectId);
     }
 
-    private void ResetHealthBar() {
+    private void ResetOnSpawn() {
+        // Reset health bar
         _health = maxHealth;
         _healthBar.value = _health;
         UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health, 50f);
         UpdatePlayerTagServerRpc(NetworkObjectId, playerName, 50f);
-    }
-    
-    private void ResetPosition() {
+        
+        // Initiate respawn countdown
+        _world.countdownFinished = false;
+        _countdown.GetComponent<Countdown>().StartLocalCountdown("Respawning in ...");
+        
+        // Reset player position and lookAt
         _rotX = 0;
         _playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0);
         if (team == Lobby.Team.Red) {
@@ -605,6 +590,10 @@ public class Player : NetworkBehaviour {
 
         _rb.constraints = RigidbodyConstraints.FreezeAll;
         _rb.velocity = Vector3.zero;
+        
+        // Reset inventory
+        _inventory.Clear();
+        UpdatePlayerCubeServerRpc(NetworkObjectId, false, _activeBlock);
     }
 
     private void SwitchWeapons(WeaponType weapon) {
@@ -911,7 +900,7 @@ public class Player : NetworkBehaviour {
 public class PlayerInventory : MonoBehaviour {
     public int[] Items => _items;
     public int Size => _items.Length;
-    public bool active = false;
+    public bool active;
 
     private Dictionary<int, Texture2D> _blockTextures;
 
@@ -945,6 +934,11 @@ public class PlayerInventory : MonoBehaviour {
 
     public void Remove(BlockType blockType) {
         _items[(int) blockType] -= 1;
+    }
+
+    public void Clear() {
+        for (int i = 0; i < _items.Length; i++)
+            _items[i] = 0;
     }
 
     public void Draw(BlockType activeBlock) {
