@@ -36,8 +36,9 @@ public class Chunk : NetworkBehaviour {
         
         float worldSize = _world.size * _world.chunkSize;
         int posX = (int) ((transform.position.x + worldSize / 2) / _world.chunkSize);
+        int posY = (int) ((transform.position.y + _world.height * _world.chunkSize / 2) / _world.chunkSize);
         int posZ = (int) ((transform.position.z + worldSize / 2) / _world.chunkSize);
-        pos = new Vector3(posX, 1, posZ);
+        pos = new Vector3(posX, posY, posZ);
             
         atlasSize = new Vector2(textureAtlas.width / textureBlockSize.x, textureAtlas.height / textureBlockSize.y);
         chunkMesh = GetComponent<MeshFilter>().mesh;
@@ -45,13 +46,13 @@ public class Chunk : NetworkBehaviour {
         if (IsOwnedByServer) {
             if (_world.selectedMap == "Generate") {
                 // dummy option to still be able to generate the random map TODO: remove
-                GenerateChunk();
+                GenerateChunk(posY);
                 Debug.Log("GENERATING MAP");
             }
             else {
                 // he host was für eine map junge
                 Debug.Log("Selected World in Chunk " + _world.selectedMap);
-                Load(_world.selectedMap, (int) pos.x, (int) pos.z);
+                Load(_world.selectedMap, (int) pos.x, (int) pos.y, (int) pos.z);
             }
         }
     }
@@ -142,10 +143,10 @@ public class Chunk : NetworkBehaviour {
     //     UpdateChunk();
     // }
 
-    public void Serialize(string mapName, int x, int y) {
+    public void Serialize(string mapName, int x, int y, int z) {
         BinaryFormatter bf = new BinaryFormatter();
         string basePath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Maps";
-        string savePath = basePath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + y + ".chunk";
+        string savePath = basePath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + "_"+ y + "_" + z +".chunk";
 
         Directory.CreateDirectory(basePath + Path.DirectorySeparatorChar + mapName);
 
@@ -156,9 +157,9 @@ public class Chunk : NetworkBehaviour {
         //Debug.Log("Serialized");
     }
 
-    public void Load(string mapName, int x, int y) {
+    public void Load(string mapName, int x, int y, int z) {
         string basePath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Maps";
-        string loadPath = basePath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + y + ".chunk";
+        string loadPath = basePath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + "_"+ y + "_" + z +".chunk";
 
         if (File.Exists(loadPath)) {
             BinaryFormatter bf = new BinaryFormatter();
@@ -170,11 +171,12 @@ public class Chunk : NetworkBehaviour {
             UpdateChunk();
         }
         else {
-            Debug.Log("Error: Chunk.cs: Chunk file was not found");
+            Debug.Log("Error: Chunk.cs: Chunk file was not found " + loadPath);
         }
     }
 
-    private void GenerateChunk() {
+    private void GenerateChunk(int height) {
+        Debug.Log("calling generate with height " + height);
         float[,] chunkHeights = Noise.Generate(chunkSize.x + 1, chunkSize.y + 1, seed, intensity);
         chunkBlocks = new Block[chunkSize.x + 1, chunkSize.y + 1, chunkSize.z + 1];
 
@@ -182,11 +184,15 @@ public class Chunk : NetworkBehaviour {
             for (int z = 0; z <= chunkSize.z; z++) {
                 for (int y = 0; y <= chunkSize.y; y++) {
                     chunkBlocks[x, y, z] = new Block(true, 0);
-
-                    if (y <= chunkHeights[x, z]) {
+                    if (height <= 2) {
                         chunkBlocks[x, y, z] = new Block(false, (byte) Random.Range(0, 4));
                         //chunkBlocks[x, y, z].id = (byte) Random.Range(0, 4);
                         //Debug.Log("Creating Block with id" + chunkBlocks[x, y, z].id);
+                    }
+                    else {
+                        if(y <= chunkHeights[x, z])
+                            chunkBlocks[x, y, z] = new Block(false, (byte) Random.Range(0, 4));
+                        
                     }
                 }
             }
