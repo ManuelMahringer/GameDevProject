@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using System.Threading.Tasks;
@@ -37,7 +36,7 @@ public class Chunk : NetworkBehaviour {
         
         float worldSize = _world.size * _world.chunkSize;
         int posX = (int) ((transform.position.x + worldSize / 2) / _world.chunkSize);
-        int posY = (int) ((transform.position.y + worldSize / 2) / _world.chunkSize);
+        int posY = (int) ((transform.position.y + _world.height * _world.chunkSize / 2) / _world.chunkSize);
         int posZ = (int) ((transform.position.z + worldSize / 2) / _world.chunkSize);
         pos = new Vector3(posX, posY, posZ);
             
@@ -181,7 +180,7 @@ public class Chunk : NetworkBehaviour {
             UpdateChunk();
         }
         else {
-            Debug.Log("Error: Chunk.cs: Chunk file was not found");
+            Debug.Log("Error: Chunk.cs: Chunk file was not found " + loadPath);
         }
     }
 
