@@ -143,6 +143,7 @@ public class Player : NetworkBehaviour {
     [SerializeField]
     private AudioSource _audioSourceWalking;
 
+    private bool _wasInCountdown = false;
     private AudioClip _fallSound;
     private AudioClip _handgunSound;
     private AudioClip _assaultRifleSound;
@@ -403,9 +404,15 @@ public class Player : NetworkBehaviour {
             ActivateMouse();
         }
 
+        if (!InCountdown && _wasInCountdown) {
+            UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health);
+            UpdatePlayerTagServerRpc(NetworkObjectId, playerName);
+        }
+        _wasInCountdown = InCountdown;
+        
         if (InCountdown)
             return;
-
+        
         if (isGrounded)
             currentSpeed = run ? runSpeed : walkSpeed;
         if (destroyBlock) {
@@ -549,7 +556,8 @@ public class Player : NetworkBehaviour {
         // Reset health
         _health = maxHealth;
         _healthBar.value = _health;
-        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health);
+        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health, 50f);
+        UpdatePlayerTagServerRpc(NetworkObjectId, playerName, 50f);
 
         // Initiate respawn countdown
         _world.countdownFinished = false;
@@ -569,14 +577,15 @@ public class Player : NetworkBehaviour {
         // Reset health
         _health = maxHealth;
         _healthBar.value = _health;
-        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health);
+        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health, 50f);
+        UpdatePlayerTagServerRpc(NetworkObjectId, playerName, 50f);
 
         // Reset player position and lookAt
         ResetPosition();
 
         _world.PlayerResetCallbackServerRpc(NetworkObjectId);
     }
-
+    
     private void ResetPosition() {
         _rb.velocity = Vector3.zero;
         _rotX = 0;
@@ -844,16 +853,18 @@ public class Player : NetworkBehaviour {
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void UpdateFloatingHealthBarServerRpc(ulong id, float value) {
+    private void UpdateFloatingHealthBarServerRpc(ulong id, float value, float alpha = 180f) {
         //Debug.Log("Server call update health bar of player " + id + " to the value " + value);
-        UpdateFloatingHealthBarClientRpc(id, value);
+        UpdateFloatingHealthBarClientRpc(id, value, alpha);
     }
 
     [ClientRpc]
-    private void UpdateFloatingHealthBarClientRpc(ulong id, float value) {
+    private void UpdateFloatingHealthBarClientRpc(ulong id, float value, float alpha) {
         //Debug.Log("Client updated health bar of player " + id + " to the value " + value);
         Player target = GameNetworkManager.players[id].player;
         target.floatingHealthBar.value = value;
+        Image fill = target.floatingHealthBar.GetComponentsInChildren<Image>()[1];
+        fill.color = new Color(fill.color.r, fill.color.g, fill.color.b, alpha/255);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -877,14 +888,15 @@ public class Player : NetworkBehaviour {
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void UpdatePlayerTagServerRpc(ulong id, string t) {
-        UpdatePlayerTagClientRpc(id, t);
+    private void UpdatePlayerTagServerRpc(ulong id, string t, float alpha = 255f) {
+        UpdatePlayerTagClientRpc(id, t, alpha);
     }
 
     [ClientRpc]
-    private void UpdatePlayerTagClientRpc(ulong id, string t) {
+    private void UpdatePlayerTagClientRpc(ulong id, string t, float alpha) {
         Player target = GameNetworkManager.GetPlayerById(id);
         target.playerTag.text = t;
+        target.playerTag.color = new Color(target.playerTag.color.r, target.playerTag.color.b, target.playerTag.color.g, alpha/255);
     }
 }
 
