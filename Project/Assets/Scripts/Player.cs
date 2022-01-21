@@ -31,6 +31,7 @@ public class Player : NetworkBehaviour {
     private static readonly string WorldTag = "World";
     private static readonly string PlayerTag = "Player";
     private static readonly string WeaponLayerName = "Weapon";
+    private static readonly string PlayerLayerName = "Player";
 
     [Header("Health & Damage")]
     public float maxHealth = 100f;
@@ -660,10 +661,30 @@ public class Player : NetworkBehaviour {
         }
     }
 
+    private bool CheckProtectedZone(Ray ray, Vector3 hit, RaycastAction action) {
+        Vector3 center = hit;
+        switch (action) {
+            case RaycastAction.DestroyBlock:
+                center += (ray.direction / 10000.0f);
+                break;
+            case RaycastAction.BuildBlock:
+                center -= (ray.direction / 10000.0f);
+                break;
+            default:
+                Debug.Log("Error in Player.cs: Illegal RaycastAction in method PerformRaycastAction");
+                break;
+        }
+
+        center = new Vector3(Mathf.FloorToInt(center.x) + 0.5f, Mathf.FloorToInt(center.y), Mathf.FloorToInt(center.z) + 0.5f);
+        return _world.InProtectedZone(center);
+
+    }
+
     private void PerformRaycastAction(RaycastAction raycastAction, float range) {
         Vector3 midPoint = new Vector3(_playerCamera.pixelWidth / 2, _playerCamera.pixelHeight / 2);
         Ray ray = _playerCamera.ScreenPointToRay(midPoint);
-        if (Physics.Raycast(ray, out var hit, range)) {
+        // Ignore protection layers when raycasting
+        if (Physics.Raycast(ray, out var hit, range, ~(1 << LayerMask.NameToLayer(_world.protectionLayerName)))) {
             switch (raycastAction) {
                 case RaycastAction.DestroyBlock:
                     // Melee hit
@@ -671,8 +692,12 @@ public class Player : NetworkBehaviour {
                         PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
                         break;
                     }
-
                     GameObject chunk = hit.transform.gameObject;
+
+                    // Can't destroy a block in a protected radius
+                    if (CheckProtectedZone(ray, hit.point, raycastAction))
+                        break;
+                    
                     Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
                     chunk.GetComponent<Chunk>().DestroyBlockServerRpc(localCoordinate);
                     byte destBlockId = chunk.GetComponent<Chunk>()
@@ -684,14 +709,19 @@ public class Player : NetworkBehaviour {
                         UpdatePlayerCubeServerRpc(NetworkObjectId, true, _activeBlock);
                     break;
                 case RaycastAction.BuildBlock:
-                    if (hit.point.y >= _world.height * _world.chunkSize) // Block is at max world height
+                    // Check if block is at max world height
+                    if (hit.point.y >= _world.height * _world.chunkSize)
                         break;
+
                     if (_inventory.Items[(byte) _activeBlock] > 0) {
-                        // Check if built block would intersect with player
-                        Vector3 buildPos = hit.point - (ray.direction / 10000.0f);
-                        buildPos = new Vector3(Mathf.FloorToInt(buildPos.x) + 0.5f, Mathf.FloorToInt(buildPos.y), Mathf.FloorToInt(buildPos.z) + 0.5f);
-                        if (Physics.CheckBox(buildPos, new Vector3(0.45f, 0.45f, 0.45f), Quaternion.identity, ~LayerMask.NameToLayer("Player")))
+                        // Can't build inside protection zone
+                        if (CheckProtectedZone(ray, hit.point, raycastAction))
                             break;
+                        // Can't build where player is standing
+                        Vector3 buildPos = hit.point - (ray.direction / 10000.0f);
+                        if (Physics.CheckBox(buildPos, new Vector3(0.45f, 0.45f, 0.45f), Quaternion.identity, 1 << LayerMask.NameToLayer(PlayerLayerName)))
+                            break;
+                        
                         _inventory.Remove(_activeBlock);
                         _world.BuildBlockServerRpc(hit.point - (ray.direction / 10000.0f), _activeBlock);
                         PlayAnimation(_activeWeapon, true);
@@ -708,6 +738,10 @@ public class Player : NetworkBehaviour {
                         PlayWeaponSound(_activeWeapon);
                         PlayAnimation(_activeWeapon);
                         if (hit.collider.CompareTag(WorldTag)) {
+                            // Can't destroy a block in a protected radius
+                            if (CheckProtectedZone(ray, hit.point, raycastAction))
+                                break;
+                            
                             chunk = hit.transform.gameObject;
                             localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
                             Debug.Log("Shoot Block with " + (byte) _activeWeapon.LerpDamage(hit.distance) + " damage");
@@ -732,7 +766,7 @@ public class Player : NetworkBehaviour {
                         _highlightBlock.SetActive(false);
                         break;
                     }
-
+                    
                     float epsilon = 0.0001f;
                     var blockDim = _highlightBlock.transform.localScale;
                     float blockThickness = blockDim.x;

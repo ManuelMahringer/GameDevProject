@@ -15,38 +15,48 @@ public class World : NetworkBehaviour {
     public PhysicMaterial worldMaterial;
     public int size;
     public int height;
-
-    public bool enableGenerate;
-    public bool enableGameModeSelection;
     
-    public string selectedMap;
-    public NetworkVariable<bool> gameStarted = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
-    public NetworkVariable<int> redFlagCnt = new NetworkVariable<int>(NetworkVariableReadPermission.Everyone);
-    public NetworkVariable<int> blueFlagCnt = new NetworkVariable<int>(NetworkVariableReadPermission.Everyone);
-    public NetworkVariable<bool> gameEnded = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
-    public NetworkVariable<ulong> flagHolderId = new NetworkVariable<ulong>(NetworkVariableReadPermission.Everyone);
-    public NetworkVariable<bool> respawnDirtyFlagState = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
-    public NetworkVariable<ulong> transformBasePlayer = new NetworkVariable<ulong>(NetworkVariableReadPermission.Everyone);
-    public NetworkVariable<bool> hostQuit = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
-
     [SerializeField] public float chunkSize;
-
     [SerializeField] public int capturesToWin;
-    
-    [SerializeField]
-    private GameObject flag;
-    
-    [SerializeField]
-    private Vector3 initFlagPos = new Vector3(2, 3, 2);
 
-    [SerializeField] public Vector3 baseRedPos;
-    [SerializeField] public Vector3 baseBluePos;
+    [SerializeField] private GameObject flag;
+    [SerializeField] private Vector3 initFlagPos = new Vector3(2, 3, 2);
+
+    [SerializeField] private Vector3 baseRedPos;
+    [SerializeField] private Vector3 baseBluePos;
     
     [SerializeField] private GameObject baseRed;
     [SerializeField] private GameObject baseBlue;
 
+    [SerializeField] public string protectionLayerName;
+    [SerializeField] private GameObject baseBlueProtectionZone;
+    [SerializeField] private GameObject baseRedProtectionZone;
+    [SerializeField] private GameObject flagProtectionZone;
+    
+    public bool enableGenerate;
+
+    [NonSerialized]
+    public string selectedMap;
+    [NonSerialized]
+    public readonly NetworkVariable<bool> gameStarted = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
+    [NonSerialized]
+    public readonly NetworkVariable<int> redFlagCnt = new NetworkVariable<int>(NetworkVariableReadPermission.Everyone);
+    [NonSerialized]
+    public readonly NetworkVariable<int> blueFlagCnt = new NetworkVariable<int>(NetworkVariableReadPermission.Everyone);
+    [NonSerialized]
+    public readonly NetworkVariable<bool> gameEnded = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
+    [NonSerialized]
+    public readonly NetworkVariable<ulong> flagHolderId = new NetworkVariable<ulong>(NetworkVariableReadPermission.Everyone);
+    [NonSerialized]
+    public readonly NetworkVariable<bool> respawnDirtyFlagState = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
+    [NonSerialized]
+    public readonly NetworkVariable<ulong> transformBasePlayer = new NetworkVariable<ulong>(NetworkVariableReadPermission.Everyone);
+    [NonSerialized]
+    public readonly NetworkVariable<bool> hostQuit = new NetworkVariable<bool>(NetworkVariableReadPermission.Everyone);
+    
     private GameObject[,] _chunks;
     private float _worldSize;
+    [NonSerialized]
     public bool countdownFinished;
 
     private void Start() {
@@ -59,9 +69,59 @@ public class World : NetworkBehaviour {
         flag.transform.position = initFlagPos;
         baseRed.transform.position = baseRedPos;
         baseBlue.transform.position = baseBluePos;
+        baseRedProtectionZone.transform.position = baseRedPos;
+        baseBlueProtectionZone.transform.position = baseBluePos;
+        flagProtectionZone.transform.position = initFlagPos;
         flag.SetActive(true);
     }
     
+    public bool InProtectedZone(Vector3 center) {
+        // Ignore all layermasks but one: https://answers.unity.com/questions/1164722/raycast-ignore-layers-except.html
+        return Physics.CheckBox(center, new Vector3(0.45f, 0.45f, 0.45f), Quaternion.identity, 1 << LayerMask.NameToLayer(protectionLayerName), QueryTriggerInteraction.Collide);
+    }
+
+    private void UpdateCaptureCounts(Lobby.Team team) {
+        if (team == Lobby.Team.Red)
+            redFlagCnt.Value += 1;
+        else if (team == Lobby.Team.Blue)
+            blueFlagCnt.Value += 1;
+        if (blueFlagCnt.Value == capturesToWin || redFlagCnt.Value == capturesToWin)
+            gameEnded.Value = true;
+    }
+    
+
+    public void BuildWorld() {
+        _worldSize = size * chunkSize;
+        _chunks = new GameObject[size, size];
+        // Instantiate chunks
+        for (int x = 0; x < size; x++) {
+            for (int z = 0; z < size; z++) {
+                Debug.Log("instantiate now");
+                Debug.Log("Selected World " + selectedMap);
+                _chunks[x, z] = Instantiate(chunkPrefab, new Vector3(-_worldSize / 2 + chunkSize * x, 1, -_worldSize / 2 + chunkSize * z), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
+                _chunks[x, z].GetComponent<NetworkObject>().Spawn();
+            }
+        }
+    }
+    
+    public void SerializeChunks(string mapName) {
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                _chunks[x,y].GetComponent<Chunk>().Serialize(mapName, x,y);
+            }
+        }
+    }
+
+    public void LoadChunks(string mapName) {
+        Debug.Log(_chunks);
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                _chunks[x,y].GetComponent<Chunk>().Load(mapName, x,y);
+            }
+        }
+    }
+    
+    // RPC Calls
     [ServerRpc (RequireOwnership = false)]
     public void OnFlagPickUpServerRpc(ulong playerId) {
         if (respawnDirtyFlagState.Value)
@@ -130,16 +190,6 @@ public class World : NetworkBehaviour {
             respawnDirtyFlagState.Value = false;
         }
     }
-
-    private void UpdateCaptureCounts(Lobby.Team team) {
-        if (team == Lobby.Team.Red)
-            redFlagCnt.Value += 1;
-        else if (team == Lobby.Team.Blue)
-            blueFlagCnt.Value += 1;
-        if (blueFlagCnt.Value == capturesToWin || redFlagCnt.Value == capturesToWin)
-            gameEnded.Value = true;
-    }
-    
     
     [ServerRpc (RequireOwnership = false)]
     public void BuildBlockServerRpc(Vector3 worldCoordinate, BlockType blockType) {
@@ -159,88 +209,7 @@ public class World : NetworkBehaviour {
     }
     
     [ClientRpc]
-    public void SetMapClientRpc(string map) {
+    private void SetMapClientRpc(string map) {
         selectedMap = map;
     }
-
-    public void BuildWorld() {
-        _worldSize = size * chunkSize;
-        _chunks = new GameObject[size, size];
-        // Instantiate chunks
-        for (int x = 0; x < size; x++) {
-            for (int z = 0; z < size; z++) {
-                Debug.Log("instantiate now");
-                Debug.Log("Selected World " + selectedMap);
-                _chunks[x, z] = Instantiate(chunkPrefab, new Vector3(-_worldSize / 2 + chunkSize * x, 1, -_worldSize / 2 + chunkSize * z), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
-                _chunks[x, z].GetComponent<NetworkObject>().Spawn();
-            }
-        }
-    }
-
-    public void ReBuildWorld() {
-        if (!IsOwner) {
-            return;
-        }
-        _worldSize = size * chunkSize;
-        // Instantiate chunks
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                Debug.Log("instantiate now");
-                _chunks[x, y].GetComponent<NetworkObject>().Despawn();
-                _chunks[x, y] = Instantiate(chunkPrefab, new Vector3(-_worldSize / 2 + chunkSize * x, 1, -_worldSize / 2 + chunkSize * y), Quaternion.identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.
-                if (selectedMap != "Generate") { // dummy option to still be able to generate the random map TODO: remove
-                    _chunks[x, y].GetComponent<Chunk>().Load(selectedMap, x, y);
-                }
-                _chunks[x, y].GetComponent<NetworkObject>().Spawn();
-            }
-        }
-    }
-    
-
-    public void SerializeChunks(string mapName) {
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                _chunks[x,y].GetComponent<Chunk>().Serialize(mapName, x,y);
-            }
-        }
-    }
-
-    public void LoadChunks(string mapName) {
-        Debug.Log(_chunks);
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                _chunks[x,y].GetComponent<Chunk>().Load(mapName, x,y);
-            }
-        }
-    }
-    
-    private void AddMeshCollider(int x, int z) {
-        MeshCollider mc = _chunks[x, z].AddComponent<MeshCollider>();
-        mc.material = worldMaterial;
-    }
-
-    public void UpdateMeshCollider(GameObject chunk) {
-        Destroy(chunk.GetComponent<MeshCollider>());
-        MeshCollider mc = chunk.AddComponent<MeshCollider>();
-        mc.material = worldMaterial;
-    }
-    
-    // [ServerRpc (RequireOwnership = false)]
-    // public void GetInitialChunkDataServerRpc() {
-    //     Debug.Log("SERVER: SENDING INITIAL CHUNK DATA");
-    //     for (int x = 0; x < size; x++) {
-    //         for (int y = 0; y < size; y++) {
-    //             var c = chunks[x, y].GetComponent<Chunk>();
-    //             StartCoroutine(Test(c));
-    //         }
-    //     }
-    //     // var c = chunks[0,0].GetComponent<Chunk>(); 
-    //     // c.ReceiveInitialChunkDataClientRpc(c.FlattenBlocks());
-    // }
-    
-    
-    // private IEnumerator Test(Chunk c) {
-    //     yield return new WaitForSeconds(1);
-    //     c.ReceiveInitialChunkDataClientRpc(c.FlattenBlocks());
-    // }
 }

@@ -65,8 +65,6 @@ public class Chunk : NetworkBehaviour {
     }
 
     public void BuildBlockServer(Vector3 hit, BlockType blockType) {
-        if (!IsServer)
-            Debug.Log("SERVER BUILD BLOCK NOT CALLED BY OWNER - THIS SHOULD NEVER HAPPEN");
         Debug.Log("NORMAL BUILD BLOCK: " + hit.x + " " + hit.y + " " + hit.z);
         Block block = chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)];
         block.id = (byte) blockType;
@@ -96,16 +94,9 @@ public class Chunk : NetworkBehaviour {
         chunkBlocks = ExpandBlocks(chunkSize.x + 1, chunkSize.y + 1, chunkSize.z + 1, blocks);
         UpdateChunk();
     }
-    
-    // public void DamageBlock(Vector3 hit, sbyte damage) {
-    //     Debug.Log(hit.x + " " + hit.y + " " + hit.z);
-    //     chunkBlocks[Mathf.FloorToInt(hit.x), Mathf.FloorToInt(hit.y), Mathf.FloorToInt(hit.z)].DamageBlock(damage);
-    //     Debug.Log("Damaging");
-    //     UpdateChunk();
-    // }
-    
+
     // Flatten 3D block array to 1D to be able to send it over network
-    public Block[] FlattenBlocks() {
+    private Block[] FlattenBlocks() {
         return chunkBlocks.Cast<Block>().ToArray();
     }
     
@@ -153,7 +144,7 @@ public class Chunk : NetworkBehaviour {
 
     public void Serialize(string mapName, int x, int y) {
         BinaryFormatter bf = new BinaryFormatter();
-        string basePath = System.IO.Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Maps";
+        string basePath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Maps";
         string savePath = basePath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + y + ".chunk";
 
         Directory.CreateDirectory(basePath + Path.DirectorySeparatorChar + mapName);
@@ -166,7 +157,7 @@ public class Chunk : NetworkBehaviour {
     }
 
     public void Load(string mapName, int x, int y) {
-        string basePath = System.IO.Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Maps";
+        string basePath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Maps";
         string loadPath = basePath + Path.DirectorySeparatorChar + mapName + Path.DirectorySeparatorChar + mapName + "_" + x + y + ".chunk";
 
         if (File.Exists(loadPath)) {
