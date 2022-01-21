@@ -221,6 +221,7 @@ public class Player : NetworkBehaviour {
         _winningMessage = GameObject.Find("WinningMessage").GetComponent<TMP_Text>();
         _exitGameBtn = GameObject.Find("ExitGameButton").GetComponent<Button>();
 
+        _hudIngame.SetActive(false);
         _hudGameEnd.SetActive(false);
 
         floatingHealthBar.gameObject.SetActive(false);
@@ -262,10 +263,11 @@ public class Player : NetworkBehaviour {
         ActivateMouse();
         SwitchWeapons(WeaponType.AssaultRifle);
         _healthBar.gameObject.SetActive(true);
-
+        
         if (!IsLocalPlayer)
             return;
 
+        _hudIngame.SetActive(true);
         UpdatePlayerTeamServerRpc(NetworkObject.NetworkObjectId, team);
         if (team == Lobby.Team.Red) {
             //transform.position = _world.baseRedPos;
