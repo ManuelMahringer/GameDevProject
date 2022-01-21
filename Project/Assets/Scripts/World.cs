@@ -146,7 +146,7 @@ public class World : NetworkBehaviour {
         // Finds the correct chunk to build
         Debug.Log("BuildBlockServerRPC");
         int chunkX = Mathf.Abs(Mathf.FloorToInt((_worldSize / 2 + worldCoordinate.x) / chunkSize));
-        int chunkY = Mathf.Abs(Mathf.FloorToInt((_worldSize / 2 + worldCoordinate.y) / chunkSize));
+        int chunkY = Mathf.Abs(Mathf.FloorToInt((height * chunkSize / 2 + worldCoordinate.y) / chunkSize));
         int chunkZ = Mathf.Abs(Mathf.FloorToInt((_worldSize / 2 + worldCoordinate.z) / chunkSize));
         GameObject chunk = _chunks[chunkX, chunkY, chunkZ];
         Vector3 localCoordinate = worldCoordinate - chunk.transform.position;
@@ -174,7 +174,7 @@ public class World : NetworkBehaviour {
                     Debug.Log("instantiate now");
                     Debug.Log("Selected World " + selectedMap);
                     _chunks[x, y, z] = Instantiate(chunkPrefab,
-                        new Vector3(-_worldSize / 2 + chunkSize * x, -_worldSize / 2 + chunkSize * y,
+                        new Vector3(-_worldSize / 2 + chunkSize * x, -height * chunkSize / 2 + chunkSize * y,
                             -_worldSize / 2 + chunkSize * z),
                         Quaternion
                             .identity); //  This quaternion corresponds to "no rotation" - the object is perfectly aligned with the world or parent axes.

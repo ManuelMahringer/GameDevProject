@@ -695,8 +695,11 @@ public class Player : NetworkBehaviour {
                         UpdatePlayerCubeServerRpc(NetworkObjectId, true, _activeBlock);
                     break;
                 case RaycastAction.BuildBlock:
-                    if (hit.point.y >= _world.height * _world.chunkSize) // Block is at max world height
+                    if (hit.point.y >= _world.height * _world.chunkSize) {
+                        Debug.Log("break at build block");
                         break;
+                    } // Block is at max world height
+                        
                     if (_inventory.Items[(byte) _activeBlock] > 0) {
                         // Check if built block would intersect with player
                         Vector3 buildPos = hit.point - (ray.direction / 10000.0f);

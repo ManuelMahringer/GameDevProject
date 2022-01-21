@@ -33,8 +33,7 @@ public class Lobby : NetworkBehaviour {
     private TMP_Text[] _redTMPTexts = new TMP_Text[3];
     private TMP_Text _errortext;
     private Text _nameInputText;
-    private int _registered_count_red;
-    private int _registered_count_blue;
+
 
     private GameObject _joinRed;
     private GameObject _joinBlue;
@@ -42,8 +41,12 @@ public class Lobby : NetworkBehaviour {
     private GameObject _infoTextName;
     private GameObject _worldBorders;
     private void DisableControls() {
-        _joinBlue.SetActive(false);
-        _joinRed.SetActive(false);
+        if (_joinBlue.activeSelf) {
+            _joinBlue.SetActive(false);
+        }
+        if (_joinRed.activeSelf) {
+            _joinRed.SetActive(false);
+        }
         _inputField.SetActive(false);
         _infoTextName.SetActive(false);
     }
@@ -111,28 +114,51 @@ public class Lobby : NetworkBehaviour {
         if (_players.Value != _playersOnClient) {
             RequestCurrentLobbyServerRpc();
             _playersOnClient = _players.Value;
+            
+        }
+
+        if (_clientNamesBlue.Count >= 3) {
+            _joinBlue.SetActive(false);
+        }
+        if (_clientNamesRed.Count >= 3) {
+            _joinBlue.SetActive(false);
         }
     }
     
     [ServerRpc(RequireOwnership = false)]
     void RequestCurrentLobbyServerRpc() {
         UpdateNamesClientRpc(p0, p1, p2, p3, p4, p5);
+        UpdateJoinButtonsClientRpc(_clientNamesBlue.Count < 3, _clientNamesRed.Count < 3);
     }
     
     [ClientRpc]
     public void UpdateNamesClientRpc(NetworkString p0, NetworkString p1,NetworkString p2,NetworkString p3,NetworkString p4,NetworkString p5) {
+        Debug.Log("update names client rpc ");
         _blueTMPTexts[0].text = p0.ToString();
         _blueTMPTexts[1].text = p1.ToString();
         _blueTMPTexts[2].text = p2.ToString();
         _redTMPTexts[0].text = p3.ToString();
         _redTMPTexts[1].text = p4.ToString();
         _redTMPTexts[2].text = p5.ToString();
+        Debug.Log("calling deactivate Join");
+        
     }
 
+    [ClientRpc]
+    public void UpdateJoinButtonsClientRpc(bool blue, bool red) {
+        if (!blue) {
+            _joinBlue.SetActive(false);
 
+        }
+        if (!red) {
+            _joinRed.SetActive(false);
+
+        }
+    }
+    
+    
     [ServerRpc(RequireOwnership = false)]
     void AddPlayerServerRpc(Team team, ulong clientId, NetworkString ns) {
-        Debug.Log("SERVERRPC CALLED - I HATE MY LIFE " + ns.ToString());
         if (team == Team.Blue) {
             if (_clientNamesBlue.ContainsKey(clientId)) {
                 _clientNamesBlue[clientId] = ns.ToString();
