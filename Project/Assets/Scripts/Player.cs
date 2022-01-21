@@ -71,6 +71,7 @@ public class Player : NetworkBehaviour {
     public bool active;
 
     public Lobby.Team team;
+    public String playerName;
 
     private Weapon _activeWeapon;
     private BlockType _activeBlock;
@@ -125,6 +126,9 @@ public class Player : NetworkBehaviour {
     [SerializeField]
     public Slider floatingHealthBar;
 
+    [SerializeField]
+    private TMP_Text playerTag; 
+    
     private World _world;
     private GameMode _gameMode;
     private Camera _playerCamera;
@@ -268,7 +272,8 @@ public class Player : NetworkBehaviour {
             return;
 
         _hudIngame.SetActive(true);
-        UpdatePlayerTeamServerRpc(NetworkObject.NetworkObjectId, team);
+        UpdatePlayerTeamServerRpc(NetworkObjectId, team);
+        UpdatePlayerTagServerRpc(NetworkObjectId, playerName);
         if (team == Lobby.Team.Red) {
             //transform.position = _world.baseRedPos;
             transform.position = new Vector3(-5, 4.5f, 0);
@@ -861,12 +866,25 @@ public class Player : NetworkBehaviour {
         Player target = GameNetworkManager.players[id].player;
         target.team = newTeam;
         MeshRenderer meshRenderer = target.GetComponent<MeshRenderer>();
-        if (newTeam == Lobby.Team.Blue)
+        if (newTeam == Lobby.Team.Blue) {
             meshRenderer.material.color = Color.blue;
-        else if (newTeam == Lobby.Team.Red)
+        }
+        else if (newTeam == Lobby.Team.Red) {
             meshRenderer.material.color = Color.red;
+        }
         else
             Debug.Log("Error in Player.cs: EarlyUpdate(): Player has assigned no team!");
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void UpdatePlayerTagServerRpc(ulong id, string t) {
+        UpdatePlayerTagClientRpc(id, t);
+    }
+
+    [ClientRpc]
+    private void UpdatePlayerTagClientRpc(ulong id, string t) {
+        Player target = GameNetworkManager.GetPlayerById(id);
+        target.playerTag.text = t;
     }
 }
 
