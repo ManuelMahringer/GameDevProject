@@ -33,6 +33,8 @@ public class World : NetworkBehaviour {
     [SerializeField] private GameObject baseRedProtectionZone;
     [SerializeField] private GameObject flagProtectionZone;
     
+    [SerializeField] public float statusMsgShowTime;
+    
     public bool enableGenerate;
 
     [NonSerialized]

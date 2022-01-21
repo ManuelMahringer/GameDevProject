@@ -170,7 +170,9 @@ public class Player : NetworkBehaviour {
     private Countdown _countdown;
     private TMP_Text _redFlagCntText;
     private TMP_Text _blueFlagCntText;
+    private TMP_Text _statusText;
     private TMP_Text _winningMessage;
+    private float _statusMsgShow;
     private Button _exitGameBtn;
     private Dictionary<int, Material> _blockMaterials;
 
@@ -225,6 +227,7 @@ public class Player : NetworkBehaviour {
         _countdown = GameObject.Find("HUD (Countdown)").GetComponent<Countdown>();
         _redFlagCntText = GameObject.Find("FlagsRedText").GetComponent<TMP_Text>();
         _blueFlagCntText = GameObject.Find("FlagsBlueText").GetComponent<TMP_Text>();
+        _statusText = GameObject.Find("StatusText").GetComponent<TMP_Text>();
         _winningMessage = GameObject.Find("WinningMessage").GetComponent<TMP_Text>();
         _exitGameBtn = GameObject.Find("ExitGameButton").GetComponent<Button>();
 
@@ -466,7 +469,11 @@ public class Player : NetworkBehaviour {
             _audioSync.StopSoundLoop();
             //_audioSourceWalking.Stop();
         }
-
+        
+        // Reset status message after show time
+        if (Time.time - _statusMsgShow > _world.statusMsgShowTime)
+            _statusText.text = "";
+        
         ProcessMouseInput();
         PerformRaycastAction(RaycastAction.HighlightBlock, hitRangeBuild);
     }
@@ -676,8 +683,12 @@ public class Player : NetworkBehaviour {
         }
 
         center = new Vector3(Mathf.FloorToInt(center.x) + 0.5f, Mathf.FloorToInt(center.y), Mathf.FloorToInt(center.z) + 0.5f);
-        return _world.InProtectedZone(center);
-
+        bool inProtectedZone = _world.InProtectedZone(center);
+        if (inProtectedZone) {
+            _statusMsgShow = Time.time;
+            _statusText.text = "Can't build / destroy in protected zone";
+        }
+        return inProtectedZone;
     }
 
     private void PerformRaycastAction(RaycastAction raycastAction, float range) {
