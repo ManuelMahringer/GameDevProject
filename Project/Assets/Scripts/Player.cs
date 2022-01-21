@@ -575,6 +575,10 @@ public class Player : NetworkBehaviour {
 
         // Reset health
         ResetHealthBar();
+        
+        // Initiate respawn countdown
+        _world.countdownFinished = false;
+        _countdown.GetComponent<Countdown>().StartLocalCountdown("Respawning in ...");
 
         // Reset player position and lookAt
         ResetPosition();
