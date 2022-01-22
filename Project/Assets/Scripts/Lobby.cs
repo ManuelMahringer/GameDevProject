@@ -10,6 +10,7 @@ using Unity.Netcode;
 using UnityEngine.UI;
 
 public class Lobby : NetworkBehaviour {
+    
     [SerializeField]
     private TMP_Dropdown mapDropdown;
     private List<Map> maps;
@@ -206,7 +207,17 @@ public class Lobby : NetworkBehaviour {
             return;
         }
         _errortext.text = "";
+        
         NetworkObject player = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject(); // NetworkManager.Singleton.LocalClient is null for some reason: https://forum.unity.com/threads/networkmanager-singleton-localclient-for-finding-the-local-player.1196902/
+        if (string.IsNullOrEmpty(_blueTMPTexts[0].text)) {
+            player.GetComponent<Player>().spawnOffset = -1;
+        }
+        else if(string.IsNullOrEmpty(_blueTMPTexts[1].text))
+            player.GetComponent<Player>().spawnOffset = 0;
+        else {
+            player.GetComponent<Player>().spawnOffset = 1;
+        }
+        //player.GetComponent<Player>().spawnOffset = (_clientNamesBlue.Count-1)*5;
         AddPlayerServerRpc(Team.Blue, player.NetworkObjectId, _nameInputText.text);
         player.GetComponent<Player>().team = Team.Blue;
         player.GetComponent<Player>().playerName = _nameInputText.text;
@@ -218,7 +229,15 @@ public class Lobby : NetworkBehaviour {
             return;
         }
         _errortext.text = "";
+        
         NetworkObject player = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject(); // NetworkManager.Singleton.LocalClient is null for some reason: https://forum.unity.com/threads/networkmanager-singleton-localclient-for-finding-the-local-player.1196902/
+        if(string.IsNullOrEmpty(_redTMPTexts[0].text))
+            player.GetComponent<Player>().spawnOffset = -1;
+        else if(string.IsNullOrEmpty(_redTMPTexts[1].text))
+            player.GetComponent<Player>().spawnOffset = 0;
+        else {
+            player.GetComponent<Player>().spawnOffset = 1;
+        }
         AddPlayerServerRpc(Team.Red, player.NetworkObjectId, _nameInputText.text);
         player.GetComponent<Player>().team = Team.Red;
         player.GetComponent<Player>().playerName = _nameInputText.text;
@@ -240,7 +259,7 @@ public class Lobby : NetworkBehaviour {
     [ClientRpc]
     private void CloseLobbyClientRpc() {
         // make bottom plane visible
-        GameObject.Find("WorldBorders/Bottom_Plane").GetComponent<MeshRenderer>().enabled = true;
+        _worldBorders.GetComponent<MeshRenderer>().enabled = true;
         // disable Lobby overlay
         GameObject.Find("HUD (Countdown)").GetComponent<Countdown>().StartCountdown("Game starting in ...");
         gameObject.SetActive(false);

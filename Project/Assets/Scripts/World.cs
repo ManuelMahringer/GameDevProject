@@ -22,8 +22,8 @@ public class World : NetworkBehaviour {
     [SerializeField] private GameObject flag;
     [SerializeField] private Vector3 initFlagPos = new Vector3(2, 3, 2);
 
-    [SerializeField] private Vector3 baseRedPos;
-    [SerializeField] private Vector3 baseBluePos;
+    [SerializeField] public Vector3 baseRedPos;
+    [SerializeField] public Vector3 baseBluePos;
     
     [SerializeField] private GameObject baseRed;
     [SerializeField] private GameObject baseBlue;

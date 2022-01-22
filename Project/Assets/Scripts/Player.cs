@@ -130,6 +130,7 @@ public class Player : NetworkBehaviour {
     private const float MAXVert = 90.0f;
 
     private AudioSync _audioSync;
+    public int spawnOffset;
 
     // [SerializeField]
     // private Slider healthBar;
@@ -290,14 +291,14 @@ public class Player : NetworkBehaviour {
         _healthBarFill.color = team == Lobby.Team.Blue ? blueTeamColor : redTeamColor;
         UpdatePlayerTeamServerRpc(NetworkObjectId, team);
         UpdatePlayerTagServerRpc(NetworkObjectId, playerName);
+        
         if (team == Lobby.Team.Red) {
-            //transform.position = _world.baseRedPos;
-            transform.position = new Vector3(-5, 4.5f, 0);
+            transform.position = _world.baseRedPos + new Vector3(0,0, spawnOffset*5);
             transform.rotation = Quaternion.Euler(0, 90, 0);
         }
         else if (team == Lobby.Team.Blue) {
-            // transform.position = _world.baseBluePos;
-            transform.position = new Vector3(5, 4.5f, 0);
+            Debug.Log("spawning at baseBluePos " +_world.baseBluePos.z + " and offset " + spawnOffset*5);
+            transform.position = _world.baseBluePos + new Vector3(0,0, spawnOffset*5);;
             transform.rotation = Quaternion.Euler(0, -90, 0);
         }
 
@@ -477,14 +478,10 @@ public class Player : NetworkBehaviour {
         }
 
         if (IsWalking && !_audioSourceWalking.isPlaying) {
-            //Debug.Log("Start playing audio");
             _audioSync.StartSoundLoop();
-            //_audioSourceWalking.Play();
         }
         else if (!IsWalking) {
-            //Debug.Log("Stop sound!!!");
             _audioSync.StopSoundLoop();
-            //_audioSourceWalking.Stop();
         }
         
         // Reset status message after show time
@@ -609,14 +606,14 @@ public class Player : NetworkBehaviour {
         _rotX = 0;
         _playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0);
         if (team == Lobby.Team.Red) {
-            //transform.position = _world.baseRedPos;
+            transform.position = _world.baseRedPos + new Vector3(0,0, spawnOffset * 5);
             transform.rotation = Quaternion.Euler(0, 90, 0);
-            transform.position = new Vector3(-5, 4.5f, 0);
+            //transform.position = new Vector3(-5, 4.5f, 0);
         }
         else if (team == Lobby.Team.Blue) {
-            // transform.position = _world.baseBluePos;
+            transform.position = _world.baseBluePos + new Vector3(0,0, spawnOffset * 5);;
             transform.rotation = Quaternion.Euler(0, -90, 0);
-            transform.position = new Vector3(5, 4.5f, 0);
+            //transform.position = new Vector3(5, 4.5f, 0);
         }
 
         _rb.constraints = RigidbodyConstraints.FreezeAll;
