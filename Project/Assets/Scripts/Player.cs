@@ -367,6 +367,10 @@ public class Player : NetworkBehaviour {
         Cursor.lockState = CursorLockMode.Locked;
     }
 
+    public void EnableIngameHud(bool enable) {
+        _hudIngame.SetActive(enable);
+    }
+
     private void InitWeaponModels() {
         foreach (var model in weaponModels) {
             model.layer = LayerMask.NameToLayer(WeaponLayerName);

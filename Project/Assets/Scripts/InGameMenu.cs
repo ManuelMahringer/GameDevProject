@@ -8,6 +8,7 @@ public class InGameMenu : MonoBehaviour {
     // Update is called once per frame
     public void Show(bool active, Player player) {
         _player = player;
+        _player.EnableIngameHud(!active);
         mainMenu.SetActive(active);
     }
 
