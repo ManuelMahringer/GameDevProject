@@ -979,7 +979,7 @@ MonoBehaviour:
   appliedForceMode: 0
   hitRangeBuild: 3.5
   hitRangeDestroy: 3.5
-  groundTag: 
+  groundTag: World
   jump: 0
   isGrounded: 0
   currentSpeed: 0
@@ -990,7 +990,6 @@ MonoBehaviour:
   playerName: 
   redTeamColor: {r: 1, g: 0, b: 0, a: 0.7058824}
   blueTeamColor: {r: 0, g: 0, b: 1, a: 0.7058824}
-  enabledAlpha: 0
   disabledAlpha: 0
   weaponModels:
   - {fileID: 1239264663508546941}
@@ -1003,6 +1002,7 @@ MonoBehaviour:
   woodMat: {fileID: 2100000, guid: 14153d415877c8d41953c566d9d5dbba, type: 2}
   stoneMat: {fileID: 2100000, guid: 0e7e41a054c196345a60399b44716568, type: 2}
   ironMat: {fileID: 2100000, guid: 2c7bf5aea97bec34781a8b27ef6d97b5, type: 2}
+  spawnOffset: 0
   floatingHealthBar: {fileID: 575969829}
   playerTag: {fileID: 1142097414}
   _audioSource: {fileID: 6568169588386428653}
