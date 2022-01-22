@@ -255,7 +255,6 @@ public class Player : NetworkBehaviour {
         _playerCamera.enabled = true;
         _weaponCamera = cameras[1];
         _weaponCamera.enabled = true;
-        gameObject.GetComponentInChildren<AudioListener>().enabled = true;
 
         playerCube.SetActive(false);
 
@@ -285,7 +284,8 @@ public class Player : NetworkBehaviour {
         ActivateMouse();
         SwitchWeapons(WeaponType.AssaultRifle);
         _healthBar.gameObject.SetActive(true);
-        
+        gameObject.GetComponentInChildren<AudioListener>().enabled = true;
+
         if (!IsLocalPlayer)
             return;
 
