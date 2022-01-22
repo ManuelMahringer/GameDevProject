@@ -253,6 +253,11 @@ public class Player : NetworkBehaviour {
         Camera[] cameras = gameObject.GetComponentsInChildren<Camera>();
         _playerCamera = cameras[0];
         _playerCamera.enabled = true;
+        gameObject.GetComponentsInChildren<AudioListener>()[0].enabled = false;
+        
+        gameObject.GetComponentsInChildren<AudioSource>()[0].enabled = false;
+        gameObject.GetComponentsInChildren<AudioSource>()[1].enabled = false;
+        
         _weaponCamera = cameras[1];
         _weaponCamera.enabled = true;
 
@@ -285,6 +290,8 @@ public class Player : NetworkBehaviour {
         SwitchWeapons(WeaponType.AssaultRifle);
         _healthBar.gameObject.SetActive(true);
         gameObject.GetComponentInChildren<AudioListener>().enabled = true;
+        gameObject.GetComponentsInChildren<AudioSource>()[0].enabled = true;
+        gameObject.GetComponentsInChildren<AudioSource>()[1].enabled = true;
 
         if (!IsLocalPlayer)
             return;
