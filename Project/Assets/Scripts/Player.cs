@@ -695,7 +695,7 @@ public class Player : NetworkBehaviour {
             if (placeBlock) {
                 if (name == "Cube") {
                     anim.Stop();
-                    anim.Play();
+                    anim.Play("PlaceBlock");
                 }
             }
             // literally every other animation
@@ -703,16 +703,12 @@ public class Player : NetworkBehaviour {
                 // melee hit 
                 if (name == "Shovel" && melee){
                     // find attack script and play
-                    foreach (AnimationState state in anim){
-                        if (state.name == "AttackShovel"){
-                            anim.Stop();
-                            anim.Play();
-                        }
-                    }
+                    anim.Stop();
+                    anim.Play("AttackShovel");
                 }
                 else if (name == activeWeapon.WeaponType.ToString()) {
                     anim.Stop();
-                    anim.Play();
+                    anim.Play();    // plays default Animation so no need to specify
                 }
             }
         }
