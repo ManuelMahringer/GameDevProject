@@ -255,7 +255,6 @@ public class Player : NetworkBehaviour {
         _playerCamera.enabled = true;
         _weaponCamera = cameras[1];
         _weaponCamera.enabled = true;
-        gameObject.GetComponentInChildren<AudioListener>().enabled = true;
 
         playerCube.SetActive(false);
 
@@ -285,7 +284,8 @@ public class Player : NetworkBehaviour {
         ActivateMouse();
         SwitchWeapons(WeaponType.AssaultRifle);
         _healthBar.gameObject.SetActive(true);
-        
+        gameObject.GetComponentInChildren<AudioListener>().enabled = true;
+
         if (!IsLocalPlayer)
             return;
 
@@ -680,17 +680,41 @@ public class Player : NetworkBehaviour {
             else if (activeWeapon.WeaponType == WeaponType.AssaultRifle)
                 _audioSync.PlaySound(1);
             //_audioSource.PlayOneShot(_assaultRifleSound);
+            else if (activeWeapon.WeaponType == WeaponType.Shovel)
+               _audioSync.PlaySound(4); 
+            //_audioSource.PlayOneShot(_shovelSound);
         }
     }
 
-    private void PlayAnimation(Weapon activeWeapon, bool placeBlock = false) {
+    private void PlayAnimation(Weapon activeWeapon, bool placeBlock = false, bool melee = false) {
         foreach (GameObject gameObject in weaponModels) {
+
+            Animation anim = gameObject.GetComponent<Animation>();
+            String name = gameObject.transform.name;
+
+            // block is placed so just play this animation
             if (placeBlock) {
-                if (gameObject.transform.name == "Cube")
-                    gameObject.GetComponent<Animation>().Play();
+                if (name == "Cube") {
+                    anim.Stop();
+                    anim.Play();
+                }
             }
-            else if (gameObject.transform.name == activeWeapon.WeaponType.ToString()) {
-                gameObject.GetComponent<Animation>().Play();
+            // literally every other animation
+            else {
+                // melee hit 
+                if (name == "Shovel" && melee){
+                    // find attack script and play
+                    foreach (AnimationState state in anim){
+                        if (state.name == "AttackShovel"){
+                            anim.Stop();
+                            anim.Play();
+                        }
+                    }
+                }
+                else if (name == activeWeapon.WeaponType.ToString()) {
+                    anim.Stop();
+                    anim.Play();
+                }
             }
         }
     }
@@ -729,6 +753,8 @@ public class Player : NetworkBehaviour {
                     // Melee hit
                     if (hit.collider.CompareTag(PlayerTag)) {
                         PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
+                        PlayAnimation(_activeWeapon, false, true);
+                        PlayWeaponSound(_activeWeapon);
                         break;
                     }
                     GameObject chunk = hit.transform.gameObject;
