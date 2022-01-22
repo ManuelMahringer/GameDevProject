@@ -228,7 +228,7 @@ public class Player : NetworkBehaviour {
         _saveMapPopup.action = MapPopup.MapPopupAction.Save;
         _loadMapPopup = gameObject.AddComponent<MapPopup>();
         _loadMapPopup.action = MapPopup.MapPopupAction.Load;
-        _activeBlock = BlockType.Grass;
+        _activeBlock = BlockType.Earth;
         _inventory = gameObject.AddComponent<PlayerInventory>();
         _flagImage = GameObject.Find("FlagImage");
         _flagImage.SetActive(false);
@@ -290,6 +290,7 @@ public class Player : NetworkBehaviour {
         _healthBarFill.color = team == Lobby.Team.Blue ? blueTeamColor : redTeamColor;
         UpdatePlayerTeamServerRpc(NetworkObjectId, team);
         UpdatePlayerTagServerRpc(NetworkObjectId, playerName);
+        _inventory.Initialize();
         if (team == Lobby.Team.Red) {
             //transform.position = _world.baseRedPos;
             transform.position = new Vector3(-5, 4.5f, 0);
@@ -303,12 +304,14 @@ public class Player : NetworkBehaviour {
 
         _rb.constraints = RigidbodyConstraints.FreezeAll;
         _rb.velocity = Vector3.zero;
-        _inventory.active = true;
+        //_inventory.active = true;
+        _inventory.Active(true);
     }
 
     private void OnGameEnded(bool oldVal, bool newVal) {
         _hudIngame.SetActive(false);
-        _inventory.active = false;
+        //_inventory.active = false;
+        _inventory.Active(false);
         Lobby.Team winning = _world.redFlagCnt.Value == _world.capturesToWin ? Lobby.Team.Red : Lobby.Team.Blue;
         _winningMessage.color = winning == Lobby.Team.Red ? Color.red : Color.blue;
         _winningMessage.text = winning + " won!";
@@ -854,8 +857,8 @@ public class Player : NetworkBehaviour {
         if (!IsLocalPlayer)
             return;
 
-        if (_gameMode == GameMode.Fight)
-            _inventory.Draw(_activeBlock);
+        // if (_gameMode == GameMode.Fight)
+        //     _inventory.Draw(_activeBlock);
     }
 
     // -- SERVER / CLIENT SYNCHRONIZATION
@@ -980,40 +983,95 @@ public class Player : NetworkBehaviour {
 public class PlayerInventory : MonoBehaviour {
     public int[] Items => _items;
     public int Size => _items.Length;
-    public bool active;
 
-    private Dictionary<int, Texture2D> _blockTextures;
+    //private Dictionary<int, Texture2D> _blockTextures;
 
     private readonly int[] _items = new int[Enum.GetNames(typeof(BlockType)).Length];
-    private readonly GUIStyle _guiStyle = new GUIStyle();
-    private readonly GUIStyle _selectedStyle = new GUIStyle();
+    //private readonly GUIStyle _guiStyle = new GUIStyle();
+    //private readonly GUIStyle _selectedStyle = new GUIStyle();
 
-    private readonly int initX = Screen.width - 100;
-    private readonly int initY = Screen.height / 2;
-    private readonly int dx = 40;
-    private readonly int borderSize = 2;
+    private bool _active;
+    
+    private Image _earth;
+    private Image _wood;
+    private Image _stone;
+    private Image _iron;
+    
+    private TMP_Text _earthCount;
+    private TMP_Text _woodCount;
+    private TMP_Text _stoneCount;
+    private TMP_Text _ironCount;
+
+    // private readonly int initX = Screen.width - 100;
+    // private readonly int initY = Screen.height / 2;
+    // private readonly int dx = 40;
+    // private readonly int borderSize = 2;
 
     public void Start() {
-        _blockTextures = new Dictionary<int, Texture2D> {
-            {0, Resources.Load<Texture2D>("BlockImages/earth")},
-            {1, Resources.Load<Texture2D>("BlockImages/wood")},
-            {2, Resources.Load<Texture2D>("BlockImages/stone")},
-            {3, Resources.Load<Texture2D>("BlockImages/iron")}
-        };
-        _guiStyle.fontSize = 30;
-        _guiStyle.fontStyle = FontStyle.Bold;
-        _guiStyle.normal.textColor = Color.white;
+        // _blockTextures = new Dictionary<int, Texture2D> {
+        //     {0, Resources.Load<Texture2D>("BlockImages/earth")},
+        //     {1, Resources.Load<Texture2D>("BlockImages/wood")},
+        //     {2, Resources.Load<Texture2D>("BlockImages/stone")},
+        //     {3, Resources.Load<Texture2D>("BlockImages/iron")}
+        // };
+        // _guiStyle.fontSize = 30;
+        // _guiStyle.fontStyle = FontStyle.Bold;
+        // _guiStyle.normal.textColor = Color.white;
+        //
+        //_selectedStyle.border = new RectOffset(borderSize, borderSize, borderSize, borderSize);
+        //_selectedStyle.normal.background = Resources.Load<Texture2D>("BlockImages/border");
+    }
 
-        _selectedStyle.border = new RectOffset(borderSize, borderSize, borderSize, borderSize);
-        _selectedStyle.normal.background = Resources.Load<Texture2D>("BlockImages/border");
+    public void Active(bool active) {
+        _active = active;
+        _earth.gameObject.SetActive(active);
+        _wood.gameObject.SetActive(active);
+        _stone.gameObject.SetActive(active);
+        _iron.gameObject.SetActive(active);
+        
+        _earthCount.gameObject.SetActive(active);
+        _woodCount.gameObject.SetActive(active);
+        _stoneCount.gameObject.SetActive(active);
+        _ironCount.gameObject.SetActive(active);
+    }
+
+    public void Initialize() {
+        _earth = GameObject.Find("BlockEarth").GetComponent<Image>();
+        _wood = GameObject.Find("BlockWood").GetComponent<Image>();
+        _stone = GameObject.Find("BlockStone").GetComponent<Image>();
+        _iron = GameObject.Find("BlockIron").GetComponent<Image>();
+        
+        _earthCount = GameObject.Find("BlockEarthCount").GetComponent<TMP_Text>();
+        _woodCount = GameObject.Find("BlockWoodCount").GetComponent<TMP_Text>();
+        _stoneCount = GameObject.Find("BlockStoneCount").GetComponent<TMP_Text>();
+        _ironCount = GameObject.Find("BlockIronCount").GetComponent<TMP_Text>();
     }
 
     public void Add(BlockType blockType) {
         _items[(int) blockType % _items.Length] += 1;
+        UpdateBlockCounts(blockType);
     }
 
     public void Remove(BlockType blockType) {
         _items[(int) blockType] -= 1;
+        UpdateBlockCounts(blockType);
+    }
+
+    private void UpdateBlockCounts(BlockType blockType) {
+        switch (blockType) {
+            case BlockType.Earth:
+                _earthCount.text = _items[(int) blockType].ToString();
+                break;
+            case BlockType.Wood:
+                _woodCount.text = _items[(int) blockType].ToString();
+                break;
+            case BlockType.Stone:
+                _stoneCount.text = _items[(int) blockType].ToString();
+                break;
+            case BlockType.Iron:
+                _ironCount.text = _items[(int) blockType].ToString();
+                break;
+        }
     }
 
     public void Clear() {
@@ -1022,18 +1080,18 @@ public class PlayerInventory : MonoBehaviour {
     }
 
     public void Draw(BlockType activeBlock) {
-        if (!active)
-            return;
-        int dy = 0;
-        for (int blockType = 0; blockType < _items.Length; blockType++) {
-            if (blockType == (int) activeBlock) {
-                GUI.Box(new Rect(initX - 5, initY - 5 + dy, _items[blockType].ToString().Length * 20 + 50, 40), GUIContent.none, _selectedStyle);
-            }
-
-            GUI.DrawTexture(new Rect(initX, initY + dy, 30, 30), _blockTextures[blockType]);
-            GUI.Label(new Rect(initX + dx, initY + dy, 30, 30), _items[blockType].ToString(), _guiStyle);
-            dy += 40;
-        }
+        //if (!_active)
+        //    return;
+        // int dy = 0;
+        //for (int blockType = 0; blockType < _items.Length; blockType++) {
+        //    if (blockType == (int) activeBlock) {
+        //        GUI.Box(new Rect(initX - 5, initY - 5 + dy, _items[blockType].ToString().Length * 20 + 50, 40), GUIContent.none, _selectedStyle);
+        //    }
+        //
+        //    //GUI.DrawTexture(new Rect(initX, initY + dy, 30, 30), _blockTextures[blockType]);
+        //    //GUI.Label(new Rect(initX + dx, initY + dy, 30, 30), _items[blockType].ToString(), _guiStyle);
+        //    //dy += 40;
+        //}
     }
 }
 

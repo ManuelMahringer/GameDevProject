@@ -16,10 +16,10 @@ public enum BlockFace {
 }
 
 public enum BlockType {
-    Grass = 0,
-    Earth = 1,
-    Metal = 2,
-    Stone = 3,
+    Earth = 0,
+    Wood = 1,
+    Stone = 2,
+    Iron = 3,
 }
 
 
@@ -33,14 +33,14 @@ public enum BlockType {
 public static class BlockProperties {
     public static sbyte MaxHealth(BlockType bt) {
         switch (bt) {
+            case BlockType.Wood:
+                return 50;
             case BlockType.Earth:
                 return 30;
-            case BlockType.Grass:
-                return 30;
-            case BlockType.Metal:
-                return 100;
             case BlockType.Stone:
                 return 70;
+            case BlockType.Iron:
+                return 100;
             default:
                 Debug.Log("Error in Blockface.cs: BlockProperties.MaxHealth invalid BlockType");
                 return 0;
