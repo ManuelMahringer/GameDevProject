@@ -74,7 +74,7 @@ public class Lobby : NetworkBehaviour {
             mapDropdown.gameObject.SetActive(false);
         }
 
-        GameObject.Find("internalClientID").GetComponent<Text>().text = NetworkManager.LocalClientId.ToString();
+        //GameObject.Find("internalClientID").GetComponent<Text>().text = NetworkManager.LocalClientId.ToString();
 
         //Debug.Log(GameObject.Find("Player0").GetComponentInChildren<TMP_Text>().text);
         _blueTMPTexts[0] = GameObject.Find("Player0").GetComponentInChildren<TMP_Text>();
@@ -98,14 +98,14 @@ public class Lobby : NetworkBehaviour {
     }
     
     
-    void OnPlayersChanged(int oldVal, int newVal) {
-        if(oldVal != newVal)
-            GameObject.Find("AmountOfPlayers").GetComponent<Text>().text = _players.Value.ToString();
-    }
+    // void OnPlayersChanged(int oldVal, int newVal) {
+    //     if(oldVal != newVal)
+    //         GameObject.Find("AmountOfPlayers").GetComponent<Text>().text = _players.Value.ToString();
+    // }
 
-    void OnEnable() {
-        _players.OnValueChanged += OnPlayersChanged;
-    }
+    // void OnEnable() {
+    //     _players.OnValueChanged += OnPlayersChanged;
+    // }
 
     // Update is called once per frame
     void Update() {
@@ -115,7 +115,7 @@ public class Lobby : NetworkBehaviour {
         if (_players.Value != _playersOnClient) {
             RequestCurrentLobbyServerRpc();
             _playersOnClient = _players.Value;
-            
+
         }
 
         if (_clientNamesBlue.Count >= 3) {
