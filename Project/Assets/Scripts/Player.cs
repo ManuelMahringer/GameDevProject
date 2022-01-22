@@ -32,7 +32,9 @@ public class Player : NetworkBehaviour {
     private static readonly string PlayerTag = "Player";
     private static readonly string WeaponLayerName = "Weapon";
     private static readonly string PlayerLayerName = "Player";
-
+    private const float HealthBarEnabledAlpha = 180f;
+    
+    
     [Header("Health & Damage")]
     public float maxHealth = 100f;
 
@@ -77,7 +79,13 @@ public class Player : NetworkBehaviour {
 
     private Weapon _activeWeapon;
     private BlockType _activeBlock;
-
+    
+    [SerializeField]
+    private Color redTeamColor;
+    [SerializeField]
+    private Color blueTeamColor;
+    [SerializeField]
+    private float disabledAlpha;
 
     [SerializeField]
     public List<GameObject> weaponModels;
@@ -175,7 +183,7 @@ public class Player : NetworkBehaviour {
     private float _statusMsgShow;
     private Button _exitGameBtn;
     private Dictionary<int, Material> _blockMaterials;
-
+    private Image _healthBarFill;
 
     private enum RaycastAction {
         DestroyBlock,
@@ -212,6 +220,7 @@ public class Player : NetworkBehaviour {
         _healthBar.value = _health;
         _healthBar.interactable = false;
         _healthBar.gameObject.SetActive(false);
+        _healthBarFill = _healthBar.GetComponentsInChildren<Image>()[1];
         _highlightBlock = GameObject.Find("Highlight Slab");
         _highlightBlock.SetActive(false);
         _saveMapPopup = gameObject.AddComponent<MapPopup>();
@@ -230,10 +239,9 @@ public class Player : NetworkBehaviour {
         _statusText = GameObject.Find("StatusText").GetComponent<TMP_Text>();
         _winningMessage = GameObject.Find("WinningMessage").GetComponent<TMP_Text>();
         _exitGameBtn = GameObject.Find("ExitGameButton").GetComponent<Button>();
-
+        
         _hudIngame.SetActive(false);
         _hudGameEnd.SetActive(false);
-
         floatingHealthBar.gameObject.SetActive(false);
         InitWeaponModels();
 
@@ -277,6 +285,7 @@ public class Player : NetworkBehaviour {
             return;
 
         _hudIngame.SetActive(true);
+        _healthBarFill.color = team == Lobby.Team.Blue ? blueTeamColor : redTeamColor;
         UpdatePlayerTeamServerRpc(NetworkObjectId, team);
         UpdatePlayerTagServerRpc(NetworkObjectId, playerName);
         if (team == Lobby.Team.Red) {
@@ -297,9 +306,10 @@ public class Player : NetworkBehaviour {
 
     private void OnGameEnded(bool oldVal, bool newVal) {
         _hudIngame.SetActive(false);
+        _inventory.active = false;
         Lobby.Team winning = _world.redFlagCnt.Value == _world.capturesToWin ? Lobby.Team.Red : Lobby.Team.Blue;
         _winningMessage.color = winning == Lobby.Team.Red ? Color.red : Color.blue;
-        _winningMessage.text = winning.ToString() + " won!";
+        _winningMessage.text = winning + " won!";
         _hudGameEnd.SetActive(true);
         DeactivateMouse();
     }
@@ -410,6 +420,7 @@ public class Player : NetworkBehaviour {
         }
 
         if (!InCountdown && _wasInCountdown) {
+            _healthBarFill.color = team == Lobby.Team.Blue ? blueTeamColor : redTeamColor; 
             UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health);
             UpdatePlayerTagServerRpc(NetworkObjectId, playerName);
             _rb.constraints = RigidbodyConstraints.FreezeRotation;
@@ -477,6 +488,7 @@ public class Player : NetworkBehaviour {
         ProcessMouseInput();
         PerformRaycastAction(RaycastAction.HighlightBlock, hitRangeBuild);
     }
+    
 
     private void LateUpdate() {
         if (!IsLocalPlayer)
@@ -570,13 +582,14 @@ public class Player : NetworkBehaviour {
         
         _world.PlayerResetCallbackServerRpc(NetworkObjectId);
     }
-
+    
     private void ResetOnSpawn() {
         // Reset health bar
         _health = maxHealth;
         _healthBar.value = _health;
-        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health, 50f);
-        UpdatePlayerTagServerRpc(NetworkObjectId, playerName, 50f);
+        _healthBarFill.color = new Color(_healthBarFill.color.r, _healthBarFill.color.b, _healthBarFill.color.g, disabledAlpha/255);
+        UpdateFloatingHealthBarServerRpc(NetworkObjectId, _health, disabledAlpha);
+        UpdatePlayerTagServerRpc(NetworkObjectId, playerName, disabledAlpha);
         
         // Initiate respawn countdown
         _world.countdownFinished = false;
@@ -892,7 +905,7 @@ public class Player : NetworkBehaviour {
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void UpdateFloatingHealthBarServerRpc(ulong id, float value, float alpha = 180f) {
+    private void UpdateFloatingHealthBarServerRpc(ulong id, float value, float alpha = HealthBarEnabledAlpha) {
         //Debug.Log("Server call update health bar of player " + id + " to the value " + value);
         UpdateFloatingHealthBarClientRpc(id, value, alpha);
     }
@@ -916,11 +929,26 @@ public class Player : NetworkBehaviour {
         Player target = GameNetworkManager.players[id].player;
         target.team = newTeam;
         MeshRenderer meshRenderer = target.GetComponent<MeshRenderer>();
+        GameObject handgun = target.weaponModels.Find(m => m.name == WeaponType.Handgun.ToString());
+        GameObject assaultRifle = target.weaponModels.Find(m => m.name == WeaponType.AssaultRifle.ToString());
+        GameObject shovel = target.weaponModels.Find(m => m.name == WeaponType.Shovel.ToString());
+        MeshRenderer handgunSled = handgun.GetComponentsInChildren<MeshRenderer>()[3];
+        MeshRenderer assaultRifleDustcover = assaultRifle.GetComponentsInChildren<MeshRenderer>()[1];
+        MeshRenderer shovelHandle = shovel.GetComponentsInChildren<MeshRenderer>()[0];
+        Image floatingHealthBarFill = target.floatingHealthBar.GetComponentsInChildren<Image>()[1];
         if (newTeam == Lobby.Team.Blue) {
-            meshRenderer.material.color = Color.blue;
+            meshRenderer.material.color = blueTeamColor;
+            floatingHealthBarFill.color = blueTeamColor;
+            handgunSled.material.color = blueTeamColor;
+            assaultRifleDustcover.material.color = blueTeamColor;
+            shovelHandle.material.color = blueTeamColor;
         }
         else if (newTeam == Lobby.Team.Red) {
-            meshRenderer.material.color = Color.red;
+            meshRenderer.material.color = redTeamColor;
+            floatingHealthBarFill.color = redTeamColor;
+            handgunSled.material.color = redTeamColor;
+            assaultRifleDustcover.material.color = redTeamColor;
+            shovelHandle.material.color = redTeamColor;
         }
         else
             Debug.Log("Error in Player.cs: EarlyUpdate(): Player has assigned no team!");

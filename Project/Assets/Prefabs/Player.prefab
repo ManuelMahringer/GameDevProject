@@ -988,6 +988,10 @@ MonoBehaviour:
   active: 0
   team: 0
   playerName: 
+  redTeamColor: {r: 1, g: 0, b: 0, a: 0.7058824}
+  blueTeamColor: {r: 0, g: 0, b: 1, a: 0.7058824}
+  enabledAlpha: 0
+  disabledAlpha: 0
   weaponModels:
   - {fileID: 1239264663508546941}
   - {fileID: 3706476736094964199}
