@@ -174,6 +174,7 @@ public class Player : NetworkBehaviour {
     private PlayerInventory _inventory;
     private GameObject _flagImage;
     private GameObject _hudIngame;
+    private GameObject _hudIngameMenu;
     private GameObject _hudGameEnd;
     private Countdown _countdown;
     private TMP_Text _redFlagCntText;
@@ -233,6 +234,7 @@ public class Player : NetworkBehaviour {
         _flagImage.SetActive(false);
         _hudIngame = GameObject.Find("HUD (ingame)");
         _hudGameEnd = GameObject.Find("HUD (game end)");
+        _hudIngameMenu = GameObject.Find("HUD (ingame menu)");
         _countdown = GameObject.Find("HUD (Countdown)").GetComponent<Countdown>();
         _redFlagCntText = GameObject.Find("FlagsRedText").GetComponent<TMP_Text>();
         _blueFlagCntText = GameObject.Find("FlagsBlueText").GetComponent<TMP_Text>();
@@ -352,6 +354,8 @@ public class Player : NetworkBehaviour {
         mouseActive = false;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+        Debug.Log("Stopping sound");
+        _audioSync.StopSoundLoop();
     }
 
     public void ActivateMouse() {
@@ -413,9 +417,11 @@ public class Player : NetworkBehaviour {
             Debug.Log("This player network object id: " + NetworkObjectId);
 
         if (mouseActive && deactivateMouse) {
+            _hudIngameMenu.GetComponent<InGameMenu>().Show(true, this);
             DeactivateMouse();
         }
         else if (!mouseActive && deactivateMouse) {
+            _hudIngameMenu.GetComponent<InGameMenu>().Show(false, this);
             ActivateMouse();
         }
 
@@ -499,7 +505,7 @@ public class Player : NetworkBehaviour {
     }
 
     private void FixedUpdate() {
-        if (!IsLocalPlayer || !mouseActive || InCountdown)
+        if (!IsLocalPlayer ) //|| !mouseActive || InCountdown
             return;
 
         if (_gameMode == GameMode.Build) {
@@ -536,6 +542,10 @@ public class Player : NetworkBehaviour {
         if (isGrounded) {
             // _dxz = Vector3.ClampMagnitude(transform.TransformDirection(_xAxis, 0f, _zAxis), 1f);
             _rb.velocity = Vector3.zero; // artificial friction when grounded
+        }
+
+        if (!mouseActive || InCountdown) {
+            _dxz = Vector3.zero;
         }
 
         _rb.MovePosition(transform.position + _dxz * (currentSpeed * Time.deltaTime));
