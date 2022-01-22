@@ -7,6 +7,7 @@ TagManager:
   - ground
   - Weapon
   - World
+  - Border
   layers:
   - Default
   - TransparentFX
@@ -17,7 +18,7 @@ TagManager:
   - Weapon
   - Player
   - ProtectionZone
-  - 
+  - Border
   - 
   - 
   - 

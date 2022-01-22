@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 8101650270133551982}
   - component: {fileID: 8101650270133551983}
   - component: {fileID: 8101650270133551976}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Side_Plane
-  m_TagString: World
+  m_TagString: Border
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -121,9 +121,9 @@ GameObject:
   - component: {fileID: 8101650270562422968}
   - component: {fileID: 8101650270562422969}
   - component: {fileID: 8101650270562422970}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Side_Plane
-  m_TagString: World
+  m_TagString: Border
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -227,7 +227,7 @@ GameObject:
   - component: {fileID: 8101650270580948041}
   m_Layer: 0
   m_Name: WorldBorders 6x6x2
-  m_TagString: World
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -264,9 +264,9 @@ GameObject:
   - component: {fileID: 8101650270772057066}
   - component: {fileID: 8101650270772057067}
   - component: {fileID: 8101650270772056980}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Side_Plane
-  m_TagString: World
+  m_TagString: Border
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -372,9 +372,9 @@ GameObject:
   - component: {fileID: 8101650271521066253}
   - component: {fileID: 8101650271521066254}
   - component: {fileID: 8101650271521066255}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Side_Plane
-  m_TagString: World
+  m_TagString: Border
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

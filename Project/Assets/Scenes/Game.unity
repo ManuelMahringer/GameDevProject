@@ -8729,6 +8729,7 @@ MonoBehaviour:
   baseRed: {fileID: 407983800}
   baseBlue: {fileID: 2053621328}
   protectionLayerName: ProtectionZone
+  borderLayerName: Border
   baseBlueProtectionZone: {fileID: 1932930839}
   baseRedProtectionZone: {fileID: 1707395259}
   flagProtectionZone: {fileID: 879676473}

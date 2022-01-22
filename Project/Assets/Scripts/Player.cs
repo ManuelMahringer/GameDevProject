@@ -722,7 +722,8 @@ public class Player : NetworkBehaviour {
         Vector3 midPoint = new Vector3(_playerCamera.pixelWidth / 2, _playerCamera.pixelHeight / 2);
         Ray ray = _playerCamera.ScreenPointToRay(midPoint);
         // Ignore protection layers when raycasting
-        if (Physics.Raycast(ray, out var hit, range, ~(1 << LayerMask.NameToLayer(_world.protectionLayerName)))) {
+        int layerMask = ~(1 << (LayerMask.NameToLayer(_world.protectionLayerName) | LayerMask.NameToLayer(_world.borderLayerName)));
+        if (Physics.Raycast(ray, out var hit, range, layerMask)) {
             switch (raycastAction) {
                 case RaycastAction.DestroyBlock:
                     // Melee hit

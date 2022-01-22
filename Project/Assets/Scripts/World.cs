@@ -29,6 +29,7 @@ public class World : NetworkBehaviour {
     [SerializeField] private GameObject baseBlue;
 
     [SerializeField] public string protectionLayerName;
+    [SerializeField] public string borderLayerName;
     [SerializeField] private GameObject baseBlueProtectionZone;
     [SerializeField] private GameObject baseRedProtectionZone;
     [SerializeField] private GameObject flagProtectionZone;
