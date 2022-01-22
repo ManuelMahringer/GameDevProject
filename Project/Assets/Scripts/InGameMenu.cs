@@ -18,6 +18,7 @@ public class InGameMenu : MonoBehaviour {
 
     public void Resume() {
         Debug.Log("resume called");
+        _player.EnableIngameHud(true);
         _player.ActivateMouse();
     }
 }

@@ -310,7 +310,6 @@ public class Player : NetworkBehaviour {
 
     private void OnGameEnded(bool oldVal, bool newVal) {
         _hudIngame.SetActive(false);
-        //_inventory.active = false;
         _inventory.Active(false);
         Lobby.Team winning = _world.redFlagCnt.Value == _world.capturesToWin ? Lobby.Team.Red : Lobby.Team.Blue;
         _winningMessage.color = winning == Lobby.Team.Red ? Color.red : Color.blue;
@@ -1070,7 +1069,6 @@ public class PlayerInventory : MonoBehaviour {
 
     public void Draw(BlockType activeBlock) {
         if (!_active) {
-            Debug.Log("Inventory not active");
             return;
         }
 

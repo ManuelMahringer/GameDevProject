@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class ExitGame : NetworkBehaviour {
+public class ExitGame : MonoBehaviour {
 
     private World _world;
 
@@ -12,10 +12,10 @@ public class ExitGame : NetworkBehaviour {
     }
     
     public void DoExitGame() {
-        if (IsHost) {
-            Debug.Log("Setting host quit");
-            _world.hostQuit.Value = true;
-        }
+        // if (IsHost) {
+        //     Debug.Log("Setting host quit");
+        //     _world.hostQuit.Value = true;
+        // }
         Application.Quit();
     }
 }
