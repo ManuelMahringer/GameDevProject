@@ -6,7 +6,6 @@
 | Lukas Seifriedsberger | K11816320 | k11816320@students.jku.at  
 | Michael Duschek		||
 
-
 # 2 Responsibilities
 |Feature   | Responsible   |
 |---|---|
@@ -41,6 +40,9 @@ Choose weapon: 1, 2, 3
 
 When using weapon 1 (Pistol) or weapon 2(Assault rifle): Left click to shoot   
 When using weapon 3 (Shovel): Left click to gather a block ressource or hit player (melee range), Right click to build a block at the highlighted destination
+Choose block type to build: Mouse wheel  
+
+Access ingame menu: ESC  
 
 # 4 Instructions to run the game
 The game features 2 different modes:   
@@ -63,6 +65,7 @@ Therefore playtesting using distributed clients is currently not possible.
 Our interal playtesting as well the recording of the video was done using a VPN, in our case Hamachi (https://www.vpn.net/).    
 
 # 5 Assets
+
 Attack Jump & Hit Damage Human Sounds
 https://assetstore.unity.com/packages/audio/sound-fx/voices/attack-jump-hit-damage-human-sounds-32785
 
@@ -75,8 +78,14 @@ https://assetstore.unity.com/packages/2d/textures-materials/sky/allsky-free-10-s
 Free Pixel Font - Thaleah
 https://assetstore.unity.com/packages/2d/fonts/free-pixel-font-thaleah-140059\
 
+Mixkit - Free Sound Effects 
+https://mixkit.co/free-sound-effects/
+
+Blades & Bludgeoning Free Sample Pack
+https://assetstore.unity.com/packages/audio/sound-fx/blades-bludgeoning-free-sample-pack-179306
 
 # 6 Game world core idea
 The idea of game world based on voxels stems from the following thread:
 https://forum.unity.com/threads/coredev-creating-voxelised-worlds-like-minecraft.192954/
+
 
