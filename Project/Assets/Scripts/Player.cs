@@ -458,7 +458,7 @@ public class Player : NetworkBehaviour {
             currentSpeed = run ? runSpeed : walkSpeed;
         if (destroyBlock) {
             if (_activeWeapon.WeaponType == WeaponType.Shovel) {
-                PerformRaycastAction(RaycastAction.DestroyBlock, _activeWeapon.Range);
+                PerformRaycastAction(RaycastAction.DestroyBlock, _gameMode == GameMode.Fight ? _activeWeapon.Range : float.PositiveInfinity);
             }
             else {
                 PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
@@ -467,7 +467,7 @@ public class Player : NetworkBehaviour {
 
         if (buildBlock)
             if (_activeWeapon.WeaponType == WeaponType.Shovel)
-                PerformRaycastAction(RaycastAction.BuildBlock, _activeWeapon.Range);
+                PerformRaycastAction(RaycastAction.BuildBlock, _gameMode == GameMode.Fight ? _activeWeapon.Range : float.PositiveInfinity);
 
         if (saveMap)
             _saveMapPopup.Open(this);
@@ -730,9 +730,10 @@ public class Player : NetworkBehaviour {
     }
 
     private bool CheckProtectedZone(Ray ray, Vector3 hit, RaycastAction action) {
+        Debug.Log("Raycastaction: " + action);
         Vector3 center = hit;
         switch (action) {
-            case RaycastAction.DestroyBlock:
+            case RaycastAction.DestroyBlock: case RaycastAction.Shoot:
                 center += (ray.direction / 10000.0f);
                 break;
             case RaycastAction.BuildBlock:
@@ -756,37 +757,43 @@ public class Player : NetworkBehaviour {
         Vector3 midPoint = new Vector3(_playerCamera.pixelWidth / 2, _playerCamera.pixelHeight / 2);
         Ray ray = _playerCamera.ScreenPointToRay(midPoint);
         // Ignore protection layers when raycasting
-        int layerMask = ~(1 << (LayerMask.NameToLayer(_world.protectionLayerName) | LayerMask.NameToLayer(_world.borderLayerName)));
+        int layerMask = ~(1 << (LayerMask.NameToLayer(_world.protectionLayerName) | LayerMask.NameToLayer(_world.borderLayerName) | LayerMask.NameToLayer(_world.baseLayerName)));
         if (Physics.Raycast(ray, out var hit, range, layerMask, QueryTriggerInteraction.Ignore)) {
             switch (raycastAction) {
                 case RaycastAction.DestroyBlock:
                     // Melee hit
                     if (hit.collider.CompareTag(PlayerTag)) {
                         PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
-                        PlayAnimation(_activeWeapon, false, true);
-                        _audioSync.PlaySound(5);
-                        break;
-                    }
-                    GameObject chunk = hit.transform.gameObject;
+                    } else if (hit.collider.CompareTag(WorldTag)) {
+                        GameObject chunk = hit.transform.gameObject;
 
-                    // Can't destroy a block in a protected radius
-                    if (CheckProtectedZone(ray, hit.point, raycastAction))
-                        break;
+                        PlayAnimation(_activeWeapon);
+                        PlayWeaponSound(_activeWeapon);
                     
-                    Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
-                    chunk.GetComponent<Chunk>().DestroyBlockServerRpc(localCoordinate);
-                    byte destBlockId = chunk.GetComponent<Chunk>()
-                        .chunkBlocks[Mathf.FloorToInt(localCoordinate.x), Mathf.FloorToInt(localCoordinate.y), Mathf.FloorToInt(localCoordinate.z)].id;
-                    _inventory.Add((BlockType) destBlockId);
-                    PlayAnimation(_activeWeapon);
-                    PlayWeaponSound(_activeWeapon);
-                    Debug.Log("Inventory at place " + destBlockId % _inventory.Size + " with " + _inventory.Items[destBlockId % _inventory.Size] + " blocks");
-                    if (destBlockId == (int) _activeBlock)
-                        UpdatePlayerCubeServerRpc(NetworkObjectId, true, _activeBlock);
+                        // Can't destroy a block in a protected radius
+                        if (CheckProtectedZone(ray, hit.point, raycastAction))
+                            break;
+                    
+                        Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
+                        chunk.GetComponent<Chunk>().DestroyBlockServerRpc(localCoordinate);
+                        byte destBlockId = chunk.GetComponent<Chunk>()
+                            .chunkBlocks[Mathf.FloorToInt(localCoordinate.x), Mathf.FloorToInt(localCoordinate.y), Mathf.FloorToInt(localCoordinate.z)].id;
+                        _inventory.Add((BlockType) destBlockId);
+                        Debug.Log("Inventory at place " + destBlockId % _inventory.Size + " with " + _inventory.Items[destBlockId % _inventory.Size] + " blocks");
+                        if (destBlockId == (int) _activeBlock)
+                            UpdatePlayerCubeServerRpc(NetworkObjectId, true, _activeBlock);
+                    }
+                    else { // Shovel hit into air
+                        PlayAnimation(_activeWeapon, false, true);
+                        _tFired = Time.time;
+                    }
+
                     break;
                 case RaycastAction.BuildBlock:
                     // Check if block is at max world height
                     if (hit.point.y >= _world.height * _world.chunkSize)
+                        break;
+                    if (!hit.collider.CompareTag(WorldTag))
                         break;
 
                     if (_inventory.Items[(byte) _activeBlock] > 0) {
@@ -813,23 +820,27 @@ public class Player : NetworkBehaviour {
                         PlayWeaponSound(_activeWeapon);
                         PlayAnimation(_activeWeapon, melee: _activeWeapon.WeaponType == WeaponType.Shovel);
                         Debug.Log("Hit collider tag: " + hit.collider.name);
-                        if (hit.collider.CompareTag(WorldTag)) {
-                            // Can't destroy a block in a protected radius
-                            if (CheckProtectedZone(ray, hit.point, raycastAction))
-                                break;
-                            
-                            chunk = hit.transform.gameObject;
-                            localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
-                            Debug.Log("Shoot Block with " + (byte) _activeWeapon.LerpDamage(hit.distance) + " damage");
-                            chunk.GetComponent<Chunk>().DamageBlockServerRpc(localCoordinate, (sbyte) _activeWeapon.LerpDamage(hit.distance));
-                        }
-                        else if (hit.collider.CompareTag(PlayerTag)) {
+
+                        if (hit.collider.CompareTag(PlayerTag)) {
                             NetworkObject shotPlayer = hit.collider.gameObject.GetComponent<NetworkObject>();
                             float damage = _activeWeapon.WeaponType == WeaponType.Shovel ? _activeWeapon.Damage : _activeWeapon.LerpDamage(hit.distance);
                             Debug.Log("Shoot Player " + hit.collider.name + " with " + damage + " damage");
                             if (shotPlayer.GetComponent<Player>().team != team) // Only damage the player if he is not in your team
                                 PlayerShotServerRpc(shotPlayer.NetworkObjectId, damage);
                         }
+                        else if (hit.collider.CompareTag(WorldTag)) {
+                            // Can't destroy a block in a protected radius
+                            if (CheckProtectedZone(ray, hit.point, raycastAction)) {
+                                _tFired = Time.time;
+                                break;
+                            }
+                            
+                            GameObject chunk = hit.transform.gameObject;
+                            Vector3 localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
+                            Debug.Log("Shoot Block with " + (byte) _activeWeapon.LerpDamage(hit.distance) + " damage");
+                            chunk.GetComponent<Chunk>().DamageBlockServerRpc(localCoordinate, (sbyte) _activeWeapon.LerpDamage(hit.distance));
+                        }
+                        
                         _tFired = Time.time;
                     }
                     break;
@@ -886,7 +897,6 @@ public class Player : NetworkBehaviour {
                     break;
                 case RaycastAction.DestroyBlock:
                     if (Time.time - _tFired > _activeWeapon.Firerate) {
-                        PlayWeaponSound(_activeWeapon);
                         PlayAnimation(_activeWeapon, melee: true);
                     }
                     break;

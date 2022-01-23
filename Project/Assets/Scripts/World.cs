@@ -29,6 +29,7 @@ public class World : NetworkBehaviour {
     [SerializeField] private GameObject baseBlue;
 
     [SerializeField] public string protectionLayerName;
+    [SerializeField] public string baseLayerName;
     [SerializeField] public string borderLayerName;
     [SerializeField] private GameObject baseBlueProtectionZone;
     [SerializeField] private GameObject baseRedProtectionZone;
@@ -74,7 +75,7 @@ public class World : NetworkBehaviour {
         baseBlue.transform.position = baseBluePos;
         baseRedProtectionZone.transform.position = baseRedPos;
         baseBlueProtectionZone.transform.position = baseBluePos;
-        flagProtectionZone.transform.position = initFlagPos;
+        flagProtectionZone.transform.position = new Vector3(initFlagPos.x, initFlagPos.y - 0.5f, initFlagPos.z);
         flag.SetActive(true);
     }
     

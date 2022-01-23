@@ -687,7 +687,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 447
+    m_Bits: 1215
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -973,6 +973,7 @@ MonoBehaviour:
   active: 0
   team: 0
   playerName: 
+  activeWeaponModel: {fileID: 0}
   redTeamColor: {r: 1, g: 0, b: 0, a: 0.7058824}
   blueTeamColor: {r: 0, g: 0, b: 1, a: 0.7058824}
   disabledAlpha: 0
@@ -1349,7 +1350,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2295737357494966973, guid: 3688edb5c24e71a4ca43306acdf25884, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2747673612981926632, guid: 3688edb5c24e71a4ca43306acdf25884, type: 3}
       propertyPath: m_RootOrder
@@ -1531,7 +1532,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5037701439247654522, guid: 4b6c9fdd09465b94391d221821f2b5d9, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5666181888761709760, guid: 4b6c9fdd09465b94391d221821f2b5d9, type: 3}
       propertyPath: m_RootOrder
@@ -1714,7 +1715,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5486825731940458118, guid: ef31a0598e61e2d40a5fc7cd86a90d70, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ef31a0598e61e2d40a5fc7cd86a90d70, type: 3}

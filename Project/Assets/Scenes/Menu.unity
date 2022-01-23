@@ -5590,7 +5590,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0567f3bc1ab3f4d4f964a9d7940c94b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableGameModeDropdown: 1
+  enableGameModeDropdown: 0
   mapDropdown: {fileID: 1393408779}
   gameModeDropdown: {fileID: 680477857}
   gameModeDropdownGameObject: {fileID: 680477856}

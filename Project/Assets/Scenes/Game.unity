@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.3823135, g: 0.46900892, b: 0.6139051, a: 1}
+  m_IndirectSpecularColor: {r: 0.3823135, g: 0.46900892, b: 0.6139065, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1587,7 +1587,7 @@ GameObject:
   - component: {fileID: 407983802}
   - component: {fileID: 407983801}
   - component: {fileID: 407983805}
-  m_Layer: 8
+  m_Layer: 10
   m_Name: BaseRed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1668,7 +1668,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 13
+  m_RootOrder: 14
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &407983805
 MonoBehaviour:
@@ -2523,7 +2523,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -150}
+  m_AnchoredPosition: {x: 0, y: -200}
   m_SizeDelta: {x: 1000, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &517354257
@@ -2548,8 +2548,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 3d813d294ff855c4d8a0b719835691ea, type: 2}
+  m_sharedMaterial: {fileID: -9143153598990667094, guid: 3d813d294ff855c4d8a0b719835691ea, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2573,8 +2573,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 25
-  m_fontSizeBase: 25
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -4125,7 +4125,7 @@ GameObject:
   - component: {fileID: 879676475}
   m_Layer: 8
   m_Name: FlagProtectionZone
-  m_TagString: Untagged
+  m_TagString: World
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4201,10 +4201,10 @@ Transform:
   m_GameObject: {fileID: 879676473}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1.2697995, y: 0.85108685, z: 0.23238087}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalScale: {x: 4, y: 1, z: 4}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 17
+  m_RootOrder: 18
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &881263848
 GameObject:
@@ -7060,7 +7060,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 8101650270580948041, guid: 664aae8b1c4c0e5458541d95d569bdda, type: 3}
       propertyPath: m_RootOrder
-      value: 18
+      value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 8101650270580948041, guid: 664aae8b1c4c0e5458541d95d569bdda, type: 3}
       propertyPath: m_LocalPosition.x
@@ -8379,7 +8379,7 @@ GameObject:
   - component: {fileID: 1707395261}
   m_Layer: 8
   m_Name: BaseRedProtectionZone
-  m_TagString: Untagged
+  m_TagString: World
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -8455,10 +8455,10 @@ Transform:
   m_GameObject: {fileID: 1707395259}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1.2697995, y: 0.85108685, z: 0.23238087}
-  m_LocalScale: {x: 5, y: 5, z: 5}
+  m_LocalScale: {x: 5, y: 4, z: 6}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 15
+  m_RootOrder: 16
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1718127113
 GameObject:
@@ -8692,12 +8692,13 @@ MonoBehaviour:
   chunkSize: 13
   capturesToWin: 1
   flag: {fileID: 428489647}
-  initFlagPos: {x: 2, y: 2, z: 2}
-  baseRedPos: {x: -35, y: 3.5, z: 0}
-  baseBluePos: {x: 35, y: 3.5, z: 0}
+  initFlagPos: {x: 0, y: 10, z: 0}
+  baseRedPos: {x: -35.5, y: 3, z: 0}
+  baseBluePos: {x: 35.5, y: 3, z: 0}
   baseRed: {fileID: 407983800}
   baseBlue: {fileID: 2053621328}
   protectionLayerName: ProtectionZone
+  baseLayerName: 
   borderLayerName: Border
   baseBlueProtectionZone: {fileID: 1932930839}
   baseRedProtectionZone: {fileID: 1707395259}
@@ -9495,7 +9496,7 @@ GameObject:
   - component: {fileID: 1932930841}
   m_Layer: 8
   m_Name: BaseBlueProtectionZone
-  m_TagString: Untagged
+  m_TagString: World
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -9571,10 +9572,10 @@ Transform:
   m_GameObject: {fileID: 1932930839}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1.2697995, y: 0.85108685, z: 0.23238087}
-  m_LocalScale: {x: 5, y: 5, z: 5}
+  m_LocalScale: {x: 5, y: 4, z: 6}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 16
+  m_RootOrder: 17
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1959956761
 GameObject:
@@ -9945,7 +9946,7 @@ RectTransform:
   - {fileID: 933522819}
   - {fileID: 1295673265}
   m_Father: {fileID: 0}
-  m_RootOrder: 19
+  m_RootOrder: 13
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -10232,7 +10233,7 @@ GameObject:
   - component: {fileID: 2053621330}
   - component: {fileID: 2053621329}
   - component: {fileID: 2053621333}
-  m_Layer: 8
+  m_Layer: 10
   m_Name: BaseBlue
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10313,7 +10314,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 14
+  m_RootOrder: 15
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2053621333
 MonoBehaviour:
