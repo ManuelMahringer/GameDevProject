@@ -77,6 +77,8 @@ public class Player : NetworkBehaviour {
     public Lobby.Team team;
     public String playerName;
 
+    public GameObject activeWeaponModel;
+    
     private Weapon _activeWeapon;
     private BlockType _activeBlock;
     
@@ -204,6 +206,8 @@ public class Player : NetworkBehaviour {
             {2, stoneMat},
             {3, ironMat}
         };
+        Camera[] cameras = gameObject.GetComponentsInChildren<Camera>();
+        _playerCamera = cameras[0];
 
         if (!IsLocalPlayer)
             return;
@@ -250,8 +254,8 @@ public class Player : NetworkBehaviour {
         floatingHealthBar.gameObject.SetActive(false);
         InitWeaponModels();
 
-        Camera[] cameras = gameObject.GetComponentsInChildren<Camera>();
-        _playerCamera = cameras[0];
+        // Camera[] cameras = gameObject.GetComponentsInChildren<Camera>();
+        // _playerCamera = cameras[0];
         _playerCamera.enabled = true;
         gameObject.GetComponentsInChildren<AudioListener>()[0].enabled = false;
         
@@ -639,6 +643,8 @@ public class Player : NetworkBehaviour {
 
     private void SwitchWeapons(WeaponType weapon) {
         _activeWeapon = weapons[weapon];
+        activeWeaponModel = weaponModels.Find(m => m.name == _activeWeapon.WeaponType.ToString());
+        _tFired = 0;
         PlayerWeaponChangeServerRpc(NetworkObject.NetworkObjectId, weapon);
     }
 
@@ -654,10 +660,12 @@ public class Player : NetworkBehaviour {
             return;
         }
 
-        // Rotate camera around x
+        // Rotate cameras of all players around x
         _rotX -= Input.GetAxis("Mouse Y") * SensitivityVer;
         _rotX = Mathf.Clamp(_rotX, MINVert, MAXVert);
-        _playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0);
+        
+        UpdateWeaponPositionServerRpc(NetworkObjectId, new Vector3(_rotX, -5, 0)); // Arbitrary -5 to face the weapon more towards the enemy player
+        _playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0); // Own camera gets rotated normally
 
         // Rotate player object around y
         float rotY = Input.GetAxis("Mouse X") * SensitivityHor;
@@ -742,6 +750,13 @@ public class Player : NetworkBehaviour {
             _statusText.text = "Can't build / destroy in protected zone";
         }
         return inProtectedZone;
+    }
+
+    private void UpdateExternalCameraRotations(ulong id, Vector3 rotation) {
+        if (id == NetworkObjectId)
+            return;
+        Player target = GameNetworkManager.GetPlayerById(id);
+        target._playerCamera.transform.rotation = Quaternion.Euler(rotation);
     }
 
     private void PerformRaycastAction(RaycastAction raycastAction, float range) {
@@ -871,7 +886,12 @@ public class Player : NetworkBehaviour {
                         PlayAnimation(_activeWeapon);
                         _tFired = Time.time;
                     }
-
+                    break;
+                case RaycastAction.DestroyBlock:
+                    if (Time.time - _tFired > _activeWeapon.Firerate) {
+                        PlayWeaponSound(_activeWeapon);
+                        PlayAnimation(_activeWeapon, melee: true);
+                    }
                     break;
             }
         }
@@ -917,11 +937,29 @@ public class Player : NetworkBehaviour {
                 weaponModel.transform.localPosition = weaponModel.transform.name == WeaponType.Shovel.ToString() ? new Vector3(0f, 0.47f, 0.46f) : Vector3.zero;
                 weaponModel.transform.localEulerAngles = weaponModel.transform.name == WeaponType.Shovel.ToString() ? new Vector3(180f, 0f, 0f) : Vector3.zero;
                 weaponModel.SetActive(true);
+                activeWeaponModel = weaponModel;
             }
             if (weaponModel.transform.name == "Cube" && weapon == WeaponType.Shovel) {
                 UpdatePlayerCubeServerRpc(id, target._inventory.Items[(int) _activeBlock] > 0, target._activeBlock);
             }
         }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void UpdateWeaponPositionServerRpc(ulong id, Vector3 pos) {
+        UpdateWeaponPositionClientRpc(id, pos);
+    }
+
+    [ClientRpc]
+    private void UpdateWeaponPositionClientRpc(ulong id, Vector3 pos) {
+        // if (id == NetworkObjectId) {
+        //     Debug.Log("Dont update on self");
+        //     return;
+        // }
+        Player target = GameNetworkManager.GetPlayerById(id);
+        Debug.Log("Update Weapon rotation of player " + id);
+        target._playerCamera.transform.localEulerAngles = pos;
+        //UpdateExternalCameraRotations(id, pos);
     }
 
     [ServerRpc(RequireOwnership = false)]
