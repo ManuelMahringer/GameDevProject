@@ -38,7 +38,7 @@ Choose weapon: 1, 2, 3
 2: Assault Rifle  
 3: Shovel  
 
-When using weapon 1 (Pistol) or weapon 2(Assault rifle): Left click to shoot   
+When using weapon 1 (Pistol) or weapon 2 (Assault rifle): Left click to shoot   
 When using weapon 3 (Shovel): Left click to gather a block ressource or hit player (melee range), Right click to build a block at the highlighted destination
 Choose block type to build: Mouse wheel  
 
