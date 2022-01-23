@@ -5,17 +5,20 @@ TagManager:
   serializedVersion: 2
   tags:
   - ground
+  - Weapon
+  - World
+  - Border
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - World
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
+  - Weapon
+  - Player
+  - ProtectionZone
+  - Border
   - 
   - 
   - 
