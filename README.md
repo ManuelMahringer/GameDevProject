@@ -43,27 +43,27 @@ When using weapon 1 (Pistol) or weapon 2(Assault rifle): Left click to shoot
 When using weapon 3 (Shovel): Left click to gather a block ressource or hit player (melee range), Right click to build a block at the highlighted destination
 
 # 4 Instructions to run the game
-The game features 2 different  modes: 
-Host - A game instances started as Host acts as Server and Client simulatiously. 
-Client - A game instance started as client can only send and request data to/from the server.
-Each client action is processed on the server (= host)
+The game features 2 different modes:   
+Host - A game instances started as host acts as server and client simulatiously.    
+Client - A game instance started as client can only send and request data to/from the server.  
+Each client action is processed on the server (= host).  
 
-To test the game locally using multiple instances please follow these steps:
-Start a game instance, press play and choose "HOST".
-Enter your name, choose a team via buttons "JOIN BLUE" and "JOIN RED" and map via the "SELECT MAP" dropdown menu.
+To test the game locally using multiple instances please follow these steps:  
 
-Start up to 5 additional game instances, press play and choose "CLIENT" on each of them.
-Enter your name and chose a team.
+Start a game instance, press play and choose "HOST".  
+Enter your name, choose a team via buttons "JOIN BLUE" or "JOIN RED" and a map using the "SELECT MAP" dropdown menu.  
 
-When all clients are connected the host may start start via the "START GAME" button".
+Start up to 5 additional game instances, press play and choose "CLIENT" on each of them.  
+Enter your name and chose a team for each of the clients.  
 
+When all clients are connected the host may start start via the "START GAME" button". (The amount of connected players is visible in the lobby UI)
 
-Attention: The IP adress of the Host as well as the adress of the clients to connect to currently is 127.0.0.1 to unconditionally support local testing.
-Therefore playtesting using distributed clients is currently not possible.
-Our interal playtesting as well the recording of the video was done using a VPN, in our case Hamachi (https://www.vpn.net/).  
+Attention: The IP adress of the Host as well as the adress of the clients to connect to is set to 127.0.0.1 to unconditionally support local testing.  
+Therefore playtesting using distributed clients is currently not possible.  
+Our interal playtesting as well the recording of the video was done using a VPN, in our case Hamachi (https://www.vpn.net/).    
 
 # 5 Assets
-Attack Jump & Hit Damage Human Sounds 
+Attack Jump & Hit Damage Human Sounds
 https://assetstore.unity.com/packages/audio/sound-fx/voices/attack-jump-hit-damage-human-sounds-32785
 
 Footsteps - Essentials
@@ -74,7 +74,6 @@ https://assetstore.unity.com/packages/2d/textures-materials/sky/allsky-free-10-s
 
 Free Pixel Font - Thaleah
 https://assetstore.unity.com/packages/2d/fonts/free-pixel-font-thaleah-140059\
-
 
 
 # 6 Game world core idea
