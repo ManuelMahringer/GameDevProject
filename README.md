@@ -11,18 +11,18 @@
 |Feature   | Responsible   |
 |---|---|
 | Core game world       | Mahringer  
-| Networking 				    | Mahringer / Seifriedsberger  
+| Networking 				    | Mahringer, Seifriedsberger  
 | Game world serialization	| Seifriedsberger  
 | Server synced sound 		| Mahringer  
 | Player movement			| Seifriedsberger  
-| Player/world interaction 	| Mahringer / Seifriedsberger  
+| Player/world interaction 	| Mahringer, Seifriedsberger  
 | Player/player interaction | Seifriedsberger  
-| Player (re)spawn			| Mahringer / Seifriedsberger  
+| Player (re)spawn			| Mahringer, Seifriedsberger  
 | Server synced countdown	| Mahringer  
-| UI						| Mahringer / Seifriedsberger  
-| Lobby 					| Mahringer / Seifriedsberger  
-| Lighting 					| Mahringer / Seifriedsberger  
-| Balancing 				| Mahringer / Seifriedsberger  
+| UI						| Mahringer, Seifriedsberger  
+| Lobby 					| Mahringer, Seifriedsberger  
+| Lighting 					| Mahringer, Seifriedsberger  
+| Balancing 				| Mahringer, Seifriedsberger  
 | Safe zones 				| Seifriedsberger  
 | Flag and base logic		| Seifriedsberger  
 | 1000 hours code refactoring | Seifriedsberger  
