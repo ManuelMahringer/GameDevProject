@@ -1014,20 +1014,13 @@ public class PlayerInventory : MonoBehaviour {
     public int[] Items => _items;
     public int Size => _items.Length;
 
-    private Dictionary<int, Image> _blockImages;
-    private Dictionary<int, TMP_Text> _blockCounts;
-
+    private Dictionary<BlockType, Image> _blockImages;
+    private Dictionary<BlockType, TMP_Text> _blockCounts;
+    private Image _border;
+    
     private readonly int[] _items = new int[Enum.GetNames(typeof(BlockType)).Length];
-    private readonly GUIStyle _selectedStyle = new GUIStyle();
 
     private bool _active;
-
-    private readonly int borderSize = 2;
-
-    public void Start() {
-        _selectedStyle.border = new RectOffset(borderSize, borderSize, borderSize, borderSize);
-        _selectedStyle.normal.background = Resources.Load<Texture2D>("BlockImages/border");
-    }
 
     public void Active(bool active) {
         _active = active;
@@ -1037,32 +1030,34 @@ public class PlayerInventory : MonoBehaviour {
         foreach (var blockCount in _blockCounts.Values) {
             blockCount.gameObject.SetActive(active);
         }
+        _border.gameObject.SetActive(active);
     }
 
     public void Initialize() {
-        _blockImages = new Dictionary<int, Image> {
-            {0, GameObject.Find("BlockEarth").GetComponent<Image>()},
-            {1, GameObject.Find("BlockWood").GetComponent<Image>()},
-            {2, GameObject.Find("BlockStone").GetComponent<Image>()},
-            {3, GameObject.Find("BlockIron").GetComponent<Image>()}
+        _blockImages = new Dictionary<BlockType, Image> {
+            {BlockType.Earth, GameObject.Find("BlockEarth").GetComponent<Image>()},
+            {BlockType.Wood, GameObject.Find("BlockWood").GetComponent<Image>()},
+            {BlockType.Stone, GameObject.Find("BlockStone").GetComponent<Image>()},
+            {BlockType.Iron, GameObject.Find("BlockIron").GetComponent<Image>()}
         };
 
-        _blockCounts = new Dictionary<int, TMP_Text> {
-            {0, GameObject.Find("BlockEarthCount").GetComponent<TMP_Text>()},
-            {1, GameObject.Find("BlockWoodCount").GetComponent<TMP_Text>()},
-            {2, GameObject.Find("BlockStoneCount").GetComponent<TMP_Text>()},
-            {3, GameObject.Find("BlockIronCount").GetComponent<TMP_Text>()}
+        _blockCounts = new Dictionary<BlockType, TMP_Text> {
+            {BlockType.Earth, GameObject.Find("BlockEarthCount").GetComponent<TMP_Text>()},
+            {BlockType.Wood, GameObject.Find("BlockWoodCount").GetComponent<TMP_Text>()},
+            {BlockType.Stone, GameObject.Find("BlockStoneCount").GetComponent<TMP_Text>()},
+            {BlockType.Iron, GameObject.Find("BlockIronCount").GetComponent<TMP_Text>()}
         };
+        _border = GameObject.Find("InventoryBorder").GetComponent<Image>();
     }
 
     public void Add(BlockType blockType) {
         _items[(int) blockType % _items.Length] += 1;
-        _blockCounts[(int) blockType].text = _items[(int) blockType].ToString();
+        _blockCounts[blockType].text = _items[(int) blockType].ToString();
     }
 
     public void Remove(BlockType blockType) {
         _items[(int) blockType] -= 1;
-        _blockCounts[(int) blockType].text = _items[(int) blockType].ToString();
+        _blockCounts[blockType].text = _items[(int) blockType].ToString();
     }
 
     public void Clear() {
@@ -1075,13 +1070,9 @@ public class PlayerInventory : MonoBehaviour {
             return;
         }
 
-        for (int blockType = 0; blockType < _items.Length; blockType++) {
-            if (blockType == (int) activeBlock) {
-                Image active = _blockImages[blockType];
-                Vector3 imgPos = active.transform.position;
-                GUI.Box(new Rect(imgPos.x - 23, Screen.height - imgPos.y - 23, 110, 23 * 2), GUIContent.none, _selectedStyle);
-            }
-        }
+        Image activeImg = _blockImages[activeBlock];
+        Transform borderTransform = _border.transform;
+        borderTransform.position = new Vector3(borderTransform.position.x, activeImg.transform.position.y, borderTransform.position.z);
     }
 }
 
