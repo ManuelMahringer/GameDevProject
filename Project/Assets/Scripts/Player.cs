@@ -515,7 +515,7 @@ public class Player : NetworkBehaviour {
     }
 
     private void FixedUpdate() {
-        if (!IsLocalPlayer ) //|| !mouseActive || InCountdown
+        if (!IsLocalPlayer || InCountdown)
             return;
 
         if (_gameMode == GameMode.Build) {
