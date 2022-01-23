@@ -337,12 +337,12 @@ public class Player : NetworkBehaviour {
         }
     }
 
-    private void OnApplicationQuit() {
-        if (IsHost) {
-            Debug.Log("Setting application quit");
-            _world.hostQuit.Value = true;
-        }
-    }
+    // private void OnApplicationQuit() {
+    //     if (IsHost) {
+    //         Debug.Log("Setting application quit");
+    //         _world.hostQuit.Value = true;
+    //     }
+    // }
 
     private void OnNewFlagHolder(ulong oldId, ulong newId) {
         if (IsLocalPlayer && NetworkObject.NetworkObjectId == newId) {
@@ -664,8 +664,8 @@ public class Player : NetworkBehaviour {
         _rotX -= Input.GetAxis("Mouse Y") * SensitivityVer;
         _rotX = Mathf.Clamp(_rotX, MINVert, MAXVert);
         
-        UpdateWeaponPositionServerRpc(NetworkObjectId, new Vector3(_rotX, -5, 0)); // Arbitrary -5 to face the weapon more towards the enemy player
-        _playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0); // Own camera gets rotated normally
+        UpdateWeaponPositionServerRpc(NetworkObjectId, new Vector3(_rotX, 0, 0)); // Arbitrary -5 to face the weapon more towards the enemy player
+        //_playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0); // Own camera gets rotated normally
 
         // Rotate player object around y
         float rotY = Input.GetAxis("Mouse X") * SensitivityHor;
@@ -751,20 +751,13 @@ public class Player : NetworkBehaviour {
         }
         return inProtectedZone;
     }
-
-    private void UpdateExternalCameraRotations(ulong id, Vector3 rotation) {
-        if (id == NetworkObjectId)
-            return;
-        Player target = GameNetworkManager.GetPlayerById(id);
-        target._playerCamera.transform.rotation = Quaternion.Euler(rotation);
-    }
-
+    
     private void PerformRaycastAction(RaycastAction raycastAction, float range) {
         Vector3 midPoint = new Vector3(_playerCamera.pixelWidth / 2, _playerCamera.pixelHeight / 2);
         Ray ray = _playerCamera.ScreenPointToRay(midPoint);
         // Ignore protection layers when raycasting
         int layerMask = ~(1 << (LayerMask.NameToLayer(_world.protectionLayerName) | LayerMask.NameToLayer(_world.borderLayerName)));
-        if (Physics.Raycast(ray, out var hit, range, layerMask)) {
+        if (Physics.Raycast(ray, out var hit, range, layerMask, QueryTriggerInteraction.Ignore)) {
             switch (raycastAction) {
                 case RaycastAction.DestroyBlock:
                     // Melee hit
@@ -819,6 +812,7 @@ public class Player : NetworkBehaviour {
                     if (Time.time - _tFired > _activeWeapon.Firerate) {
                         PlayWeaponSound(_activeWeapon);
                         PlayAnimation(_activeWeapon, melee: _activeWeapon.WeaponType == WeaponType.Shovel);
+                        Debug.Log("Hit collider tag: " + hit.collider.name);
                         if (hit.collider.CompareTag(WorldTag)) {
                             // Can't destroy a block in a protected radius
                             if (CheckProtectedZone(ray, hit.point, raycastAction))
@@ -955,14 +949,8 @@ public class Player : NetworkBehaviour {
 
     [ClientRpc]
     private void UpdateWeaponPositionClientRpc(ulong id, Vector3 pos) {
-        // if (id == NetworkObjectId) {
-        //     Debug.Log("Dont update on self");
-        //     return;
-        // }
         Player target = GameNetworkManager.GetPlayerById(id);
-        Debug.Log("Update Weapon rotation of player " + id);
         target._playerCamera.transform.localEulerAngles = pos;
-        //UpdateExternalCameraRotations(id, pos);
     }
 
     [ServerRpc(RequireOwnership = false)]
