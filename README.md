@@ -3,7 +3,7 @@
 |Name| Matr.Nr. | E-Mail|
 |---|---|---|
 | Manuel Mahringer		| K11816360 | k11816360@students.jku.at
-| Lukas Seifriedsberger ||  
+| Lukas Seifriedsberger | K11816320 | k11816320@students.jku.at  
 | Michael Duschek		||
 
 
