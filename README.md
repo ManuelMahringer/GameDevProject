@@ -2,8 +2,8 @@
 
 |Name| Matr.Nr. | E-Mail|
 |---|---|---|
-| Manuel Mahringer		| K11816360 | k11816360@students.jku.at\
-| Lukas Seifriedsberger ||\
+| Manuel Mahringer		| K11816360 | k11816360@students.jku.at
+| Lukas Seifriedsberger ||  
 | Michael Duschek		||
 
 
@@ -25,7 +25,7 @@
 | Balancing 				| Mahringer / Seifriedsberger  
 | Safe zones 				| Seifriedsberger  
 | Flag and base logic		| Seifriedsberger  
-| 1000 hours of code refactoring | Seifriedsberger  
+| 1000 hours code refactoring | Seifriedsberger  
 | Weapon models				| Duschek  
 | Shooting Animations		| Duschek  
 
