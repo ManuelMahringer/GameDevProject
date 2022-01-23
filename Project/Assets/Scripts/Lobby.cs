@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 using Unity.Netcode;
@@ -13,6 +14,8 @@ public class Lobby : NetworkBehaviour {
     
     [SerializeField]
     private TMP_Dropdown mapDropdown;
+    [SerializeField]
+    private InputField inputField;
     private List<Map> maps;
 
     private World _world;
@@ -95,6 +98,8 @@ public class Lobby : NetworkBehaviour {
         mapDropdown.AddOptions(mapNames.ToList());
         if (_world.enableGenerate)
             mapDropdown.AddOptions(new List<string> { "Generate" }); // dummy option to still be able to generate the random map TODO: remove
+        
+        inputField.onValueChanged.AddListener(OnInputFieldChanged);
     }
     
     
@@ -124,6 +129,10 @@ public class Lobby : NetworkBehaviour {
         if (_clientNamesRed.Count >= 3) {
             _joinBlue.SetActive(false);
         }
+    }
+
+    private void OnInputFieldChanged(string s) {
+        inputField.text = Regex.Replace(s, @"[äÄöÖüÜ§°]", "");
     }
     
     [ServerRpc(RequireOwnership = false)]
