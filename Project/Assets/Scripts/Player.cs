@@ -799,12 +799,11 @@ public class Player : NetworkBehaviour {
                             UpdatePlayerCubeServerRpc(NetworkObjectId, false, _activeBlock);
                         }
                     }
-
                     break;
                 case RaycastAction.Shoot:
                     if (Time.time - _tFired > _activeWeapon.Firerate) {
                         PlayWeaponSound(_activeWeapon);
-                        PlayAnimation(_activeWeapon);
+                        PlayAnimation(_activeWeapon, melee: _activeWeapon.WeaponType == WeaponType.Shovel);
                         if (hit.collider.CompareTag(WorldTag)) {
                             // Can't destroy a block in a protected radius
                             if (CheckProtectedZone(ray, hit.point, raycastAction))
@@ -814,7 +813,6 @@ public class Player : NetworkBehaviour {
                             localCoordinate = hit.point + (ray.direction / 10000.0f) - chunk.transform.position;
                             Debug.Log("Shoot Block with " + (byte) _activeWeapon.LerpDamage(hit.distance) + " damage");
                             chunk.GetComponent<Chunk>().DamageBlockServerRpc(localCoordinate, (sbyte) _activeWeapon.LerpDamage(hit.distance));
-                            //_world.GetComponent<World>().UpdateMeshCollider(chunk);
                         }
                         else if (hit.collider.CompareTag(PlayerTag)) {
                             NetworkObject shotPlayer = hit.collider.gameObject.GetComponent<NetworkObject>();
@@ -823,10 +821,8 @@ public class Player : NetworkBehaviour {
                             if (shotPlayer.GetComponent<Player>().team != team) // Only damage the player if he is not in your team
                                 PlayerShotServerRpc(shotPlayer.NetworkObjectId, damage);
                         }
-
                         _tFired = Time.time;
                     }
-
                     break;
                 case RaycastAction.HighlightBlock:
                     if (_activeWeapon.WeaponType != WeaponType.Shovel || !hit.collider.CompareTag(WorldTag)) {
