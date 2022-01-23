@@ -25,7 +25,7 @@
 | Balancing 				| Mahringer, Seifriedsberger  
 | Safe zones 				| Seifriedsberger  
 | Flag and base logic		| Seifriedsberger  
-| 1000 hours code refactoring | Seifriedsberger  
+| 1000 hours code refactoring :-)| Seifriedsberger  
 | Weapon models				| Duschek  
 | Shooting Animations		| Duschek  
 
