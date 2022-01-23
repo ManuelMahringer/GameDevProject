@@ -519,7 +519,7 @@ public class Player : NetworkBehaviour {
     }
 
     private void FixedUpdate() {
-        if (!IsLocalPlayer ) //|| !mouseActive || InCountdown
+        if (!IsLocalPlayer || InCountdown)
             return;
 
         if (_gameMode == GameMode.Build) {
@@ -770,6 +770,8 @@ public class Player : NetworkBehaviour {
                     // Melee hit
                     if (hit.collider.CompareTag(PlayerTag)) {
                         PerformRaycastAction(RaycastAction.Shoot, _activeWeapon.Range);
+                        PlayAnimation(_activeWeapon, false, true);
+                        _audioSync.PlaySound(5);
                         break;
                     }
                     GameObject chunk = hit.transform.gameObject;
@@ -784,6 +786,7 @@ public class Player : NetworkBehaviour {
                         .chunkBlocks[Mathf.FloorToInt(localCoordinate.x), Mathf.FloorToInt(localCoordinate.y), Mathf.FloorToInt(localCoordinate.z)].id;
                     _inventory.Add((BlockType) destBlockId);
                     PlayAnimation(_activeWeapon);
+                    PlayWeaponSound(_activeWeapon);
                     Debug.Log("Inventory at place " + destBlockId % _inventory.Size + " with " + _inventory.Items[destBlockId % _inventory.Size] + " blocks");
                     if (destBlockId == (int) _activeBlock)
                         UpdatePlayerCubeServerRpc(NetworkObjectId, true, _activeBlock);
