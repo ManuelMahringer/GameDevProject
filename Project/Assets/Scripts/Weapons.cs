@@ -26,21 +26,21 @@ public abstract class Weapon {
 
 public class Handgun : Weapon {
     public override WeaponType WeaponType => WeaponType.Handgun;
-    public override float Damage => 30f;
-    public override float Range => 70f;
-    public override float Firerate => 0.3f;
+    public override float Damage => 20f;
+    public override float Range => 30f;
+    public override float Firerate => 0.2f;
 }
 
 public class AssaultRifle : Weapon {
     public override WeaponType WeaponType => WeaponType.AssaultRifle;
-    public override float Damage => 50f;
-    public override float Range => 250f;
+    public override float Damage => 40f;
+    public override float Range => 100f;
     public override float Firerate => 1f;
 }
 
 public class Shovel : Weapon {
     public override WeaponType WeaponType => WeaponType.Shovel;
-    public override float Damage => 25f;
+    public override float Damage => 50f;
     public override float Range => 3.5f;
     public override float Firerate => 0.7f;
 }
