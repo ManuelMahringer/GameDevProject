@@ -918,8 +918,12 @@ public class Player : NetworkBehaviour {
         Player target = GameNetworkManager.players[id].player;
         target.weaponModels.ForEach(w => w.SetActive(false));
         foreach (GameObject weaponModel in target.weaponModels) {
-            if (weaponModel.transform.name == weapon.ToString())
+            if (weaponModel.transform.name == weapon.ToString()) {
+                // Reset the weapon position if it may be stuck in animation
+                weaponModel.transform.localPosition = weaponModel.transform.name == WeaponType.Shovel.ToString() ? new Vector3(0f, 0.47f, 0.46f) : Vector3.zero;
+                weaponModel.transform.localEulerAngles = weaponModel.transform.name == WeaponType.Shovel.ToString() ? new Vector3(180f, 0f, 0f) : Vector3.zero;
                 weaponModel.SetActive(true);
+            }
             if (weaponModel.transform.name == "Cube" && weapon == WeaponType.Shovel) {
                 UpdatePlayerCubeServerRpc(id, target._inventory.Items[(int) _activeBlock] > 0, target._activeBlock);
             }
@@ -939,7 +943,6 @@ public class Player : NetworkBehaviour {
             target.playerCube.transform.localPosition = Vector3.zero;
             target.playerCube.transform.localEulerAngles = Vector3.zero;
             target.playerCube.SetActive(true);
-            //Debug.Log("Setting cube material of player " + target + " to block " + type);
             target.playerCube.GetComponent<MeshRenderer>().material = _blockMaterials[(int) type];
         }
         else {
