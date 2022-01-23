@@ -66,6 +66,7 @@ Therefore playtesting using distributed clients is currently not possible.
 Our interal playtesting as well the recording of the video was done using a VPN, in our case Hamachi (https://www.vpn.net/).    
 
 # 5 Assets
+
 Attack Jump & Hit Damage Human Sounds
 https://assetstore.unity.com/packages/audio/sound-fx/voices/attack-jump-hit-damage-human-sounds-32785
 
@@ -78,6 +79,11 @@ https://assetstore.unity.com/packages/2d/textures-materials/sky/allsky-free-10-s
 Free Pixel Font - Thaleah
 https://assetstore.unity.com/packages/2d/fonts/free-pixel-font-thaleah-140059\
 
+Mixkit - Free Sound Effects 
+https://mixkit.co/free-sound-effects/
+
+Blades & Bludgeoning Free Sample Pack
+https://assetstore.unity.com/packages/audio/sound-fx/blades-bludgeoning-free-sample-pack-179306
 
 # 6 Game world core idea
 The idea of game world based on voxels stems from the following thread:
