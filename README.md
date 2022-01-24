@@ -27,7 +27,7 @@
 | 1000 hours code refactoring :-) | Seifriedsberger            |
 | Weapon models                   | Duschek                    |
 | Player model + Textures         | Duschek                    |
-| Shooting +Building Animations   | Duschek                    |
+| Shooting + Building Animations  | Duschek                    |
 | Block Textures                  | Duschek                    |
 
 # 3 Game description/goal
@@ -108,11 +108,6 @@ Blades & Bludgeoning Free Sample Pack
 https://assetstore.unity.com/packages/audio/sound-fx/blades-bludgeoning-free-sample-pack-179306
 
 Bullet Imact Sound: https://freesound.org/people/morganpurkis/sounds/392975/\
-Dirt Texture:	https://www.pexels.com/photo/cracked-dry-soil-in-desert-7952779/\
-Wood Texture:	https://www.pexels.com/photo/brown-wooden-parquet-flooring-129731/ \
-Stone Texture:	https://www.pexels.com/photo/brown-and-grey-wall-brick-37865/\
-Steel Texture:	https://www.pexels.com/photo/old-shabby-metal-surface-with-white-paint-on-wall-of-old-building-3964453/\
-Crack Texture:	https://www.pngfind.com/mpng/ibmhbm_crack-texture-png-cracks-texture-transparent-png-png/
 
 # 7 Game world core idea
 The idea of game world based on voxels stems from the following thread:
