@@ -1,48 +1,58 @@
 # 1 Team members
 
-|Name| Matr.Nr. | E-Mail|
-|---|---|---|
-| Manuel Mahringer		| K11816360 | k11816360@students.jku.at
-| Lukas Seifriedsberger | K11816320 | k11816320@students.jku.at  
-| Michael Duschek		||
+| Name                  | Matr.Nr.  | E-Mail                    |
+| --------------------- | --------- | ------------------------- |
+| Manuel Mahringer      | K11816360 | k11816360@students.jku.at |
+| Lukas Seifriedsberger | K11816320 | k11816320@students.jku.at |
+| Michael Duschek       |           |                           |
 
 # 2 Responsibilities
-|Feature   | Responsible   |
-|---|---|
-| Core game world       | Mahringer  
-| Networking 				    | Mahringer, Seifriedsberger  
-| Game world serialization	| Seifriedsberger  
-| Server synced sound 		| Mahringer  
-| Player movement			| Seifriedsberger  
-| Player/world interaction 	| Mahringer, Seifriedsberger  
-| Player/player interaction | Seifriedsberger  
-| Player (re)spawn			| Mahringer, Seifriedsberger  
-| Server synced countdown	| Mahringer  
-| UI						| Mahringer, Seifriedsberger  
-| Lobby 					| Mahringer, Seifriedsberger  
-| Lighting 					| Mahringer, Seifriedsberger  
-| Balancing 				| Mahringer, Seifriedsberger  
-| Safe zones 				| Seifriedsberger  
-| Flag and base logic		| Seifriedsberger  
-| 1000 hours code refactoring :-)| Seifriedsberger  
-| Weapon models				| Duschek  
-| Shooting Animations		| Duschek  
+| Feature                         | Responsible                |
+| ------------------------------- | -------------------------- |
+| Core game world                 | Mahringer                  |
+| Networking                      | Mahringer, Seifriedsberger |
+| Game world serialization        | Seifriedsberger            |
+| Server synced sound             | Mahringer                  |
+| Player movement                 | Seifriedsberger            |
+| Player/world interaction        | Mahringer, Seifriedsberger |
+| Player/player interaction       | Seifriedsberger            |
+| Player (re)spawn                | Mahringer, Seifriedsberger |
+| Server synced countdown         | Mahringer                  |
+| UI                              | Mahringer, Seifriedsberger |
+| Lobby                           | Mahringer, Seifriedsberger |
+| Lighting                        | Mahringer, Seifriedsberger |
+| Balancing                       | Mahringer, Seifriedsberger |
+| Safe zones                      | Seifriedsberger            |
+| Flag and base logic             | Seifriedsberger            |
+| 1000 hours code refactoring :-) | Seifriedsberger            |
+| Weapon models                   | Duschek                    |
+| Shooting Animations             | Duschek                    |
 
 # 3 Game controls
-Movement: WASD  
-Sprint: Hold Shift  
-Jump: Space bar  
+## Player
+| Key                                              | Action   |
+| ------------------------------------------------ | -------- |
+| <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> | Movement |
+| <kbd>Shift</kbd> (hold)                          | Sprint   |
+| <kbd>Space</kbd>                                 | Jump     |
 
-Choose weapon: 1, 2, 3  
-1: Pistol  
-2: Assault Rifle  
-3: Shovel  
+## Weapons
+Choose weapon: <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>:
+| Key                            | Action            |
+| ------------------------------ | ----------------- |
+| <kbd>1</kbd>                   | Pistol            |
+| <kbd>2</kbd>                   | Assault Rifle     |
+| <kbd>3</kbd>                   | Shovel            |
+| <kbd>Mouse wheel up/down</kbd> | Choose block type |
 
 When using weapon 1 (Pistol) or weapon 2 (Assault rifle): Left click to shoot   
 When using weapon 3 (Shovel): Left click to gather a block ressource or hit player (melee range), Right click to build a block at the highlighted destination
 Choose block type to build: Mouse wheel  
 
-Access ingame menu: ESC  
+## General
+| Key            | Action      |
+| -------------- | ----------- |
+| <kbd>Esc</kbd> | Ingame menu |
 
 # 4 Instructions to run the game
 The game features 2 different modes:   
