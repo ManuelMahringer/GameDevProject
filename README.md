@@ -56,21 +56,21 @@ Choose block type to build: Mouse wheel
 
 # 4 Instructions to run the game
 The game features 2 different modes:   
-Host - A game instances started as host acts as server and client simulatiously.    
-Client - A game instance started as client can only send and request data to/from the server.  
+**Host** - A game instances started as host acts as server and client simulatiously.    
+**Client** - A game instance started as client can only send and request data to/from the server.  
 Each client action is processed on the server (= host).  
 
 To test the game locally using multiple instances please follow these steps:  
 
-Start a game instance, press play and choose "HOST".  
+1. Start a game instance, press play and choose "HOST". 
 Enter your name, choose a team via buttons "JOIN BLUE" or "JOIN RED" and a map using the "SELECT MAP" dropdown menu.  
 
-Start up to 5 additional game instances, press play and choose "CLIENT" on each of them.  
+2. Start up to 5 additional game instances, press play and choose "CLIENT" on each of them. 
 Enter your name and chose a team for each of the clients.  
 
-When all clients are connected the host may start start via the "START GAME" button". (The amount of connected players is visible in the lobby UI)
+3. When all clients are connected the host may start start via the "START GAME" button". (The amount of connected players is visible in the lobby UI)
 
-Attention: The IP adress of the Host as well as the adress of the clients to connect to is set to 127.0.0.1 to unconditionally support local testing.  
+*Attention:* The IP adress of the Host as well as the adress of the clients to connect to is set to 127.0.0.1 to unconditionally support local testing.  
 Therefore playtesting using distributed clients is currently not possible.  
 Our interal playtesting as well the recording of the video was done using a VPN, in our case Hamachi (https://www.vpn.net/).    
 
