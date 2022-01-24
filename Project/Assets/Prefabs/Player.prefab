@@ -988,6 +988,8 @@ MonoBehaviour:
   woodMat: {fileID: 2100000, guid: 14153d415877c8d41953c566d9d5dbba, type: 2}
   stoneMat: {fileID: 2100000, guid: 0e7e41a054c196345a60399b44716568, type: 2}
   ironMat: {fileID: 2100000, guid: 2c7bf5aea97bec34781a8b27ef6d97b5, type: 2}
+  teamBlueMat: {fileID: 2100000, guid: 0116a6975aaf2944280cc6e1fbdccda5, type: 2}
+  teamRedMat: {fileID: 2100000, guid: f0474947725ba374b937c07072123f29, type: 2}
   spawnOffset: 0
   floatingHealthBar: {fileID: 575969829}
   playerTag: {fileID: 1142097414}
