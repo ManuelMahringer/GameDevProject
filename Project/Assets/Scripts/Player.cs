@@ -265,8 +265,8 @@ public class Player : NetworkBehaviour {
         _playerCamera.enabled = true;
         gameObject.GetComponentsInChildren<AudioListener>()[0].enabled = false;
         
-        gameObject.GetComponentsInChildren<AudioSource>()[0].enabled = false;
-        gameObject.GetComponentsInChildren<AudioSource>()[1].enabled = false;
+        //gameObject.GetComponentsInChildren<AudioSource>()[0].enabled = false;
+        //gameObject.GetComponentsInChildren<AudioSource>()[1].enabled = false;
         
         _weaponCamera = cameras[1];
         _weaponCamera.enabled = true;
@@ -576,12 +576,14 @@ public class Player : NetworkBehaviour {
         }
     }
 
-    private void TakeDamage(float amount) {
+    private void TakeDamage(float amount, bool weaponHit = false) {
         if (!IsLocalPlayer || InCountdown)
             return;
         //_audioSource.PlayOneShot(_fallSound);
         _health -= amount;
         _healthBar.value = _health;
+        if (weaponHit)
+            _audioSync.PlaySound(6);
         UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
         if (_health <= 0) {
             Respawn();
@@ -924,7 +926,7 @@ public class Player : NetworkBehaviour {
     [ClientRpc]
     private void TakeDamageClientRpc(float amount) {
         Debug.Log("Player " + transform.name + " took " + amount + " damage");
-        TakeDamage(amount);
+        TakeDamage(amount, true);
     }
 
     [ServerRpc]
