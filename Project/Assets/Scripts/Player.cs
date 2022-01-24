@@ -306,12 +306,12 @@ public class Player : NetworkBehaviour {
         UpdatePlayerTagServerRpc(NetworkObjectId, playerName);
         _inventory.Active(true);
         if (team == Lobby.Team.Red) {
-            transform.position = _world.baseRedPos + new Vector3(0,0, spawnOffset*5);
+            transform.position = _world.baseRedPos + new Vector3(0,-0.1f, spawnOffset*5);
             transform.rotation = Quaternion.Euler(0, 90, 0);
         }
         else if (team == Lobby.Team.Blue) {
             Debug.Log("spawning at baseBluePos " +_world.baseBluePos.z + " and offset " + spawnOffset*5);
-            transform.position = _world.baseBluePos + new Vector3(0,0, spawnOffset*5);;
+            transform.position = _world.baseBluePos + new Vector3(0,-0.1f, spawnOffset*5);;
             transform.rotation = Quaternion.Euler(0, -90, 0);
         }
 
@@ -623,14 +623,12 @@ public class Player : NetworkBehaviour {
         _rotX = 0;
         _playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0);
         if (team == Lobby.Team.Red) {
-            transform.position = _world.baseRedPos + new Vector3(0,0, spawnOffset * 5);
+            transform.position = _world.baseRedPos + new Vector3(0,-0.1f, spawnOffset * 5);
             transform.rotation = Quaternion.Euler(0, 90, 0);
-            //transform.position = new Vector3(-5, 4.5f, 0);
         }
         else if (team == Lobby.Team.Blue) {
-            transform.position = _world.baseBluePos + new Vector3(0,0, spawnOffset * 5);;
+            transform.position = _world.baseBluePos + new Vector3(0,-0.1f, spawnOffset * 5);;
             transform.rotation = Quaternion.Euler(0, -90, 0);
-            //transform.position = new Vector3(5, 4.5f, 0);
         }
 
         _rb.constraints = RigidbodyConstraints.FreezeAll;
@@ -791,7 +789,7 @@ public class Player : NetworkBehaviour {
                     break;
                 case RaycastAction.BuildBlock:
                     // Check if block is at max world height
-                    if (hit.point.y >= _world.height * _world.chunkSize)
+                    if (hit.point.y >= _world.chunkSize)
                         break;
                     if (!hit.collider.CompareTag(WorldTag))
                         break;
@@ -1099,6 +1097,9 @@ public class PlayerInventory : MonoBehaviour {
     public void Clear() {
         for (int i = 0; i < _items.Length; i++)
             _items[i] = 0;
+        foreach (var blockType in _blockCounts.Keys) {
+            _blockCounts[blockType].text = "0";
+        }
     }
 
     public void Draw(BlockType activeBlock) {

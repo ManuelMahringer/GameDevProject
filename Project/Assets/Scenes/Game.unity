@@ -8469,7 +8469,7 @@ MonoBehaviour:
   size: 6
   height: 2
   chunkSize: 13
-  capturesToWin: 1
+  capturesToWin: 10
   flag: {fileID: 428489647}
   initFlagPos: {x: 0, y: 10, z: 0}
   baseRedPos: {x: -35.5, y: 3, z: 0}
@@ -8477,7 +8477,7 @@ MonoBehaviour:
   baseRed: {fileID: 407983800}
   baseBlue: {fileID: 2053621328}
   protectionLayerName: ProtectionZone
-  baseLayerName: 
+  baseLayerName: Base
   borderLayerName: Border
   baseBlueProtectionZone: {fileID: 1932930839}
   baseRedProtectionZone: {fileID: 1707395259}

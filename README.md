@@ -28,7 +28,14 @@
 | Weapon models                   | Duschek                    |
 | Shooting Animations             | Duschek                    |
 
-# 3 Game controls
+# 3 Game description/goal
+This game is a 2-team first-person shooter in a voxel world. The world can be modified by building/destroying blocks, excluding safe-zones (team bases, flag spawn). Teams consist of 1 up to 3 players per team.
+
+The goal of the game is to be the first team to manage to capture the flag 10 times. The flag itself is located at a platform in the sky, so building is required to get to the flag.
+
+The players may interfere with the goal of the other team getting the flag by attacking them with their weapons. On death, players are penalized by a respawn timer and losing all items in the inventory.
+
+# 4 Game controls
 ## Player
 | Key                                              | Action   |
 | ------------------------------------------------ | -------- |
@@ -55,7 +62,7 @@ When using weapon 3 (Shovel):
 | -------------- | ----------- |
 | <kbd>Esc</kbd> | Ingame menu |
 
-# 4 Instructions to run the game
+# 5 Instructions to run the game
 The game features 2 different modes:   
 **Host** - A game instances started as host acts as server and client simulatiously.    
 **Client** - A game instance started as client can only send and request data to/from the server.  
@@ -71,11 +78,14 @@ Enter your name and chose a team for each of the clients.
 
 3. When all clients are connected the host may start start via the "START GAME" button". (The amount of connected players is visible in the lobby UI)
 
+Maps have to be located in a folder called "Maps", that is located in the same directory as directory the `GuerrasDeCubos.exe`, in order for the game to find them. Every map itself is stored in its own folder. 
+For example, we have a map called "Default", so it is stored like the following: `./Maps/Default/`. The `Default` folder would then contain all the chunk files of the map.
+
 *Attention:* The IP adress of the Host as well as the adress of the clients to connect to is set to 127.0.0.1 to unconditionally support local testing.  
 Therefore playtesting using distributed clients is currently not possible.  
 Our interal playtesting as well the recording of the video was done using a VPN, in our case Hamachi (https://www.vpn.net/).    
 
-# 5 Assets
+# 6 Assets
 
 Attack Jump & Hit Damage Human Sounds
 https://assetstore.unity.com/packages/audio/sound-fx/voices/attack-jump-hit-damage-human-sounds-32785
@@ -95,7 +105,7 @@ https://mixkit.co/free-sound-effects/
 Blades & Bludgeoning Free Sample Pack
 https://assetstore.unity.com/packages/audio/sound-fx/blades-bludgeoning-free-sample-pack-179306
 
-# 6 Game world core idea
+# 7 Game world core idea
 The idea of game world based on voxels stems from the following thread:
 https://forum.unity.com/threads/coredev-creating-voxelised-worlds-like-minecraft.192954/
 
