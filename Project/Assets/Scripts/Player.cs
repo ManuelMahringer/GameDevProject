@@ -583,7 +583,7 @@ public class Player : NetworkBehaviour {
         _health -= amount;
         _healthBar.value = _health;
         if (weaponHit)
-            _audioSync.PlaySound(5);
+            _audioSync.PlaySound(6);
         UpdateFloatingHealthBarServerRpc(NetworkObject.NetworkObjectId, _health);
         if (_health <= 0) {
             Respawn();
