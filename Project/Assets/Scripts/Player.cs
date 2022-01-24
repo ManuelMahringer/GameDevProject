@@ -110,6 +110,12 @@ public class Player : NetworkBehaviour {
     [SerializeField]
     private Material ironMat;
 
+    [SerializeField]
+    private Material teamBlueMat;
+
+    [SerializeField]
+    private Material teamRedMat;
+
 
     // private Animation assaultRifleAnimation = ;
 
@@ -757,6 +763,8 @@ public class Player : NetworkBehaviour {
         // Ignore protection layers when raycasting
         int layerMask = ~(1 << (LayerMask.NameToLayer(_world.protectionLayerName) | LayerMask.NameToLayer(_world.borderLayerName) | LayerMask.NameToLayer(_world.baseLayerName)));
         if (Physics.Raycast(ray, out var hit, range, layerMask, QueryTriggerInteraction.Ignore)) {
+            Vector3 coord;
+            Vector3 blockPos;
             switch (raycastAction) {
                 case RaycastAction.DestroyBlock:
                     // Melee hit
@@ -799,9 +807,11 @@ public class Player : NetworkBehaviour {
                         if (CheckProtectedZone(ray, hit.point, raycastAction))
                             break;
                         // Can't build where player is standing
-                        Vector3 buildPos = hit.point - (ray.direction / 10000.0f);
-                        if (Physics.CheckBox(buildPos, new Vector3(0.45f, 0.45f, 0.45f), Quaternion.identity, 1 << LayerMask.NameToLayer(PlayerLayerName)))
+                        coord = hit.point - (ray.direction / 10000.0f);
+                        blockPos = new Vector3(Mathf.FloorToInt(coord.x) + 1 / 2, Mathf.FloorToInt(coord.y) + 1 / 2, Mathf.FloorToInt(coord.z) + 1 / 2);
+                        if (Physics.CheckBox(blockPos, new Vector3(0.45f, 0.45f, 0.45f), Quaternion.identity, 1 << LayerMask.NameToLayer(PlayerLayerName))) {
                             break;
+                        }
                         
                         _inventory.Remove(_activeBlock);
                         _world.BuildBlockServerRpc(hit.point - (ray.direction / 10000.0f), _activeBlock);
@@ -853,8 +863,8 @@ public class Player : NetworkBehaviour {
                     var blockDim = _highlightBlock.transform.localScale;
                     float blockThickness = blockDim.x;
                     float blockSize = blockDim.y;
-                    Vector3 coord = hit.point - (ray.direction / 10000.0f);
-                    Vector3 blockPos = new Vector3(Mathf.FloorToInt(coord.x) + blockSize / 2, Mathf.FloorToInt(coord.y) + blockSize / 2,
+                    coord = hit.point - (ray.direction / 10000.0f);
+                    blockPos = new Vector3(Mathf.FloorToInt(coord.x) + blockSize / 2, Mathf.FloorToInt(coord.y) + blockSize / 2,
                         Mathf.FloorToInt(coord.z) + blockSize / 2);
                     if (Math.Abs(hit.point.x - Mathf.Round(hit.point.x)) < epsilon) {
                         // looking at x face
@@ -1014,14 +1024,16 @@ public class Player : NetworkBehaviour {
         MeshRenderer shovelHandle = shovel.GetComponentsInChildren<MeshRenderer>()[0];
         Image floatingHealthBarFill = target.floatingHealthBar.GetComponentsInChildren<Image>()[1];
         if (newTeam == Lobby.Team.Blue) {
-            meshRenderer.material.color = blueTeamColor;
+            meshRenderer.material = teamBlueMat;
+            //meshRenderer.material.color = blueTeamColor;
             floatingHealthBarFill.color = blueTeamColor;
             handgunSled.material.color = blueTeamColor;
             assaultRifleDustcover.material.color = blueTeamColor;
             shovelHandle.material.color = blueTeamColor;
         }
         else if (newTeam == Lobby.Team.Red) {
-            meshRenderer.material.color = redTeamColor;
+            // meshRenderer.material.color = redTeamColor;
+            meshRenderer.material = teamRedMat;
             floatingHealthBarFill.color = redTeamColor;
             handgunSled.material.color = redTeamColor;
             assaultRifleDustcover.material.color = redTeamColor;
