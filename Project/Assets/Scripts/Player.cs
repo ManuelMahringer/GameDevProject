@@ -967,7 +967,6 @@ public class Player : NetworkBehaviour {
     [ClientRpc]
     private void UpdateWeaponPositionClientRpc(ulong id, Vector3 pos) {
         if (IsLocalPlayer) {
-            Debug.Log("Player with id " + id + " not synced");
             return;
         }
         Player target = GameNetworkManager.GetPlayerById(id);
