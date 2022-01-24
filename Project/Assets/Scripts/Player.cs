@@ -312,11 +312,10 @@ public class Player : NetworkBehaviour {
         UpdatePlayerTagServerRpc(NetworkObjectId, playerName);
         _inventory.Active(true);
         if (team == Lobby.Team.Red) {
-            transform.position = _world.baseRedPos + new Vector3(0,-0.1f, spawnOffset*5);
+            transform.position = _world.baseRedPos + new Vector3(0,-0.1f, spawnOffset*1.5f);
             transform.rotation = Quaternion.Euler(0, 90, 0);
         }
         else if (team == Lobby.Team.Blue) {
-            Debug.Log("spawning at baseBluePos " +_world.baseBluePos.z + " and offset " + spawnOffset*1.5f);
             transform.position = _world.baseBluePos + new Vector3(0,-0.1f, spawnOffset*1.5f);;
             transform.rotation = Quaternion.Euler(0, -90, 0);
         }
