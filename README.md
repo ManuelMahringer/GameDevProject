@@ -29,9 +29,9 @@
 | Shooting Animations             | Duschek                    |
 
 # 3 Game description/goal
-This game is a 2-team first-person shooter in a voxel world. The world can be modified by building/destroying blocks, excluding safe-zones (team bases, flag spawn). Teams consist of 1 up to 3 players per team.
+This game is a 2-team first-person capture-the-flag (ctf) shooter in a voxel world. The world can be modified by building/destroying blocks, excluding safe-zones (team bases, flag spawn). Teams consist of 1 up to 3 players per team.
 
-The goal of the game is to be the first team to manage to capture the flag 10 times. The flag itself is located at a platform in the sky, so building is required to get to the flag.
+The goal of the game is to be the first team to manage to capture the flag 10 times. A flag is captured by picking it up, and carrying it back to the drop-off location own team base. The drop-off location is indicated by a cube in team-color, that is located inside the base building. Picking up and dropping the flag just requires colliding with the flag/the drop-off location. The flag itself is located at a platform in the sky, so building is required to get to the flag.
 
 The players may interfere with the goal of the other team getting the flag by attacking them with their weapons. On death, players are penalized by a respawn timer and losing all items in the inventory.
 
