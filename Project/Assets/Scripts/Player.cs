@@ -668,7 +668,7 @@ public class Player : NetworkBehaviour {
         _rotX = Mathf.Clamp(_rotX, MINVert, MAXVert);
         
         UpdateWeaponPositionServerRpc(NetworkObjectId, new Vector3(_rotX, 0, 0)); // Arbitrary -5 to face the weapon more towards the enemy player
-        //_playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0); // Own camera gets rotated normally
+        _playerCamera.transform.localEulerAngles = new Vector3(_rotX, 0, 0); // Own camera gets rotated normally
 
         // Rotate player object around y
         float rotY = Input.GetAxis("Mouse X") * SensitivityHor;
@@ -966,6 +966,10 @@ public class Player : NetworkBehaviour {
 
     [ClientRpc]
     private void UpdateWeaponPositionClientRpc(ulong id, Vector3 pos) {
+        if (IsLocalPlayer) {
+            Debug.Log("Player with id " + id + " not synced");
+            return;
+        }
         Player target = GameNetworkManager.GetPlayerById(id);
         target._playerCamera.transform.localEulerAngles = pos;
     }
