@@ -43,11 +43,12 @@ Choose weapon: <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>:
 | <kbd>1</kbd>                   | Pistol            |
 | <kbd>2</kbd>                   | Assault Rifle     |
 | <kbd>3</kbd>                   | Shovel            |
-| <kbd>Mouse wheel up/down</kbd> | Choose block type |
 
-When using weapon 1 (Pistol) or weapon 2 (Assault rifle): Left click to shoot   
-When using weapon 3 (Shovel): Left click to gather a block ressource or hit player (melee range), Right click to build a block at the highlighted destination
-Choose block type to build: Mouse wheel  
+When using weapon 1 (Pistol) or weapon 2 (Assault rifle): <kbd>Left click</kbd> to **shoot**   
+When using weapon 3 (Shovel): 
+* <kbd>Left click</kbd> to **gather a block** ressource or hit player (melee range)
+* <kbd>Right click</kbd> to **build a block** at the highlighted destination
+* <kbd>Mouse wheel up/down</kbd> to **choose block type** to build
 
 ## General
 | Key            | Action      |
