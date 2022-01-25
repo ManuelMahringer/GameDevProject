@@ -42,19 +42,18 @@ The players may interfere with the goal of the other team getting the flag by at
 | Key                                              | Action   |
 | ------------------------------------------------ | -------- |
 | <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> | Movement |
-| <kbd>Shift</kbd> (hold)                          | Sprint   |
+| <kbd>Shift</kbd>                                 | Sprint   |
 | <kbd>Space</kbd>                                 | Jump     |
 
 ## Weapons
-Choose weapon: <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>:
-| Key                            | Action            |
-| ------------------------------ | ----------------- |
-| <kbd>1</kbd>                   | Pistol            |
-| <kbd>2</kbd>                   | Assault Rifle     |
-| <kbd>3</kbd>                   | Shovel            |
+| Key          | Action         |
+| ------------ | -------------- |
+| <kbd>1</kbd> | Pistol         |
+| <kbd>2</kbd> | Assault Rifle  |
+| <kbd>3</kbd> | Shovel + Block |
 
 When using weapon 1 (Pistol) or weapon 2 (Assault rifle): <kbd>Left click</kbd> to **shoot**   
-When using weapon 3 (Shovel): 
+When using weapon 3 (Shovel + Block): 
 * <kbd>Left click</kbd> to **gather a block** ressource or hit player (melee range)
 * <kbd>Right click</kbd> to **build a block** at the highlighted destination
 * <kbd>Mouse wheel up/down</kbd> to **choose block type** to build
@@ -80,7 +79,7 @@ Enter your name and chose a team for each of the clients.
 
 3. When all clients are connected the host may start start via the "START GAME" button". (The amount of connected players is visible in the lobby UI)
 
-Maps have to be located in a folder called "Maps", that is located in the same directory as directory the `GuerrasDeCubos.exe`, in order for the game to find them. Every map itself is stored in its own folder. 
+Maps have to be located in a folder called "Maps", that is located in the same directory as directory the `Guerras De Cubos.exe`, in order for the game to find them. Every map itself is stored in its own folder. 
 For example, we have a map called "Default", so it is stored like the following: `./Maps/Default/`. The `Default` folder would then contain all the chunk files of the map.
 
 *Attention:* The IP adress of the Host as well as the adress of the clients to connect to is set to 127.0.0.1 to unconditionally support local testing.  
