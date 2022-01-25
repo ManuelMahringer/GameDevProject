@@ -12,26 +12,27 @@
 | Core game world                 | Mahringer                  |
 | Networking                      | Mahringer, Seifriedsberger |
 | Game world serialization        | Seifriedsberger            |
-| Server synced sound             | Mahringer                  |
+| Server synced countdowns        | Mahringer                  |
+| Server synced sounds            | Mahringer                  |
 | Player movement                 | Seifriedsberger            |
 | Player/world interaction        | Mahringer, Seifriedsberger |
 | Player/player interaction       | Seifriedsberger            |
 | Player (re)spawn                | Mahringer, Seifriedsberger |
-| Server synced countdown         | Mahringer                  |
 | UI                              | Mahringer, Seifriedsberger |
 | Lobby                           | Mahringer, Seifriedsberger |
 | Lighting                        | Mahringer, Seifriedsberger |
 | Balancing                       | Mahringer, Seifriedsberger |
+| Save/load maps                  | Seifriedsberger            |
 | Safe zones                      | Seifriedsberger            |
 | Flag and base logic             | Seifriedsberger            |
-| 1000 hours code refactoring :-) | Seifriedsberger            |
+| 100 hours code refactoring :-)  | Seifriedsberger            |
 | Weapon models                   | Duschek                    |
 | Player model + Textures         | Duschek                    |
 | Shooting + Building Animations  | Duschek                    |
 | Block Textures                  | Duschek                    |
 
 # 3 Game description/goal
-This game is a 2-team first-person capture-the-flag (ctf) shooter in a voxel world. The world can be modified by building/destroying blocks, excluding safe-zones (team bases, flag spawn). Teams consist of 1 up to 3 players per team.
+Guerras de cubos  is a 2-team first-person capture-the-flag (ctf) shooter in a voxel world. The world can be modified by building/destroying blocks, excluding safe-zones (team bases, flag spawn). Teams consist of 1 up to 3 players per team.
 
 The goal of the game is to be the first team to manage to capture the flag 10 times. A flag is captured by picking it up, and carrying it back to the drop-off location own team base. The drop-off location is indicated by a cube in team-color, that is located inside the base building. Picking up and dropping the flag just requires colliding with the flag/the drop-off location. The flag itself is located at a platform in the sky, so building is required to get to the flag.
 
